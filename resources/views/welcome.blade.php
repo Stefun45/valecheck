@@ -22,6 +22,7 @@
                         <a href="{{ route('dashboard') }}" class="font-medium text-vale-navy hover:text-vale-red">Dashboard</a>
                     @else
                         <a href="{{ route('login') }}" class="font-medium text-vale-navy hover:text-vale-red">Sign in</a>
+                        <a href="{{ route('register') }}" class="font-medium text-vale-navy hover:text-vale-red">Register</a>
                         <a href="{{ route('vehicle-checks.start') }}" class="inline-flex items-center px-5 py-2 bg-vale-red rounded-full font-semibold text-sm text-white hover:bg-red-600 transition">Check Your Vehicle</a>
                     @endauth
                 </nav>

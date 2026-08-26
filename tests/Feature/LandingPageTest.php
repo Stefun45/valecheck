@@ -18,6 +18,15 @@ class LandingPageTest extends TestCase
             ->assertSeeText('£14.99');
     }
 
+    public function test_a_guest_can_find_a_direct_link_to_register(): void
+    {
+        // A direct "Register" link must always exist somewhere a guest can
+        // reach without first going through the whole vehicle-check wizard.
+        $this->get('/')
+            ->assertOk()
+            ->assertSee(route('register'), false);
+    }
+
     public function test_a_guest_can_visit_the_check_flow_from_the_registration_prefilled_directly(): void
     {
         // Guests can browse pricing/options without an account — signing up

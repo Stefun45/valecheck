@@ -75,6 +75,7 @@ new class extends Component
                     </x-dropdown>
                 @else
                     <a href="{{ route('login') }}" wire:navigate class="text-sm font-medium text-vale-navy hover:text-vale-red">{{ __('Sign in') }}</a>
+                    <a href="{{ route('register') }}" wire:navigate class="ms-4 text-sm font-medium text-vale-navy hover:text-vale-red">{{ __('Register') }}</a>
                     <a href="{{ route('vehicle-checks.start') }}" wire:navigate class="ms-4 inline-flex items-center px-5 py-2 bg-vale-red rounded-full font-semibold text-sm text-white hover:bg-red-600 transition">
                         {{ __('Check Your Vehicle') }}
                     </a>
@@ -133,6 +134,9 @@ new class extends Component
                 <div class="mt-3 space-y-1">
                     <x-responsive-nav-link :href="route('login')" wire:navigate>
                         {{ __('Sign in') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('register')" wire:navigate>
+                        {{ __('Register') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('vehicle-checks.start')" wire:navigate>
                         {{ __('Check Your Vehicle') }}
