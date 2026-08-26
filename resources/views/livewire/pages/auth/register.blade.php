@@ -36,6 +36,10 @@ new #[Layout('layouts.guest')] class extends Component
 
         RateLimiter::hit($throttleKey, 3600);
 
+        // Autofill (especially iOS/password managers) often capitalises the
+        // first letter of an email address — normalise rather than reject.
+        $this->email = strtolower($this->email);
+
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
