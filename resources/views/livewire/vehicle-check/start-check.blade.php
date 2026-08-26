@@ -77,6 +77,9 @@
                     <h2 class="font-display font-bold text-lg text-vale-navy">ValeCheck Plus</h2>
                     <p class="text-xs uppercase tracking-widest text-vale-navy/60 mt-1">Know the history. Know the value.</p>
                     <p class="font-display text-3xl font-extrabold text-vale-navy mt-3">£{{ number_format($plusPrice->gross, 2) }}</p>
+                    @if ($plusBalance > 0)
+                        <p class="text-sm text-vale-red font-semibold mt-1">You have {{ $plusBalance }} credit(s) — this report is included.</p>
+                    @endif
                     <p class="text-sm text-vale-navy/80 mt-2 flex-1">Everything in ValeCheck, plus market valuation, retail/trade value and a resale estimate — is the asking price fair?</p>
                     <button type="button" wire:click="choose('plus')" class="mt-4 w-full inline-flex justify-center items-center px-4 py-2.5 bg-vale-navy hover:bg-vale-navy/90 border-2 border-vale-navy rounded-full font-semibold text-sm text-white transition">
                         Check The Value

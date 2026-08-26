@@ -4,11 +4,12 @@ return [
 
     'currency' => 'GBP',
 
-    // Temporary launch flag — ValeCheck Rebuild (£14.99), its credit packs
-    // and subscription plans (Trader/Pro/Dealer, which only ever grant
-    // Rebuild allowance) are hidden from the storefront while the AI
-    // damage-analysis product is finished. Flip to true to bring the whole
-    // thing back with no code changes.
+    // Temporary launch flag — ValeCheck Rebuild (£14.99) and its
+    // subscription plans (Trader/Pro/Dealer, which only ever grant Rebuild
+    // allowance) are hidden from the storefront while the AI damage-analysis
+    // product is finished. Flip to true to bring the whole thing back with
+    // no code changes. Credit packs are a ValeCheck Plus feature and are
+    // unaffected by this flag.
     'rebuild_enabled' => env('REBUILD_ENABLED', true),
 
     'vat' => [
@@ -45,10 +46,13 @@ return [
             'tagline' => 'Know the damage. Know the numbers.',
             'gross' => 14.99,
         ],
+        // Priced off the current ValeCheck Plus gross price (admin-editable,
+        // see PricingService::forCreditPack()) rather than a static amount,
+        // so a pricing change here always stays in step with it.
         'credit_packs' => [
-            'rebuild_1' => ['label' => '1 Rebuild Report', 'gross' => 14.99, 'credits' => 1],
-            'rebuild_5' => ['label' => '5 Rebuild Reports', 'gross' => 59.99, 'credits' => 5],
-            'rebuild_10' => ['label' => '10 Rebuild Reports', 'gross' => 99.99, 'credits' => 10],
+            'plus_1' => ['label' => '1 Plus Report', 'report_type' => 'plus', 'credits' => 1, 'discount' => 0],
+            'plus_5' => ['label' => '5 Plus Reports', 'report_type' => 'plus', 'credits' => 5, 'discount' => 0.10],
+            'plus_10' => ['label' => '10 Plus Reports', 'report_type' => 'plus', 'credits' => 10, 'discount' => 0.15],
         ],
         // Subscription allowances are keyed by report type rather than a
         // single hard-coded count, so a plan could grant a mix of report

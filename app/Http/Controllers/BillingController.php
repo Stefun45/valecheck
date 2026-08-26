@@ -10,10 +10,6 @@ class BillingController extends Controller
 {
     public function creditPack(Request $request, StripeCheckoutService $checkoutService)
     {
-        // Every credit pack only ever grants Rebuild allowance — hidden
-        // while Rebuild itself is hidden from launch.
-        abort_unless(config('valecheck.rebuild_enabled'), 404);
-
         $this->ensureStripeConfigured();
 
         $validated = $request->validate([

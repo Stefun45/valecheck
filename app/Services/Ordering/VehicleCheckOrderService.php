@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\DB;
  * dispatches the processing pipeline immediately or leaves the check
  * "pending" for a Payment to unlock it.
  *
- * Only ValeCheck Rebuild (the specialist, highest-value product) can be
- * funded by purchased credits or a subscription allowance — ValeCheck and
- * ValeCheck Plus are always a one-off purchase, same as before.
+ * ValeCheck Plus and ValeCheck Rebuild can be funded by purchased credits or
+ * a subscription allowance — the base ValeCheck product is always a one-off
+ * purchase.
  */
 class VehicleCheckOrderService
 {
@@ -94,7 +94,7 @@ class VehicleCheckOrderService
 
     private function determineFundingSource(User $user, string $type): string
     {
-        if ($type !== VehicleCheck::TYPE_REBUILD) {
+        if (! in_array($type, [VehicleCheck::TYPE_PLUS, VehicleCheck::TYPE_REBUILD], true)) {
             return 'purchase';
         }
 

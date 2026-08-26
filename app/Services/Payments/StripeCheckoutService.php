@@ -92,7 +92,7 @@ class StripeCheckoutService
                 'metadata' => [
                     'kind' => 'credit_pack',
                     'payment_id' => (string) $payment->id,
-                    'report_type' => VehicleCheck::TYPE_REBUILD,
+                    'report_type' => $pack['report_type'],
                     'credits' => (string) $credits,
                 ],
             ],

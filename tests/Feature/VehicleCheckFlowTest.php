@@ -32,10 +32,9 @@ class VehicleCheckFlowTest extends TestCase
     }
 
     /**
-     * Simulates a paid one-off purchase (ValeCheck and ValeCheck Plus are
-     * always "purchase" funded) completing via the real Stripe completion
-     * handler, without touching the real Stripe API — the same handler that
-     * a genuine webhook would invoke.
+     * Simulates a paid one-off purchase completing via the real Stripe
+     * completion handler, without touching the real Stripe API — the same
+     * handler that a genuine webhook would invoke.
      */
     private function completeViaPurchase(User $user, string $type, string $registration): VehicleCheck
     {
@@ -211,6 +210,32 @@ class VehicleCheckFlowTest extends TestCase
 
         $ledger = app(CreditLedgerService::class);
         $this->assertSame(1, $ledger->balance($user, VehicleCheck::TYPE_REBUILD));
+    }
+
+    public function test_user_can_submit_a_plus_check_funded_by_a_purchased_credit(): void
+    {
+        $user = $this->verifiedUser();
+        app(CreditLedgerService::class)->grantPurchasedCredits($user, VehicleCheck::TYPE_PLUS, 2);
+        $this->actingAs($user);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'PL1USCR')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->call('choose', 'plus')
+            ->assertSet('step', 'details')
+            ->set('mileage', 45000)
+            ->call('submit');
+
+        $check = VehicleCheck::where('registration', 'PL1USCR')->firstOrFail();
+
+        $this->assertSame(VehicleCheck::TYPE_PLUS, $check->type);
+        $this->assertSame('credit', $check->funding_source);
+        $this->assertSame(VehicleCheck::STATUS_COMPLETED, $check->status);
+        $this->assertNotNull($check->valuation);
+
+        $ledger = app(CreditLedgerService::class);
+        $this->assertSame(1, $ledger->balance($user, VehicleCheck::TYPE_PLUS));
     }
 
     public function test_third_rebuild_report_requires_payment_once_credits_are_used(): void

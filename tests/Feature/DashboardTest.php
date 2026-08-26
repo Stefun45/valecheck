@@ -12,15 +12,15 @@ class DashboardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_dashboard_shows_the_rebuild_credit_balance(): void
+    public function test_dashboard_shows_the_plus_credit_balance(): void
     {
         $user = User::factory()->create();
-        app(CreditLedgerService::class)->grantPurchasedCredits($user, VehicleCheck::TYPE_REBUILD, 3);
+        app(CreditLedgerService::class)->grantPurchasedCredits($user, VehicleCheck::TYPE_PLUS, 3);
 
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Total Rebuild balance')
+            ->assertSee('Total Plus balance')
             ->assertSeeText('3');
     }
 

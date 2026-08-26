@@ -25,12 +25,12 @@
                 </a>
             </div>
 
-            @if (config('valecheck.rebuild_enabled'))
-                <div class="grid sm:grid-cols-2 gap-4">
-                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                        <p class="text-xs uppercase tracking-widest text-gray-400">Total Rebuild balance</p>
-                        <p class="font-display text-3xl font-extrabold text-vale-navy mt-1">{{ $rebuildBalance }}</p>
-                    </div>
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <p class="text-xs uppercase tracking-widest text-gray-400">Total Plus balance</p>
+                    <p class="font-display text-3xl font-extrabold text-vale-navy mt-1">{{ $plusBalance }}</p>
+                </div>
+                @if (config('valecheck.rebuild_enabled'))
                     <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
                         <p class="text-xs uppercase tracking-widest text-gray-400">Subscription</p>
                         @if ($activeSubscriptionUsage)
@@ -42,25 +42,30 @@
                             <p class="font-display text-lg font-bold text-gray-400 mt-1">None</p>
                         @endif
                     </div>
-                </div>
+                @endif
+            </div>
 
-                <div>
-                    <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Buy Rebuild credits</h3>
-                    <div class="grid sm:grid-cols-3 gap-4">
-                        @foreach ($creditPacks as $key => $pack)
-                            <form method="POST" action="{{ route('billing.credit-pack') }}" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                                @csrf
-                                <input type="hidden" name="pack" value="{{ $key }}">
-                                <p class="text-vale-navy font-semibold">{{ $pack['label'] }}</p>
-                                <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($pack['gross'], 2) }}</p>
-                                <button type="submit" class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-white hover:bg-gray-50 border-2 border-vale-navy rounded-full font-semibold text-sm text-vale-navy">
-                                    Buy
-                                </button>
-                            </form>
-                        @endforeach
-                    </div>
+            <div>
+                <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Buy ValeCheck Plus credits</h3>
+                <div class="grid sm:grid-cols-3 gap-4">
+                    @foreach ($creditPacks as $key => $pack)
+                        <form method="POST" action="{{ route('billing.credit-pack') }}" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                            @csrf
+                            <input type="hidden" name="pack" value="{{ $key }}">
+                            <p class="text-vale-navy font-semibold">{{ $pack['label'] }}</p>
+                            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($pack['price']->gross, 2) }}</p>
+                            @if (($pack['discount'] ?? 0) > 0)
+                                <p class="text-xs text-vale-red font-semibold mt-1">Save {{ (int) round($pack['discount'] * 100) }}%</p>
+                            @endif
+                            <button type="submit" class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-white hover:bg-gray-50 border-2 border-vale-navy rounded-full font-semibold text-sm text-vale-navy">
+                                Buy
+                            </button>
+                        </form>
+                    @endforeach
                 </div>
+            </div>
 
+            @if (config('valecheck.rebuild_enabled'))
                 @unless ($isSubscribed)
                     <div>
                         <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Subscribe for regular checks</h3>

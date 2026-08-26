@@ -435,6 +435,7 @@ class StartCheck extends Component
             'checkPrice' => $pricing->forCheck(),
             'plusPrice' => $pricing->forPlus(),
             'rebuildPrice' => $pricing->forRebuild(),
+            'plusBalance' => auth()->check() ? app(CreditLedgerService::class)->balance(auth()->user(), VehicleCheck::TYPE_PLUS) : 0,
             'rebuildBalance' => auth()->check() ? app(CreditLedgerService::class)->balance(auth()->user(), VehicleCheck::TYPE_REBUILD) : 0,
         ]);
     }

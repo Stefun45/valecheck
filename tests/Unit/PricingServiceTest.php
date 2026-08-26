@@ -56,6 +56,23 @@ class PricingServiceTest extends TestCase
         $this->assertSame(6.49, (new PricingService)->forCheck()->gross);
     }
 
+    public function test_credit_packs_are_priced_off_the_plus_price_with_a_bulk_discount(): void
+    {
+        $pricing = new PricingService;
+        $plusGross = $pricing->forPlus()->gross;
+
+        $this->assertSame($plusGross, $pricing->forCreditPack('plus_1')->gross);
+        $this->assertSame(round($plusGross * 5 * 0.90, 2), $pricing->forCreditPack('plus_5')->gross);
+        $this->assertSame(round($plusGross * 10 * 0.85, 2), $pricing->forCreditPack('plus_10')->gross);
+    }
+
+    public function test_credit_pack_price_moves_with_an_admin_amended_plus_price(): void
+    {
+        ProductPrice::where('type', 'plus')->update(['gross' => 10.00]);
+
+        $this->assertSame(10.00, (new PricingService)->forCreditPack('plus_1')->gross);
+    }
+
     public function test_gross_always_equals_net_plus_vat(): void
     {
         $pricing = new PricingService;

@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\SubscriptionUsage;
 use App\Models\VehicleCheck;
 use App\Services\Credits\CreditLedgerService;
+use App\Services\Pricing\PricingService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, CreditLedgerService $ledger)
+    public function index(Request $request, CreditLedgerService $ledger, PricingService $pricing)
     {
         $user = $request->user();
 
@@ -19,11 +20,15 @@ class DashboardController extends Controller
             ->whereDate('period_end', '>=', now())
             ->first();
 
+        $creditPacks = collect(config('valecheck.pricing.credit_packs'))
+            ->map(fn ($pack, $key) => array_merge($pack, ['price' => $pricing->forCreditPack($key)]))
+            ->all();
+
         return view('dashboard', [
-            'rebuildBalance' => $ledger->balance($user, VehicleCheck::TYPE_REBUILD),
+            'plusBalance' => $ledger->balance($user, VehicleCheck::TYPE_PLUS),
             'activeSubscriptionUsage' => $activeSubscriptionUsage,
             'recentChecks' => $user->vehicleChecks()->with('vehicle')->latest()->take(10)->get(),
-            'creditPacks' => config('valecheck.pricing.credit_packs'),
+            'creditPacks' => $creditPacks,
             'subscriptionPlans' => config('valecheck.pricing.subscriptions'),
             'isSubscribed' => $user->subscribed('default'),
         ]);
