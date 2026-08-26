@@ -21,10 +21,6 @@ class BillingController extends Controller
 
     public function subscription(Request $request, StripeCheckoutService $checkoutService)
     {
-        // Every subscription plan only ever grants Rebuild allowance —
-        // hidden while Rebuild itself is hidden from launch.
-        abort_unless(config('valecheck.rebuild_enabled'), 404);
-
         $this->ensureStripeConfigured();
 
         $validated = $request->validate([

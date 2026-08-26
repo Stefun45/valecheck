@@ -82,7 +82,15 @@ class PricingService
             throw new InvalidArgumentException("Unknown subscription plan [{$plan}].");
         }
 
-        return $this->breakdown((float) $subscription['gross']);
+        if (isset($subscription['gross'])) {
+            return $this->breakdown((float) $subscription['gross']);
+        }
+
+        $reportType = array_key_first($subscription['allowances']);
+        $credits = $subscription['allowances'][$reportType];
+        $unitGross = $this->forProduct($reportType)->gross;
+
+        return $this->breakdown($unitGross * $credits * (1 - ($subscription['discount'] ?? 0)));
     }
 
     public function creditPackCredits(string $key): int

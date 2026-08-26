@@ -73,6 +73,24 @@ class PricingServiceTest extends TestCase
         $this->assertSame(10.00, (new PricingService)->forCreditPack('plus_1')->gross);
     }
 
+    public function test_trader_and_pro_subscriptions_are_priced_off_the_plus_price_with_a_discount(): void
+    {
+        $pricing = new PricingService;
+        $plusGross = $pricing->forPlus()->gross;
+
+        $this->assertSame(round($plusGross * 5 * 0.85, 2), $pricing->forSubscription('trader')->gross);
+        $this->assertSame(round($plusGross * 10 * 0.80, 2), $pricing->forSubscription('pro')->gross);
+    }
+
+    public function test_dealer_subscription_is_a_flat_price_not_derived_from_plus(): void
+    {
+        $this->assertSame(149.99, (new PricingService)->forSubscription('dealer')->gross);
+
+        ProductPrice::where('type', 'plus')->update(['gross' => 999.00]);
+
+        $this->assertSame(149.99, (new PricingService)->forSubscription('dealer')->gross);
+    }
+
     public function test_gross_always_equals_net_plus_vat(): void
     {
         $pricing = new PricingService;

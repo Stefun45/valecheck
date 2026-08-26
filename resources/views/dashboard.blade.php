@@ -30,19 +30,17 @@
                     <p class="text-xs uppercase tracking-widest text-gray-400">Total Plus balance</p>
                     <p class="font-display text-3xl font-extrabold text-vale-navy mt-1">{{ $plusBalance }}</p>
                 </div>
-                @if (config('valecheck.rebuild_enabled'))
-                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                        <p class="text-xs uppercase tracking-widest text-gray-400">Subscription</p>
-                        @if ($activeSubscriptionUsage)
-                            <p class="font-display text-lg font-bold text-vale-navy mt-1 capitalize">{{ $activeSubscriptionUsage->plan }}</p>
-                            <p class="text-xs text-gray-500 mt-1">
-                                {{ $activeSubscriptionUsage->used }} / {{ $activeSubscriptionUsage->allowance ?? '∞' }} used this period
-                            </p>
-                        @else
-                            <p class="font-display text-lg font-bold text-gray-400 mt-1">None</p>
-                        @endif
-                    </div>
-                @endif
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <p class="text-xs uppercase tracking-widest text-gray-400">Subscription</p>
+                    @if ($activeSubscriptionUsage)
+                        <p class="font-display text-lg font-bold text-vale-navy mt-1 capitalize">{{ $activeSubscriptionUsage->plan }}</p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            {{ $activeSubscriptionUsage->used }} / {{ $activeSubscriptionUsage->allowance ?? '∞' }} used this period
+                        </p>
+                    @else
+                        <p class="font-display text-lg font-bold text-gray-400 mt-1">None</p>
+                    @endif
+                </div>
             </div>
 
             <div>
@@ -65,27 +63,33 @@
                 </div>
             </div>
 
-            @if (config('valecheck.rebuild_enabled'))
-                @unless ($isSubscribed)
-                    <div>
-                        <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Subscribe for regular checks</h3>
-                        <div class="grid sm:grid-cols-3 gap-4">
-                            @foreach ($subscriptionPlans as $key => $plan)
-                                <form method="POST" action="{{ route('billing.subscribe') }}" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                                    @csrf
-                                    <input type="hidden" name="plan" value="{{ $key }}">
-                                    <p class="text-vale-navy font-semibold">{{ $plan['label'] }}</p>
-                                    <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($plan['gross'], 2) }}<span class="text-sm text-gray-400">/mo</span></p>
-                                    <p class="text-xs text-gray-500 mt-1">{{ $plan['allowances']['rebuild'] ? $plan['allowances']['rebuild'].' Rebuild reports/month' : 'Unlimited, fair use' }}</p>
-                                    <button type="submit" class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-vale-red hover:bg-red-600 rounded-full font-semibold text-sm text-white">
-                                        Subscribe
-                                    </button>
-                                </form>
-                            @endforeach
+            @unless ($isSubscribed)
+                <div>
+                    <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Subscribe for regular checks</h3>
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        @foreach ($subscriptionPlans as $key => $plan)
+                            <form method="POST" action="{{ route('billing.subscribe') }}" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col">
+                                @csrf
+                                <input type="hidden" name="plan" value="{{ $key }}">
+                                <p class="text-vale-navy font-semibold">{{ $plan['label'] }}</p>
+                                <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($plan['price']->gross, 2) }}<span class="text-sm text-gray-400">/mo</span></p>
+                                <p class="text-xs text-gray-500 mt-1 flex-1">{{ $plan['allowances']['plus'] }} Plus reports/month</p>
+                                <button type="submit" class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-vale-red hover:bg-red-600 rounded-full font-semibold text-sm text-white">
+                                    Subscribe
+                                </button>
+                            </form>
+                        @endforeach
+                        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col">
+                            <p class="text-vale-navy font-semibold">Enterprise</p>
+                            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">Contact us</p>
+                            <p class="text-xs text-gray-500 mt-1 flex-1">Custom volume and pricing for high-usage accounts.</p>
+                            <a href="{{ route('contact.enterprise') }}" wire:navigate class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-vale-navy hover:bg-vale-navy/90 rounded-full font-semibold text-sm text-white">
+                                Contact Us
+                            </a>
                         </div>
                     </div>
-                @endunless
-            @endif
+                </div>
+            @endunless
 
             <div>
                 <div class="flex justify-between items-center mb-3">

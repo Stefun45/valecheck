@@ -56,18 +56,20 @@ return [
         ],
         // Subscription allowances are keyed by report type rather than a
         // single hard-coded count, so a plan could grant a mix of report
-        // types in future without a schema change.
+        // types in future without a schema change. Trader and Pro are
+        // priced off the current ValeCheck Plus gross price at a discount
+        // (see PricingService::forSubscription()) so they stay in step with
+        // an admin price change; Dealer is a flat price, not derived.
         'subscriptions' => [
-            'trader' => ['label' => 'Trader', 'gross' => 39.99, 'allowances' => ['rebuild' => 5], 'stripe_price' => env('STRIPE_PRICE_TRADER')],
-            'pro' => ['label' => 'Pro', 'gross' => 69.99, 'allowances' => ['rebuild' => 10], 'stripe_price' => env('STRIPE_PRICE_PRO')],
-            'dealer' => ['label' => 'Dealer', 'gross' => 129.99, 'allowances' => ['rebuild' => null], 'stripe_price' => env('STRIPE_PRICE_DEALER')],
+            'trader' => ['label' => 'Trader', 'discount' => 0.15, 'allowances' => ['plus' => 5], 'stripe_price' => env('STRIPE_PRICE_TRADER')],
+            'pro' => ['label' => 'Pro', 'discount' => 0.20, 'allowances' => ['plus' => 10], 'stripe_price' => env('STRIPE_PRICE_PRO')],
+            'dealer' => ['label' => 'Dealer', 'gross' => 149.99, 'allowances' => ['plus' => 30], 'stripe_price' => env('STRIPE_PRICE_DEALER')],
         ],
     ],
 
-    'fair_use' => [
-        // Soft monthly cap applied to "unlimited" Dealer plan usage.
-        'dealer_monthly_soft_cap' => 40,
-    ],
+    // Where a submitted Enterprise contact-form enquiry (see ContactController)
+    // is emailed to — no Stripe plan exists for Enterprise, it's sales-led.
+    'enterprise_contact_email' => env('ENTERPRISE_CONTACT_EMAIL', 'stefan@silverbackcustomsuk.com'),
 
     /*
     |--------------------------------------------------------------------------

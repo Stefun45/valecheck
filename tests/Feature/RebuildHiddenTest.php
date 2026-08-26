@@ -68,24 +68,18 @@ class RebuildHiddenTest extends TestCase
         $this->assertDatabaseMissing('vehicle_checks', ['registration' => 'AB12CDE']);
     }
 
-    public function test_the_subscription_endpoint_is_unreachable(): void
+    public function test_billing_endpoints_remain_reachable(): void
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-
-        $this->post(route('billing.subscribe'), ['plan' => 'trader'])->assertNotFound();
-    }
-
-    public function test_the_credit_pack_endpoint_remains_reachable(): void
-    {
-        // Credit packs are a ValeCheck Plus feature, independent of whether
-        // Rebuild is hidden — this must not 404. It still redirects back
-        // (Stripe isn't configured in tests), which is enough to prove the
-        // route was actually reached rather than gated off.
+        // Credit packs and subscriptions are both ValeCheck Plus features
+        // now, independent of whether Rebuild is hidden — neither must 404.
+        // Both redirect back (Stripe isn't configured in tests), which is
+        // enough to prove the route was actually reached rather than gated
+        // off.
         $user = User::factory()->create();
         $this->actingAs($user);
 
         $this->post(route('billing.credit-pack'), ['pack' => 'plus_1'])->assertStatus(302);
+        $this->post(route('billing.subscribe'), ['plan' => 'trader'])->assertStatus(302);
     }
 
     public function test_verifying_a_new_user_grants_no_free_rebuild_credits(): void
@@ -98,17 +92,16 @@ class RebuildHiddenTest extends TestCase
         $this->assertSame(0, $balance);
     }
 
-    public function test_the_dashboard_hides_only_the_subscription_section(): void
+    public function test_the_dashboard_still_shows_plus_credits_and_subscriptions(): void
     {
-        // The Plus credit-pack section is independent of Rebuild and must
-        // stay visible; only the still-Rebuild-only subscription section
-        // is hidden while Rebuild itself is hidden.
+        // Both are ValeCheck Plus features now and must stay visible
+        // regardless of whether Rebuild itself is hidden.
         $user = User::factory()->create();
         $this->actingAs($user);
 
         $this->get(route('dashboard'))
             ->assertOk()
             ->assertSeeText('Buy ValeCheck Plus credits')
-            ->assertDontSeeText('Subscribe for regular checks');
+            ->assertSeeText('Subscribe for regular checks');
     }
 }

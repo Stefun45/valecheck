@@ -15,7 +15,7 @@ class DashboardController extends Controller
         $user = $request->user();
 
         $activeSubscriptionUsage = SubscriptionUsage::where('user_id', $user->id)
-            ->where('report_type', VehicleCheck::TYPE_REBUILD)
+            ->where('report_type', VehicleCheck::TYPE_PLUS)
             ->whereDate('period_start', '<=', now())
             ->whereDate('period_end', '>=', now())
             ->first();
@@ -24,12 +24,16 @@ class DashboardController extends Controller
             ->map(fn ($pack, $key) => array_merge($pack, ['price' => $pricing->forCreditPack($key)]))
             ->all();
 
+        $subscriptionPlans = collect(config('valecheck.pricing.subscriptions'))
+            ->map(fn ($plan, $key) => array_merge($plan, ['price' => $pricing->forSubscription($key)]))
+            ->all();
+
         return view('dashboard', [
             'plusBalance' => $ledger->balance($user, VehicleCheck::TYPE_PLUS),
             'activeSubscriptionUsage' => $activeSubscriptionUsage,
             'recentChecks' => $user->vehicleChecks()->with('vehicle')->latest()->take(10)->get(),
             'creditPacks' => $creditPacks,
-            'subscriptionPlans' => config('valecheck.pricing.subscriptions'),
+            'subscriptionPlans' => $subscriptionPlans,
             'isSubscribed' => $user->subscribed('default'),
         ]);
     }

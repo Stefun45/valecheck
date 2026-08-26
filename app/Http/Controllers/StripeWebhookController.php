@@ -67,10 +67,10 @@ class StripeWebhookController extends CashierWebhookController
             return;
         }
 
-        // Subscriptions currently only grant a Rebuild allowance, but the
+        // Subscriptions currently only grant a Plus allowance, but the
         // schema (report_type column, config keyed by product) supports more
         // than one product per plan without a future migration.
-        $reportType = 'rebuild';
+        $reportType = 'plus';
 
         SubscriptionUsage::firstOrCreate(
             [

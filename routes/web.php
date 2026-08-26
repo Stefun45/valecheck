@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CreatorController;
 use App\Http\Controllers\Admin\DiscountCodeController;
 use App\Http\Controllers\Admin\ProductPriceController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportPdfController;
 use App\Http\Controllers\StripeWebhookController;
@@ -50,6 +51,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('billing/credit-pack', [BillingController::class, 'creditPack'])->name('billing.credit-pack');
     Route::post('billing/subscribe', [BillingController::class, 'subscription'])->name('billing.subscribe');
+
+    Route::get('contact/enterprise', [ContactController::class, 'showEnterprise'])->name('contact.enterprise');
+    Route::post('contact/enterprise', [ContactController::class, 'submitEnterprise'])
+        ->middleware('throttle:5,1')
+        ->name('contact.enterprise.submit');
 });
 
 Route::get('admin', [AdminDashboardController::class, 'index'])
