@@ -56,13 +56,11 @@ return [
         ],
         // Subscription allowances are keyed by report type rather than a
         // single hard-coded count, so a plan could grant a mix of report
-        // types in future without a schema change. Trader and Pro are
-        // priced off the current ValeCheck Plus gross price at a discount
-        // (see PricingService::forSubscription()) so they stay in step with
-        // an admin price change; Dealer is a flat price, not derived.
+        // types in future without a schema change. All three are flat,
+        // deliberately-chosen prices, not derived from the Plus price.
         'subscriptions' => [
-            'trader' => ['label' => 'Trader', 'discount' => 0.15, 'allowances' => ['plus' => 5], 'stripe_price' => env('STRIPE_PRICE_TRADER')],
-            'pro' => ['label' => 'Pro', 'discount' => 0.20, 'allowances' => ['plus' => 10], 'stripe_price' => env('STRIPE_PRICE_PRO')],
+            'trader' => ['label' => 'Trader', 'gross' => 49.99, 'allowances' => ['plus' => 5], 'stripe_price' => env('STRIPE_PRICE_TRADER')],
+            'pro' => ['label' => 'Pro', 'gross' => 94.99, 'allowances' => ['plus' => 10], 'stripe_price' => env('STRIPE_PRICE_PRO')],
             'dealer' => ['label' => 'Dealer', 'gross' => 149.99, 'allowances' => ['plus' => 30], 'stripe_price' => env('STRIPE_PRICE_DEALER')],
         ],
     ],
