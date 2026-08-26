@@ -2,6 +2,7 @@
     $vehicle = $check->vehicle;
     $history = $check->history;
     $report = $check->report;
+    $plusPrice = app(\App\Services\Pricing\PricingService::class)->forPlus();
 @endphp
 
 <div>
@@ -110,7 +111,7 @@
         <h3 class="font-display font-bold text-lg text-vale-navy">Want to know what it's actually worth?</h3>
         <p class="text-gray-500 mt-2">ValeCheck Plus adds market valuation, retail/trade value and a resale estimate — is the asking price fair?</p>
         <a href="{{ route('vehicle-checks.start', ['registration' => $check->registration]) }}" wire:navigate class="inline-flex items-center justify-center mt-4 px-5 py-2.5 bg-vale-red rounded-full font-semibold text-sm text-white hover:bg-red-600">
-            Upgrade to ValeCheck Plus — £{{ number_format(config('valecheck.pricing.plus.gross'), 2) }}
+            Upgrade to ValeCheck Plus — £{{ number_format($plusPrice->gross, 2) }}
         </a>
     </div>
 </div>

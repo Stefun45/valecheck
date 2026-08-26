@@ -11,6 +11,7 @@
     // The "buying a damaged vehicle?" upsell only shows when there's an
     // actual data-backed reason to — never as a blanket sales pitch.
     $suggestsDamage = $history?->isWrittenOff() ?? false;
+    $rebuildPrice = app(\App\Services\Pricing\PricingService::class)->forRebuild();
 @endphp
 
 <div>
@@ -113,7 +114,7 @@
                 estimate, repaired value and a maximum bid — built specifically for damaged and salvage vehicles.
             </p>
             <a href="{{ route('vehicle-checks.start', ['registration' => $check->registration]) }}" wire:navigate class="inline-flex items-center justify-center mt-4 px-5 py-2.5 bg-vale-red rounded-full font-semibold text-sm text-white hover:bg-red-600">
-                Upgrade to ValeCheck Rebuild — £{{ number_format(config('valecheck.pricing.rebuild.gross'), 2) }}
+                Upgrade to ValeCheck Rebuild — £{{ number_format($rebuildPrice->gross, 2) }}
             </a>
         </div>
     @endif

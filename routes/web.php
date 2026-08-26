@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\CreatorController;
 use App\Http\Controllers\Admin\DiscountCodeController;
+use App\Http\Controllers\Admin\ProductPriceController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportPdfController;
@@ -12,9 +13,16 @@ use App\Http\Controllers\VehicleCheckCheckoutController;
 use App\Livewire\VehicleCheck\ReportHistory;
 use App\Livewire\VehicleCheck\ShowCheck;
 use App\Livewire\VehicleCheck\StartCheck;
+use App\Services\Pricing\PricingService;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome');
+Route::get('/', function (PricingService $pricing) {
+    return view('welcome', [
+        'checkPrice' => $pricing->forCheck(),
+        'plusPrice' => $pricing->forPlus(),
+        'rebuildPrice' => $pricing->forRebuild(),
+    ]);
+})->name('welcome');
 
 Route::post('stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])->name('cashier.webhook');
 
@@ -55,6 +63,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::resource('discount-codes', DiscountCodeController::class)->parameters(['discount-codes' => 'discountCode'])->except(['destroy', 'show']);
     Route::post('discount-codes/{discountCode}/toggle', [DiscountCodeController::class, 'toggle'])->name('discount-codes.toggle');
+
+    Route::get('pricing', [ProductPriceController::class, 'edit'])->name('pricing.edit');
+    Route::put('pricing', [ProductPriceController::class, 'update'])->name('pricing.update');
 });
 
 require __DIR__.'/auth.php';

@@ -2,11 +2,15 @@
 
 namespace Tests\Unit;
 
+use App\Models\ProductPrice;
 use App\Services\Pricing\PricingService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PricingServiceTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_check_price_breaks_down_vat_correctly(): void
     {
         $breakdown = (new PricingService)->forCheck();
@@ -43,6 +47,13 @@ class PricingServiceTest extends TestCase
         $this->assertSame($pricing->forCheck()->gross, $pricing->forProduct('check')->gross);
         $this->assertSame($pricing->forPlus()->gross, $pricing->forProduct('plus')->gross);
         $this->assertSame($pricing->forRebuild()->gross, $pricing->forProduct('rebuild')->gross);
+    }
+
+    public function test_an_admin_amended_price_is_reflected_immediately(): void
+    {
+        ProductPrice::where('type', 'check')->update(['gross' => 6.49]);
+
+        $this->assertSame(6.49, (new PricingService)->forCheck()->gross);
     }
 
     public function test_gross_always_equals_net_plus_vat(): void

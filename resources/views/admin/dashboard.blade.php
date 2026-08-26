@@ -9,6 +9,7 @@
             <div class="flex gap-4 text-sm font-semibold">
                 <a href="{{ route('admin.affiliates.index') }}" class="text-vale-red hover:text-red-600">Manage Affiliates &rarr;</a>
                 <a href="{{ route('admin.discount-codes.index') }}" class="text-vale-red hover:text-red-600">Manage Discount Codes &rarr;</a>
+                <a href="{{ route('admin.pricing.edit') }}" class="text-vale-red hover:text-red-600">Edit Pricing &rarr;</a>
             </div>
 
             <div>

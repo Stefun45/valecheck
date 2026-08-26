@@ -3,13 +3,17 @@
 namespace App\Services\Pricing;
 
 use App\DataTransferObjects\PriceBreakdown;
+use App\Models\ProductPrice;
 use InvalidArgumentException;
 
 /**
- * Single source of truth for VAT-inclusive pricing. All prices in
- * config('valecheck.pricing') are GROSS (VAT inclusive) — this service is
- * the only place that derives net/VAT figures from them. Nothing else in
- * the codebase should compute VAT directly.
+ * Single source of truth for VAT-inclusive pricing. Check/Plus/Rebuild's
+ * gross prices live in the product_prices table (editable from the admin
+ * pricing screen) — config('valecheck.pricing.*.gross') is only consulted
+ * as a fallback if a product's row is somehow missing. Credit packs and
+ * subscription plans are still config-only (unedited by this admin screen).
+ * This service is the only place that derives net/VAT figures from a
+ * gross price — nothing else in the codebase should compute VAT directly.
  */
 class PricingService
 {
@@ -35,22 +39,24 @@ class PricingService
 
     public function forCheck(): PriceBreakdown
     {
-        return $this->breakdown((float) config('valecheck.pricing.check.gross'));
+        return $this->forProduct('check');
     }
 
     public function forPlus(): PriceBreakdown
     {
-        return $this->breakdown((float) config('valecheck.pricing.plus.gross'));
+        return $this->forProduct('plus');
     }
 
     public function forRebuild(): PriceBreakdown
     {
-        return $this->breakdown((float) config('valecheck.pricing.rebuild.gross'));
+        return $this->forProduct('rebuild');
     }
 
     public function forProduct(string $type): PriceBreakdown
     {
-        return $this->breakdown((float) config("valecheck.pricing.{$type}.gross"));
+        $gross = ProductPrice::where('type', $type)->value('gross');
+
+        return $this->breakdown((float) ($gross ?? config("valecheck.pricing.{$type}.gross")));
     }
 
     public function forCreditPack(string $key): PriceBreakdown
