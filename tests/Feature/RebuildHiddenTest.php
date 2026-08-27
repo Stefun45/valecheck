@@ -31,6 +31,16 @@ class RebuildHiddenTest extends TestCase
             ->assertDontSee('£14.99');
     }
 
+    public function test_the_landing_page_how_it_works_step_does_not_promise_a_bid_recommendation(): void
+    {
+        // "BUY, MAYBE or WALK AWAY" and a maximum bid are Rebuild-only
+        // features — this step's copy must not promise them while Rebuild
+        // itself is hidden.
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSeeText('BUY, MAYBE or WALK AWAY');
+    }
+
     public function test_the_choose_step_shows_only_two_plans(): void
     {
         $this->get(route('vehicle-checks.start', ['registration' => 'AB12CDE']))

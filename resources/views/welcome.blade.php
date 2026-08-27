@@ -75,7 +75,9 @@
                         $steps = [
                             ['n' => '01', 'title' => 'Enter the registration', 'body' => 'Any UK plate — private sale, dealer, auction or salvage listing.'],
                             ['n' => '02', 'title' => 'We check everything', 'body' => 'History, provenance, mileage, photographs and market value — all in one pass.'],
-                            ['n' => '03', 'title' => 'Get a straight answer', 'body' => 'BUY, MAYBE or WALK AWAY, with an estimated maximum you should ever bid.'],
+                            ['n' => '03', 'title' => 'Get a straight answer', 'body' => config('valecheck.rebuild_enabled')
+                                ? 'BUY, MAYBE or WALK AWAY, with an estimated maximum you should ever bid.'
+                                : 'A clear report on history, provenance and — with ValeCheck Plus — what it\'s actually worth.'],
                         ];
                     @endphp
                     @foreach ($steps as $step)
