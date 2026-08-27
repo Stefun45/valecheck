@@ -6,6 +6,8 @@ use App\Models\VehicleCheck;
 use App\Services\Reports\ReportPdfService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ReportPdfController extends Controller
 {
@@ -19,8 +21,14 @@ class ReportPdfController extends Controller
             return back()->with('error', 'This report is no longer available for download.');
         }
 
-        $report = $pdfService->generate($vehicleCheck);
+        try {
+            $report = $pdfService->generate($vehicleCheck);
 
-        return redirect()->away($report->pdfTemporaryUrl());
+            return redirect()->away($report->pdfTemporaryUrl());
+        } catch (Throwable $e) {
+            Log::error("Failed to generate/serve report PDF for VehicleCheck #{$vehicleCheck->id}: {$e->getMessage()}");
+
+            return back()->with('error', "We couldn't prepare your PDF just now — please try again shortly.");
+        }
     }
 }

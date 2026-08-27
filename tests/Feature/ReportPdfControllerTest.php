@@ -52,6 +52,25 @@ class ReportPdfControllerTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_a_storage_failure_shows_a_friendly_message_instead_of_a_500(): void
+    {
+        // Simulates the real incident this covers: a misconfigured PDF disk
+        // (e.g. a broken S3/Backblaze endpoint) must never surface as a raw
+        // 500 — the customer should land back on their report with an
+        // explanation, not a crash page.
+        config(['valecheck.reports.pdf_disk' => 'not-a-real-disk']);
+
+        $user = User::factory()->create();
+        $check = $this->completedCheckFor($user);
+
+        $this->actingAs($user)
+            ->get(route('vehicle-checks.pdf', $check))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertNull($check->fresh()->report->pdf_path);
+    }
+
     public function test_a_purged_reports_pdf_is_no_longer_downloadable(): void
     {
         $user = User::factory()->create();
