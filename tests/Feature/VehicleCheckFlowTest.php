@@ -370,6 +370,14 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSeeText('MOT & Mileage')
             ->assertSeeText('Keeper / Registration History')
             ->assertSeeText('Market Assessment');
+
+        // The downloadable PDF is a separate template from the on-site
+        // report — must not regress independently of it.
+        $pdfHtml = view('pdf.plus-report', ['check' => $check])->render();
+
+        $this->assertStringContainsString('Vehicle Summary', $pdfHtml);
+        $this->assertStringContainsString('Stolen / Scrapped', $pdfHtml);
+        $this->assertStringContainsString('MOT &amp; Mileage', $pdfHtml);
     }
 
     public function test_a_completed_rebuild_report_has_everything_plus_has_all_the_way(): void

@@ -53,15 +53,31 @@
         <tr>
             <td width="50%">
                 <div class="section">
+                    <div class="section-title">Vehicle Summary</div>
+                    <table class="data">
+                        <tr><td>VIN</td><td>{{ $vehicle->vin ?? '—' }}</td></tr>
+                        <tr><td>Year</td><td>{{ $vehicle->year ?? '—' }}</td></tr>
+                        <tr><td>Engine</td><td>{{ $vehicle->engine ?? '—' }}</td></tr>
+                        <tr><td>Fuel</td><td>{{ $vehicle->fuel ?? '—' }}</td></tr>
+                        <tr><td>Transmission</td><td>{{ $vehicle->transmission ?? '—' }}</td></tr>
+                        <tr><td>Colour</td><td>{{ $vehicle->colour ?? '—' }}</td></tr>
+                    </table>
+                </div>
+            </td>
+            <td width="50%">
+                <div class="section">
                     <div class="section-title">Write-Off History</div>
                     @if ($history?->isWrittenOff())
                         <p class="warn">Category {{ $history->write_off_category }} recorded</p>
+                        <p>Date: {{ optional($history->write_off_date)->format('d M Y') ?? 'Unknown' }}</p>
                     @else
                         <p class="ok">No write-off history recorded.</p>
                     @endif
                 </div>
             </td>
-            <td width="50%">
+        </tr>
+        <tr>
+            <td>
                 <div class="section">
                     <div class="section-title">Finance</div>
                     <p class="{{ $history?->finance_marker ? 'warn' : 'ok' }}">
@@ -69,8 +85,36 @@
                     </p>
                 </div>
             </td>
+            <td>
+                <div class="section">
+                    <div class="section-title">Stolen / Scrapped</div>
+                    <p class="{{ $history?->stolen_marker ? 'warn' : 'ok' }}">Stolen: {{ $history?->stolen_marker ? 'Marker found' : 'No marker found' }}</p>
+                    <p class="{{ $history?->scrapped_marker ? 'warn' : 'ok' }}">Scrapped: {{ $history?->scrapped_marker ? 'Marker found' : 'No marker found' }}</p>
+                </div>
+            </td>
         </tr>
     </table>
+
+    <div class="section">
+        <div class="section-title">MOT &amp; Mileage</div>
+        @if ($history?->mot_history)
+            <table class="data">
+                <tr><th>Test Date</th><th>Result</th><th>Mileage</th></tr>
+                @foreach (array_reverse($history->mot_history) as $test)
+                    <tr>
+                        <td>{{ $test['test_date'] ?? '—' }}</td>
+                        <td>{{ ucfirst($test['result'] ?? '—') }}</td>
+                        <td>{{ isset($test['mileage']) ? number_format($test['mileage']).' mi' : '—' }}</td>
+                    </tr>
+                @endforeach
+            </table>
+            @if ($history->mileage_anomaly)
+                <p class="warn">Mileage anomaly detected in the MOT history.</p>
+            @endif
+        @else
+            <p>No MOT history available.</p>
+        @endif
+    </div>
 
     <div class="section">
         <div class="section-title">Market Assessment</div>
