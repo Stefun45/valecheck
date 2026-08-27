@@ -15,6 +15,8 @@
     <h1>{{ $vehicle->description() ?: $check->registration }}</h1>
     <p class="reg">{{ $check->registration }}</p>
 
+    @include('pdf.partials.report-status-grid', ['history' => $history])
+
     <table class="grid">
         <tr>
             <td width="33%">

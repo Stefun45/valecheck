@@ -14,7 +14,11 @@
     <h1 class="font-display font-bold text-2xl text-vale-navy">{{ $vehicle->description() ?: $check->registration }}</h1>
     <p class="text-gray-500 font-mono">{{ $check->registration }}</p>
 
-    <div class="mt-8 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    <div class="mt-6">
+        @include('livewire.vehicle-check.partials.report-status-grid', ['history' => $history])
+    </div>
+
+    <div class="mt-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
         <h2 class="text-sm font-bold uppercase tracking-widest text-gray-400">Overall History Assessment</h2>
         <p class="text-vale-navy mt-2">{{ $report?->headline_summary }}</p>
     </div>

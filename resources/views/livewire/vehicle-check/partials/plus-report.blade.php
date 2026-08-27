@@ -23,7 +23,11 @@
     <h1 class="font-display font-bold text-2xl text-vale-navy">{{ $vehicle->description() ?: $check->registration }}</h1>
     <p class="text-gray-500 font-mono">{{ $check->registration }}</p>
 
-    <div class="grid sm:grid-cols-3 gap-4 mt-6">
+    <div class="mt-6">
+        @include('livewire.vehicle-check.partials.report-status-grid', ['history' => $history])
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-4">
         <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
             <p class="text-xs uppercase tracking-widest text-gray-400">Estimated Retail Value</p>
             <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($cleanValue ?? 0, 0) }}</p>

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleCheck;
 use App\Models\VehicleHistory;
+use App\Models\VehicleValuation;
 use App\Services\Credits\CreditLedgerService;
 use App\Services\Payments\StripeCheckoutCompletionHandler;
 use App\Services\Reports\ReportPdfService;
@@ -584,5 +585,45 @@ class VehicleCheckFlowTest extends TestCase
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Not enough MOT history to show a mileage trend.');
+    }
+
+    public function test_the_at_a_glance_status_grid_appears_on_check_and_plus_web_and_pdf(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'write_off_category' => 'N',
+            'finance_marker' => false,
+            'stolen_marker' => false,
+        ]);
+
+        VehicleValuation::create([
+            'vehicle_check_id' => $check->id,
+            'clean_value' => 10000,
+            'trade_value' => 8500,
+            'retail_value' => 10000,
+            'private_value' => 9300,
+            'confidence' => 'medium',
+        ]);
+
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test summary.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Mileage Trend')
+            ->assertSeeText('Write-Off History')
+            ->assertSeeText('Outstanding Finance')
+            ->assertSeeText('Stolen');
+
+        Storage::fake('local');
+        $report = app(ReportPdfService::class)->generate($check->fresh());
+        $this->assertNotNull($report->pdf_path);
     }
 }
