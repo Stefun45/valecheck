@@ -9,6 +9,7 @@ use App\Models\SubscriptionUsage;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleCheck;
+use App\Models\VehicleHistory;
 use App\Services\Credits\CreditLedgerService;
 use App\Services\Payments\StripeCheckoutCompletionHandler;
 use Illuminate\Auth\Events\Verified;
@@ -495,5 +496,36 @@ class VehicleCheckFlowTest extends TestCase
         $this->actingAs($intruder)
             ->get(route('vehicle-checks.show', $check))
             ->assertForbidden();
+    }
+
+    public function test_mot_advisories_are_shown_on_the_report_and_in_the_pdf(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'mot_history' => [
+                [
+                    'test_date' => '2024-03-05',
+                    'result' => 'fail',
+                    'mileage' => 36940,
+                    'advisories' => ['Offside rear brake disc worn'],
+                ],
+            ],
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('1 advisory')
+            ->assertSeeText('Offside rear brake disc worn');
+
+        $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('Offside rear brake disc worn', $pdfHtml);
     }
 }

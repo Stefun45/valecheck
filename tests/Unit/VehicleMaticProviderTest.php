@@ -22,7 +22,7 @@ class VehicleMaticProviderTest extends TestCase
                     'engine_capacity' => 2000,
                     'year_of_manufacture' => 2017,
                     'mot_history' => [
-                        ['test_date' => '2023-06-01', 'result' => 'pass', 'odometer' => 42000],
+                        ['test_date' => '2023-06-01', 'result' => 'pass', 'odometer' => 42000, 'advisories' => ['Nearside front tyre worn close to the legal limit']],
                     ],
                     'provenance' => [
                         'write_off' => true,
@@ -55,6 +55,7 @@ class VehicleMaticProviderTest extends TestCase
         $this->assertSame(1, $result->plateChanges);
         $this->assertCount(1, $result->motHistory);
         $this->assertSame(42000, $result->motHistory[0]['mileage']);
+        $this->assertSame(['Nearside front tyre worn close to the legal limit'], $result->motHistory[0]['advisories']);
     }
 
     public function test_no_write_off_flag_means_no_category_is_reported(): void

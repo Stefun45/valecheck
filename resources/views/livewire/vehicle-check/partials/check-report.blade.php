@@ -59,34 +59,7 @@
             </p>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">MOT &amp; Mileage</h3>
-            @if ($history?->mot_history)
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="text-gray-400 text-left">
-                            <th class="font-normal pb-2">Test Date</th>
-                            <th class="font-normal pb-2">Result</th>
-                            <th class="font-normal pb-2">Mileage</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (array_reverse($history->mot_history) as $test)
-                            <tr class="border-t border-gray-100">
-                                <td class="py-2 text-vale-navy">{{ $test['test_date'] ?? '—' }}</td>
-                                <td class="py-2 text-vale-navy capitalize">{{ $test['result'] ?? '—' }}</td>
-                                <td class="py-2 text-vale-navy">{{ isset($test['mileage']) ? number_format($test['mileage']).' mi' : '—' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                @if ($history->mileage_anomaly)
-                    <p class="text-vale-red text-sm font-semibold mt-3">Mileage anomaly detected in the MOT history.</p>
-                @endif
-            @else
-                <p class="text-vale-navy">No MOT history available.</p>
-            @endif
-        </div>
+        @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $history])
 
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
             <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Keeper / Registration History</h3>

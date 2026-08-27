@@ -95,26 +95,7 @@
         </tr>
     </table>
 
-    <div class="section">
-        <div class="section-title">MOT &amp; Mileage</div>
-        @if ($history?->mot_history)
-            <table class="data">
-                <tr><th>Test Date</th><th>Result</th><th>Mileage</th></tr>
-                @foreach (array_reverse($history->mot_history) as $test)
-                    <tr>
-                        <td>{{ $test['test_date'] ?? '—' }}</td>
-                        <td>{{ ucfirst($test['result'] ?? '—') }}</td>
-                        <td>{{ isset($test['mileage']) ? number_format($test['mileage']).' mi' : '—' }}</td>
-                    </tr>
-                @endforeach
-            </table>
-            @if ($history->mileage_anomaly)
-                <p class="warn">Mileage anomaly detected in the MOT history.</p>
-            @endif
-        @else
-            <p>No MOT history available.</p>
-        @endif
-    </div>
+    @include('pdf.partials.mot-history-table', ['history' => $history])
 
     <div class="section">
         <div class="section-title">Market Assessment</div>

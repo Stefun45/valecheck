@@ -87,6 +87,7 @@ class VehicleMaticProvider implements VehicleDataProvider
                 'test_date' => $test['test_date'] ?? null,
                 'result' => $test['result'] ?? null,
                 'mileage' => $test['odometer'] ?? null,
+                'advisories' => $test['advisories'] ?? [],
             ], $data['mot_history'] ?? []),
             keeperHistory: [],
             confidence: 'high',

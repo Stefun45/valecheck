@@ -24,6 +24,15 @@ class MockVehicleDataProvider implements VehicleDataProvider
 
     private const WRITE_OFF_CATEGORIES = [null, null, null, null, 'N', 'S'];
 
+    private const ADVISORIES = [
+        'Nearside front tyre worn close to the legal limit',
+        'Offside rear brake disc worn',
+        'Front wiper blade deteriorated',
+        'Exhaust has a minor leak',
+        'Nearside headlamp aim slightly high',
+        'Rear number plate lamp not working',
+    ];
+
     public function getVehicle(string $registration): VehicleData
     {
         $registration = strtoupper(preg_replace('/\s+/', '', $registration));
@@ -86,10 +95,13 @@ class MockVehicleDataProvider implements VehicleDataProvider
 
         for ($testYear = $year + 3; $testYear <= $currentYear; $testYear++) {
             $mileage += 6000 + ($seed % 4000);
+            $testSeed = $seed + $testYear;
+
             $history[] = [
                 'test_date' => Carbon::createFromDate($testYear, 6, 1)->toDateString(),
-                'result' => 'pass',
+                'result' => ($testSeed % 6) === 0 ? 'fail' : 'pass',
                 'mileage' => $mileage,
+                'advisories' => ($testSeed % 3) === 0 ? [] : [self::ADVISORIES[$testSeed % count(self::ADVISORIES)]],
             ];
         }
 
