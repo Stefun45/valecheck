@@ -45,6 +45,13 @@
             overrides this to false per-test to cover the hidden state.
         -->
         <env name="REBUILD_ENABLED" value="true"/>
+        <!--
+            Force this to true regardless of the real .env (which is set to
+            false for the current launch) so the existing subscription test
+            suite keeps exercising that code path — a dedicated hidden-state
+            test overrides this to false per-test to cover the hidden state.
+        -->
+        <env name="SUBSCRIPTIONS_ENABLED" value="true"/>
         <env name="REPORT_PDF_DISK" value="local"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>

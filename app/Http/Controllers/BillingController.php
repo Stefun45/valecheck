@@ -21,6 +21,8 @@ class BillingController extends Controller
 
     public function subscription(Request $request, StripeCheckoutService $checkoutService)
     {
+        abort_unless(config('valecheck.subscriptions_enabled'), 404);
+
         $this->ensureStripeConfigured();
 
         $validated = $request->validate([

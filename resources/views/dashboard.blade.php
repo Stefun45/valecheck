@@ -30,17 +30,19 @@
                     <p class="text-xs uppercase tracking-widest text-gray-400">Total Plus balance</p>
                     <p class="font-display text-3xl font-extrabold text-vale-navy mt-1">{{ $plusBalance }}</p>
                 </div>
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                    <p class="text-xs uppercase tracking-widest text-gray-400">Subscription</p>
-                    @if ($activeSubscriptionUsage)
-                        <p class="font-display text-lg font-bold text-vale-navy mt-1 capitalize">{{ $activeSubscriptionUsage->plan }}</p>
-                        <p class="text-xs text-gray-500 mt-1">
-                            {{ $activeSubscriptionUsage->used }} / {{ $activeSubscriptionUsage->allowance ?? '∞' }} used this period
-                        </p>
-                    @else
-                        <p class="font-display text-lg font-bold text-gray-400 mt-1">None</p>
-                    @endif
-                </div>
+                @if (config('valecheck.subscriptions_enabled'))
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                        <p class="text-xs uppercase tracking-widest text-gray-400">Subscription</p>
+                        @if ($activeSubscriptionUsage)
+                            <p class="font-display text-lg font-bold text-vale-navy mt-1 capitalize">{{ $activeSubscriptionUsage->plan }}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ $activeSubscriptionUsage->used }} / {{ $activeSubscriptionUsage->allowance ?? '∞' }} used this period
+                            </p>
+                        @else
+                            <p class="font-display text-lg font-bold text-gray-400 mt-1">None</p>
+                        @endif
+                    </div>
+                @endif
             </div>
 
             <div>
@@ -63,7 +65,7 @@
                 </div>
             </div>
 
-            @unless ($isSubscribed)
+            @if (config('valecheck.subscriptions_enabled') && ! $isSubscribed)
                 <div>
                     <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Subscribe for regular checks</h3>
                     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -89,7 +91,7 @@
                         </div>
                     </div>
                 </div>
-            @endunless
+            @endif
 
             <div>
                 <div class="flex justify-between items-center mb-3">

@@ -4,13 +4,19 @@ return [
 
     'currency' => 'GBP',
 
-    // Temporary launch flag — ValeCheck Rebuild (£14.99) and its
-    // subscription plans (Trader/Pro/Dealer, which only ever grant Rebuild
-    // allowance) are hidden from the storefront while the AI damage-analysis
-    // product is finished. Flip to true to bring the whole thing back with
-    // no code changes. Credit packs are a ValeCheck Plus feature and are
-    // unaffected by this flag.
+    // Temporary launch flag — ValeCheck Rebuild (£14.99) is hidden from the
+    // storefront while the AI damage-analysis product is finished. Flip to
+    // true to bring it back with no code changes. Credit packs and
+    // subscriptions are ValeCheck Plus features and are unaffected by this
+    // flag — see subscriptions_enabled below.
     'rebuild_enabled' => env('REBUILD_ENABLED', true),
+
+    // Temporary launch flag — subscriptions (Trader/Pro/Dealer) are hidden
+    // until their Stripe recurring prices are set up (STRIPE_PRICE_TRADER/
+    // PRO/DEALER) and there's time to test them properly. Defaults to
+    // hidden so a missing env var never accidentally exposes an untested
+    // feature. Credit packs are unaffected by this flag.
+    'subscriptions_enabled' => env('SUBSCRIPTIONS_ENABLED', false),
 
     'vat' => [
         'rate' => 0.20,
