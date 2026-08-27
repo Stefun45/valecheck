@@ -89,6 +89,8 @@
             </p>
         </div>
 
+        @include('livewire.vehicle-check.partials.mileage-chart', ['history' => $history])
+
         @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $history])
 
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">

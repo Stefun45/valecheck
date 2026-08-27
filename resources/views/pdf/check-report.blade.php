@@ -61,6 +61,8 @@
         </tr>
     </table>
 
+    @include('pdf.partials.mileage-chart', ['history' => $history])
+
     @include('pdf.partials.mot-history-table', ['history' => $history])
 
     <div class="section">

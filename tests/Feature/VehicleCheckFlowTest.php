@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\VehicleCheck\ShowCheck;
 use App\Livewire\VehicleCheck\StartCheck;
 use App\Models\Payment;
+use App\Models\Report;
 use App\Models\SubscriptionUsage;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -12,6 +13,7 @@ use App\Models\VehicleCheck;
 use App\Models\VehicleHistory;
 use App\Services\Credits\CreditLedgerService;
 use App\Services\Payments\StripeCheckoutCompletionHandler;
+use App\Services\Reports\ReportPdfService;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -527,5 +529,60 @@ class VehicleCheckFlowTest extends TestCase
 
         $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
         $this->assertStringContainsString('Offside rear brake disc worn', $pdfHtml);
+    }
+
+    public function test_a_mileage_chart_is_shown_when_there_are_at_least_two_mot_tests(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'mot_history' => [
+                ['test_date' => '2022-06-01', 'result' => 'pass', 'mileage' => 15000, 'advisories' => []],
+                ['test_date' => '2023-06-01', 'result' => 'pass', 'mileage' => 24000, 'advisories' => []],
+            ],
+        ]);
+
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Test summary.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Mileage Over Time')
+            ->assertSeeHtml('<polyline')
+            ->assertDontSeeText('Not enough MOT history');
+
+        // Must not break dompdf generation — real rendering, not just a
+        // string check, since SVG support varies across PDF renderers.
+        Storage::fake('local');
+        $report = app(ReportPdfService::class)->generate($check->fresh());
+        $this->assertNotNull($report->pdf_path);
+    }
+
+    public function test_the_mileage_chart_gracefully_handles_a_single_mot_test(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'mot_history' => [
+                ['test_date' => '2024-06-01', 'result' => 'pass', 'mileage' => 24000, 'advisories' => []],
+            ],
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Not enough MOT history to show a mileage trend.');
     }
 }
