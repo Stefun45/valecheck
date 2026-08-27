@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Listeners\SendWelcomeEmail;
 use App\Services\Ai\AiProvider;
 use App\Services\Ai\AnthropicProvider;
 use App\Services\Ai\OpenAiProvider;
@@ -20,8 +19,6 @@ use App\Services\Valuation\MockMarketValuationProvider;
 use App\Services\VehicleData\MockVehicleDataProvider;
 use App\Services\VehicleData\VehicleDataProvider;
 use App\Services\VehicleData\VehicleMaticProvider;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -87,6 +84,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Event::listen(Registered::class, SendWelcomeEmail::class);
+        //
     }
 }

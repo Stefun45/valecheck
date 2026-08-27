@@ -27,5 +27,11 @@ class WelcomeEmailTest extends TestCase
         $user = User::where('email', 'welcome-test@example.com')->firstOrFail();
 
         Mail::assertSent(WelcomeEmail::class, fn (WelcomeEmail $mail) => $mail->hasTo($user->email));
+
+        // Registration must fire exactly one welcome email — Laravel
+        // auto-discovers listeners with a handle(Event) method, so an
+        // explicit Event::listen() for the same pair registers it twice
+        // and silently doubles every send.
+        Mail::assertSent(WelcomeEmail::class, 1);
     }
 }
