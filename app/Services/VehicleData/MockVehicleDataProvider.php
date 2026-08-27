@@ -6,9 +6,9 @@ use App\DataTransferObjects\VehicleData;
 use Carbon\Carbon;
 
 /**
- * Deterministic simulated VehicleMatic-shaped data, keyed off the
- * registration so the same plate always returns the same result. Used
- * until real VehicleMatic API credentials/documentation are supplied.
+ * Deterministic simulated vehicle data, keyed off the registration so the
+ * same plate always returns the same result. Used for local development
+ * and tests instead of calling One Auto API.
  */
 class MockVehicleDataProvider implements VehicleDataProvider
 {
@@ -33,7 +33,7 @@ class MockVehicleDataProvider implements VehicleDataProvider
         'Rear number plate lamp not working',
     ];
 
-    public function getVehicle(string $registration): VehicleData
+    public function getVehicle(string $registration, ?int $vehicleCheckId = null): VehicleData
     {
         $registration = strtoupper(preg_replace('/\s+/', '', $registration));
         $seed = $this->seedFor($registration);

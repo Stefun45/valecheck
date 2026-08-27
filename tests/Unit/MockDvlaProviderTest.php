@@ -23,7 +23,7 @@ class MockDvlaProviderTest extends TestCase
     {
         // DVLA VES genuinely doesn't return model/derivative data — the
         // mock must stay honest to that, even though the DTO itself now
-        // supports a model field for other providers (e.g. VehicleMatic).
+        // supports a model field for other providers (e.g. One Auto).
         $provider = new MockDvlaProvider;
 
         $this->assertNull($provider->preview('AB12CDE')->model);

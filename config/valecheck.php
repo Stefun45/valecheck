@@ -165,34 +165,40 @@ return [
         'fixed' => 0.20,
     ],
 
-    // The expensive "Full Vehicle Check" — write-off, finance, stolen,
-    // keeper, mileage history and market valuation. Only ever called once a
-    // report is funded (free credit, subscription allowance, or payment) —
-    // never on demand.
+    // One Auto API (https://docs.oneautoapi.com/) — the paid "Full Vehicle
+    // Check" equivalent (Experian AutoCheck for identity+provenance, One
+    // Auto's own MOT History & Tax Status), plus the Brego valuation used
+    // for ValeCheck Plus. Only ever called once a report is funded (free
+    // credit, subscription allowance, or payment) — never on demand.
+    // cost_per_lookup_net is per API call, not per report — a Check report
+    // makes 2 calls (AutoCheck + MOT/Tax), Plus makes 3 (+ Brego
+    // valuation); see ProviderLookupLog for the real count. Depends on
+    // which One Auto plan tier (PrePay/Business/Enterprise/Bespoke) is
+    // active — set once known, not guessed here.
     'vehicle_data' => [
         'provider' => env('VEHICLE_DATA_PROVIDER', 'mock'),
-        'vehiclematic' => [
-            'api_key' => env('VEHICLEMATIC_API_KEY'),
-            'base_url' => env('VEHICLEMATIC_BASE_URL', 'https://vehiclematic.com/products/full-vehicle-check/api/live'),
-            'cost_per_lookup_net' => 2.95,
+        'oneauto' => [
+            'api_key' => env('ONEAUTO_API_KEY'),
+            'base_url' => env('ONEAUTO_BASE_URL', 'https://api.oneautoapi.com'),
+            'cost_per_lookup_net' => (float) env('ONEAUTO_COST_PER_LOOKUP_NET', 0),
+            // How long a MOT History & Tax Status lookup is cached per
+            // registration — shared between the free preview and the paid
+            // report, so previewing then buying within this window doesn't
+            // trigger a second paid call for the same data.
+            'preview_cache_minutes' => (int) env('ONEAUTO_PREVIEW_CACHE_MINUTES', 30),
         ],
     ],
 
-    // The cheap "is this your vehicle?" preview (make/model/colour/fuel/
+    // The free "is this your vehicle?" preview (make/model/colour/fuel/
     // year/MOT/tax) shown when the user clicks "Check Vehicle", before any
-    // payment or credit is spent. DVLA is free but has no model field;
-    // VehicleMatic's "Vehicle Details" product costs ~£0.15/lookup and does
-    // include model.
+    // payment or credit is spent. DVLA is free but has no model field.
+    // 'oneauto' reuses vehicle_data.oneauto above — no separate config,
+    // since it shares the same MOT/Tax call and cache as the paid report.
     'registration_lookup' => [
         'provider' => env('REGISTRATION_LOOKUP_PROVIDER', 'mock'),
         'dvla' => [
             'api_key' => env('DVLA_API_KEY'),
             'base_url' => env('DVLA_BASE_URL', 'https://driver-vehicle-licensing.api.gov.uk'),
-        ],
-        'vehiclematic' => [
-            'api_key' => env('VEHICLEMATIC_API_KEY'),
-            'base_url' => env('VEHICLEMATIC_BASIC_BASE_URL', 'https://vehiclematic.com/products/vehicle-details/api/live'),
-            'cost_per_lookup_net' => 0.15,
         ],
     ],
 

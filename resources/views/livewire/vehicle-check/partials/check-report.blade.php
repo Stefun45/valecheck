@@ -36,32 +36,7 @@
             </dl>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Write-Off History</h3>
-            @if ($history?->isWrittenOff())
-                <p class="text-vale-red font-semibold">Category {{ $history->write_off_category }} recorded</p>
-                <p class="text-sm text-gray-500 mt-1">Date: {{ optional($history->write_off_date)->format('d M Y') ?? 'Unknown' }}</p>
-            @else
-                <p class="text-vale-navy">No write-off history recorded.</p>
-            @endif
-        </div>
-
-        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Finance</h3>
-            <p class="{{ $history?->finance_marker ? 'text-vale-red font-semibold' : 'text-vale-navy' }}">
-                {{ $history?->finance_marker ? 'Finance marker detected' : 'No finance marker found' }}
-            </p>
-        </div>
-
-        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Stolen / Scrapped</h3>
-            <p class="{{ $history?->stolen_marker ? 'text-vale-red font-semibold' : 'text-vale-navy' }}">
-                Stolen: {{ $history?->stolen_marker ? 'Marker found' : 'No marker found' }}
-            </p>
-            <p class="{{ $history?->scrapped_marker ? 'text-vale-red font-semibold' : 'text-vale-navy' }} mt-1">
-                Scrapped: {{ $history?->scrapped_marker ? 'Marker found' : 'No marker found' }}
-            </p>
-        </div>
+        @include('livewire.vehicle-check.partials.provenance-facts', ['history' => $history])
 
         @include('livewire.vehicle-check.partials.mileage-chart', ['history' => $history])
 
@@ -71,7 +46,7 @@
             <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Keeper / Registration History</h3>
             <p class="text-vale-navy">Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
             <p class="text-vale-navy mt-1">Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
-            <p class="text-vale-navy mt-1">Imported: {{ $history?->imported ? 'Yes' : 'No' }}</p>
+            <p class="text-vale-navy mt-1">Imported: {{ is_null($history?->imported) ? 'Unavailable' : ($history->imported ? 'Yes' : 'No') }}</p>
         </div>
 
         @if (! empty($report?->listing_gaps))

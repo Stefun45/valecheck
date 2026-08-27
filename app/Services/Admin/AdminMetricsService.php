@@ -7,6 +7,7 @@ use App\Models\Commission;
 use App\Models\Creator;
 use App\Models\ListingImport;
 use App\Models\Payment;
+use App\Models\ProviderLookupLog;
 use App\Models\Referral;
 use App\Models\User;
 use App\Models\VehicleCheck;
@@ -30,11 +31,13 @@ class AdminMetricsService
         $revenueExVat = (float) Payment::where('status', Payment::STATUS_PAID)->sum('net');
         $paidPaymentsCount = Payment::where('status', Payment::STATUS_PAID)->count();
 
-        // Every completed report (any tier) involves exactly one Full
-        // Vehicle Check lookup — Plus's market valuation comes from the same
-        // response, at no extra API cost.
-        $costPerLookup = (float) config('valecheck.vehicle_data.vehiclematic.cost_per_lookup_net');
-        $apiSpend = ($completedCheck + $completedPlus + $completedRebuild) * $costPerLookup;
+        // Cost per API call (not per report — a Check report makes 2 One
+        // Auto calls, Plus makes 3) times the actual number of successful
+        // calls logged, so this reflects real usage rather than an
+        // assumed count per report.
+        $costPerLookup = (float) config('valecheck.vehicle_data.oneauto.cost_per_lookup_net');
+        $successfulLookups = ProviderLookupLog::where('status', ProviderLookupLog::STATUS_SUCCESS)->count();
+        $apiSpend = $successfulLookups * $costPerLookup;
 
         $aiSpend = (float) AiUsage::where('success', true)->get()
             ->sum(fn (AiUsage $usage) => (float) ($usage->actual_cost ?? $usage->estimated_cost ?? 0));
@@ -45,11 +48,15 @@ class AdminMetricsService
         $totalCosts = $apiSpend + $aiSpend + $paymentCost;
         $contributionMargin = $revenue - $totalCosts;
 
+        // Check = AutoCheck + MOT/Tax (2 calls). Plus = + Brego valuation
+        // (3 calls) — unless the MOT/Tax call was already served from the
+        // preview's cache, in which case actual spend is lower than this
+        // estimate; see the real per-report count in Provider Lookups.
         $avgPaymentCost = $paidPaymentsCount > 0 ? $paymentCost / $paidPaymentsCount : 0;
-        $avgCostPerCheck = $completedCheck > 0 ? $costPerLookup + $avgPaymentCost : 0;
-        $avgCostPerPlus = $completedPlus > 0 ? $costPerLookup + $avgPaymentCost : 0;
+        $avgCostPerCheck = $completedCheck > 0 ? (2 * $costPerLookup) + $avgPaymentCost : 0;
+        $avgCostPerPlus = $completedPlus > 0 ? (3 * $costPerLookup) + $avgPaymentCost : 0;
         $avgAiCostPerRebuild = $completedRebuild > 0 ? $aiSpend / $completedRebuild : 0;
-        $avgCostPerRebuild = $completedRebuild > 0 ? $costPerLookup + $avgAiCostPerRebuild + $avgPaymentCost : 0;
+        $avgCostPerRebuild = $completedRebuild > 0 ? (2 * $costPerLookup) + $avgAiCostPerRebuild + $avgPaymentCost : 0;
 
         return [
             'users_count' => User::count(),

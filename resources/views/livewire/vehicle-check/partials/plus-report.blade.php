@@ -30,7 +30,7 @@
     <div class="grid sm:grid-cols-3 gap-4">
         <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
             <p class="text-xs uppercase tracking-widest text-gray-400">Estimated Retail Value</p>
-            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($cleanValue ?? 0, 0) }}</p>
+            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">{{ $cleanValue ? '£'.number_format($cleanValue, 0) : '—' }}</p>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
             <p class="text-xs uppercase tracking-widest text-gray-400">Asking Price</p>
@@ -66,32 +66,7 @@
             </dl>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Write-Off History</h3>
-            @if ($history?->isWrittenOff())
-                <p class="text-vale-red font-semibold">Category {{ $history->write_off_category }} recorded</p>
-                <p class="text-sm text-gray-500 mt-1">Date: {{ optional($history->write_off_date)->format('d M Y') ?? 'Unknown' }}</p>
-            @else
-                <p class="text-vale-navy">No write-off history recorded.</p>
-            @endif
-        </div>
-
-        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Finance</h3>
-            <p class="{{ $history?->finance_marker ? 'text-vale-red font-semibold' : 'text-vale-navy' }}">
-                {{ $history?->finance_marker ? 'Finance marker detected' : 'No finance marker found' }}
-            </p>
-        </div>
-
-        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Stolen / Scrapped</h3>
-            <p class="{{ $history?->stolen_marker ? 'text-vale-red font-semibold' : 'text-vale-navy' }}">
-                Stolen: {{ $history?->stolen_marker ? 'Marker found' : 'No marker found' }}
-            </p>
-            <p class="{{ $history?->scrapped_marker ? 'text-vale-red font-semibold' : 'text-vale-navy' }} mt-1">
-                Scrapped: {{ $history?->scrapped_marker ? 'Marker found' : 'No marker found' }}
-            </p>
-        </div>
+        @include('livewire.vehicle-check.partials.provenance-facts', ['history' => $history])
 
         @include('livewire.vehicle-check.partials.mileage-chart', ['history' => $history])
 
@@ -99,19 +74,23 @@
 
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
             <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Market Assessment</h3>
-            <dl class="grid sm:grid-cols-3 gap-4 text-sm">
-                <div><dt class="text-gray-400">Trade value</dt><dd class="text-vale-navy font-semibold">£{{ number_format($valuation->trade_value ?? 0, 0) }}</dd></div>
-                <div><dt class="text-gray-400">Retail value</dt><dd class="text-vale-navy font-semibold">£{{ number_format($valuation->retail_value ?? 0, 0) }}</dd></div>
-                <div><dt class="text-gray-400">Private value</dt><dd class="text-vale-navy font-semibold">£{{ number_format($valuation->private_value ?? 0, 0) }}</dd></div>
-            </dl>
-            <p class="text-xs text-gray-400 mt-3">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
+            @if ($cleanValue === null)
+                <p class="text-gray-400">Valuation unavailable for this vehicle.</p>
+            @else
+                <dl class="grid sm:grid-cols-3 gap-4 text-sm">
+                    <div><dt class="text-gray-400">Trade value</dt><dd class="text-vale-navy font-semibold">{{ $valuation->trade_value ? '£'.number_format($valuation->trade_value, 0) : '—' }}</dd></div>
+                    <div><dt class="text-gray-400">Retail value</dt><dd class="text-vale-navy font-semibold">{{ $valuation->retail_value ? '£'.number_format($valuation->retail_value, 0) : '—' }}</dd></div>
+                    <div><dt class="text-gray-400">Private value</dt><dd class="text-vale-navy font-semibold">{{ $valuation->private_value ? '£'.number_format($valuation->private_value, 0) : '—' }}</dd></div>
+                </dl>
+                <p class="text-xs text-gray-400 mt-3">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
+            @endif
         </div>
 
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
             <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Keeper / Registration History</h3>
             <p class="text-vale-navy">Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
             <p class="text-vale-navy mt-1">Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
-            <p class="text-vale-navy mt-1">Imported: {{ $history?->imported ? 'Yes' : 'No' }}</p>
+            <p class="text-vale-navy mt-1">Imported: {{ is_null($history?->imported) ? 'Unavailable' : ($history->imported ? 'Yes' : 'No') }}</p>
         </div>
 
         @if (! empty($report?->listing_gaps))

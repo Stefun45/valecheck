@@ -10,15 +10,18 @@ use App\Services\ListingImport\CopartListingProvider;
 use App\Services\ListingImport\EbayListingProvider;
 use App\Services\ListingImport\GenericPublicListingProvider;
 use App\Services\ListingImport\ListingImportService;
+use App\Services\OneAuto\MotHistoryAndTaxStatusFetcher;
+use App\Services\OneAuto\OneAutoClient;
 use App\Services\RegistrationLookup\DvlaVesProvider;
 use App\Services\RegistrationLookup\MockDvlaProvider;
-use App\Services\RegistrationLookup\VehicleMaticBasicProvider;
+use App\Services\RegistrationLookup\OneAutoBasicProvider;
 use App\Services\RegistrationLookup\VehicleSpecPreviewProvider;
 use App\Services\Valuation\MarketValuationProvider;
 use App\Services\Valuation\MockMarketValuationProvider;
+use App\Services\Valuation\OneAutoMarketValuationProvider;
 use App\Services\VehicleData\MockVehicleDataProvider;
+use App\Services\VehicleData\OneAutoVehicleDataProvider;
 use App\Services\VehicleData\VehicleDataProvider;
-use App\Services\VehicleData\VehicleMaticProvider;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,11 +31,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(VehicleDataProvider::class, function () {
+        $this->app->singleton(OneAutoClient::class, function () {
+            return new OneAutoClient(
+                config('valecheck.vehicle_data.oneauto.api_key'),
+                config('valecheck.vehicle_data.oneauto.base_url'),
+            );
+        });
+
+        $this->app->bind(VehicleDataProvider::class, function ($app) {
             return match (strtolower((string) config('valecheck.vehicle_data.provider'))) {
-                'vehiclematic' => new VehicleMaticProvider(
-                    config('valecheck.vehicle_data.vehiclematic.api_key'),
-                    config('valecheck.vehicle_data.vehiclematic.base_url'),
+                'oneauto' => new OneAutoVehicleDataProvider(
+                    $app->make(OneAutoClient::class),
+                    $app->make(MotHistoryAndTaxStatusFetcher::class),
                 ),
                 default => new MockVehicleDataProvider,
             };
@@ -51,7 +61,12 @@ class AppServiceProvider extends ServiceProvider
             };
         });
 
-        $this->app->bind(MarketValuationProvider::class, MockMarketValuationProvider::class);
+        $this->app->bind(MarketValuationProvider::class, function ($app) {
+            return match (strtolower((string) config('valecheck.vehicle_data.provider'))) {
+                'oneauto' => new OneAutoMarketValuationProvider($app->make(OneAutoClient::class)),
+                default => new MockMarketValuationProvider,
+            };
+        });
 
         // Checked in this order — named marketplace providers get first
         // refusal, GenericPublicListingProvider is the catch-all fallback.
@@ -64,16 +79,13 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
 
-        $this->app->bind(VehicleSpecPreviewProvider::class, function () {
+        $this->app->bind(VehicleSpecPreviewProvider::class, function ($app) {
             return match (strtolower((string) config('valecheck.registration_lookup.provider'))) {
                 'dvla' => new DvlaVesProvider(
                     config('valecheck.registration_lookup.dvla.api_key'),
                     config('valecheck.registration_lookup.dvla.base_url'),
                 ),
-                'vehiclematic' => new VehicleMaticBasicProvider(
-                    config('valecheck.registration_lookup.vehiclematic.api_key'),
-                    config('valecheck.registration_lookup.vehiclematic.base_url'),
-                ),
+                'oneauto' => new OneAutoBasicProvider($app->make(MotHistoryAndTaxStatusFetcher::class)),
                 default => new MockDvlaProvider,
             };
         });

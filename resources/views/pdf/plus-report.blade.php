@@ -22,7 +22,7 @@
             <td width="33%">
                 <div class="section">
                     <div class="section-title">Estimated Retail Value</div>
-                    <p style="font-size:16px; font-weight:bold;">£{{ number_format($cleanValue ?? 0, 0) }}</p>
+                    <p style="font-size:16px; font-weight:bold;">{{ $cleanValue ? '£'.number_format($cleanValue, 0) : '—' }}</p>
                 </div>
             </td>
             <td width="33%">
@@ -51,49 +51,21 @@
         <p>{{ $report?->headline_summary }}</p>
     </div>
 
+    <div class="section">
+        <div class="section-title">Vehicle Summary</div>
+        <table class="data">
+            <tr><td>VIN</td><td>{{ $vehicle->vin ?? '—' }}</td></tr>
+            <tr><td>Year</td><td>{{ $vehicle->year ?? '—' }}</td></tr>
+            <tr><td>Engine</td><td>{{ $vehicle->engine ?? '—' }}</td></tr>
+            <tr><td>Fuel</td><td>{{ $vehicle->fuel ?? '—' }}</td></tr>
+            <tr><td>Transmission</td><td>{{ $vehicle->transmission ?? '—' }}</td></tr>
+            <tr><td>Colour</td><td>{{ $vehicle->colour ?? '—' }}</td></tr>
+        </table>
+    </div>
+
     <table class="grid">
         <tr>
-            <td width="50%">
-                <div class="section">
-                    <div class="section-title">Vehicle Summary</div>
-                    <table class="data">
-                        <tr><td>VIN</td><td>{{ $vehicle->vin ?? '—' }}</td></tr>
-                        <tr><td>Year</td><td>{{ $vehicle->year ?? '—' }}</td></tr>
-                        <tr><td>Engine</td><td>{{ $vehicle->engine ?? '—' }}</td></tr>
-                        <tr><td>Fuel</td><td>{{ $vehicle->fuel ?? '—' }}</td></tr>
-                        <tr><td>Transmission</td><td>{{ $vehicle->transmission ?? '—' }}</td></tr>
-                        <tr><td>Colour</td><td>{{ $vehicle->colour ?? '—' }}</td></tr>
-                    </table>
-                </div>
-            </td>
-            <td width="50%">
-                <div class="section">
-                    <div class="section-title">Write-Off History</div>
-                    @if ($history?->isWrittenOff())
-                        <p class="warn">Category {{ $history->write_off_category }} recorded</p>
-                        <p>Date: {{ optional($history->write_off_date)->format('d M Y') ?? 'Unknown' }}</p>
-                    @else
-                        <p class="ok">No write-off history recorded.</p>
-                    @endif
-                </div>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <div class="section">
-                    <div class="section-title">Finance</div>
-                    <p class="{{ $history?->finance_marker ? 'warn' : 'ok' }}">
-                        {{ $history?->finance_marker ? 'Finance marker detected' : 'No finance marker found' }}
-                    </p>
-                </div>
-            </td>
-            <td>
-                <div class="section">
-                    <div class="section-title">Stolen / Scrapped</div>
-                    <p class="{{ $history?->stolen_marker ? 'warn' : 'ok' }}">Stolen: {{ $history?->stolen_marker ? 'Marker found' : 'No marker found' }}</p>
-                    <p class="{{ $history?->scrapped_marker ? 'warn' : 'ok' }}">Scrapped: {{ $history?->scrapped_marker ? 'Marker found' : 'No marker found' }}</p>
-                </div>
-            </td>
+            @include('pdf.partials.provenance-facts', ['history' => $history])
         </tr>
     </table>
 
@@ -103,22 +75,26 @@
 
     <div class="section">
         <div class="section-title">Market Assessment</div>
-        <table class="data">
-            <tr><th>Trade value</th><th>Retail value</th><th>Private value</th></tr>
-            <tr>
-                <td>£{{ number_format($valuation->trade_value ?? 0, 0) }}</td>
-                <td>£{{ number_format($valuation->retail_value ?? 0, 0) }}</td>
-                <td>£{{ number_format($valuation->private_value ?? 0, 0) }}</td>
-            </tr>
-        </table>
-        <p style="color:#999; font-size:9px; margin-top:6px;">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
+        @if ($cleanValue === null)
+            <p>Valuation unavailable for this vehicle.</p>
+        @else
+            <table class="data">
+                <tr><th>Trade value</th><th>Retail value</th><th>Private value</th></tr>
+                <tr>
+                    <td>{{ $valuation->trade_value ? '£'.number_format($valuation->trade_value, 0) : '—' }}</td>
+                    <td>{{ $valuation->retail_value ? '£'.number_format($valuation->retail_value, 0) : '—' }}</td>
+                    <td>{{ $valuation->private_value ? '£'.number_format($valuation->private_value, 0) : '—' }}</td>
+                </tr>
+            </table>
+            <p style="color:#999; font-size:9px; margin-top:6px;">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
+        @endif
     </div>
 
     <div class="section">
         <div class="section-title">Keeper / Registration History</div>
         <p>Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
         <p>Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
-        <p>Imported: {{ $history?->imported ? 'Yes' : 'No' }}</p>
+        <p>Imported: {{ is_null($history?->imported) ? 'Unavailable' : ($history->imported ? 'Yes' : 'No') }}</p>
     </div>
 
     @if (! empty($report?->listing_gaps))

@@ -28,7 +28,7 @@ class RetrieveVehicleHistory implements ShouldQueue
             'started_at' => $check->started_at ?? now(),
         ]);
 
-        $data = $provider->getVehicle($check->registration);
+        $data = $provider->getVehicle($check->registration, $check->id);
 
         $check->vehicle->update([
             'vin' => $data->vin,

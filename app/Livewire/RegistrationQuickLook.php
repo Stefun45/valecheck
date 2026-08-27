@@ -10,9 +10,9 @@ use Throwable;
 /**
  * "Is this your vehicle?" — fired explicitly by a "Check Vehicle" click
  * (never on every keystroke) since a real lookup can cost real money via
- * VehicleMatic's per-lookup "Vehicle Details" product. Confirming navigates
- * into the full check flow; rejecting lets the user correct the plate
- * without spending another lookup until they click again.
+ * One Auto's MOT History & Tax Status call. Confirming navigates into the
+ * full check flow; rejecting lets the user correct the plate without
+ * spending another lookup until they click again.
  */
 class RegistrationQuickLook extends Component
 {

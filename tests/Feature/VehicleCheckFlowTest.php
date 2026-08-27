@@ -626,4 +626,64 @@ class VehicleCheckFlowTest extends TestCase
         $report = app(ReportPdfService::class)->generate($check->fresh());
         $this->assertNotNull($report->pdf_path);
     }
+
+    public function test_missing_provenance_data_shows_unavailable_never_clean(): void
+    {
+        // End-to-end version of the exact bug that took VehicleMatic out of
+        // production — a null marker must render as "unavailable", never
+        // be silently read as "checked and clean".
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'finance_marker' => null,
+            'stolen_marker' => null,
+            'scrapped_marker' => null,
+        ]);
+
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Test summary.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Finance data unavailable')
+            ->assertSeeText('Stolen check unavailable')
+            ->assertSeeText('Scrapped check unavailable')
+            ->assertDontSeeText('No finance marker found')
+            ->assertDontSeeText('No marker found');
+
+        $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('Finance data unavailable', $pdfHtml);
+    }
+
+    public function test_a_plus_report_with_unavailable_valuation_still_renders_the_rest(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'finance_marker' => false,
+            'stolen_marker' => false,
+        ]);
+
+        // No VehicleValuation row at all — the valuation lookup failed
+        // entirely, exactly the "missing valuation" scenario from the brief.
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test summary.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Valuation unavailable for this vehicle.')
+            ->assertSeeText('No finance marker found');
+    }
 }
