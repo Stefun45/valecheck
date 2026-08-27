@@ -20,7 +20,7 @@
     <div class="section">
         <div class="section-title">Vehicle Summary</div>
         <table class="data">
-            <tr><td>VIN</td><td>{{ $vehicle->vin ?? '—' }}</td></tr>
+            <tr><td>VIN</td><td>{{ $vehicle->maskedVin() ?? '—' }}</td></tr>
             <tr><td>Year</td><td>{{ $vehicle->year ?? '—' }}</td></tr>
             <tr><td>Engine</td><td>{{ $vehicle->engine ?? '—' }}</td></tr>
             <tr><td>Fuel</td><td>{{ $vehicle->fuel ?? '—' }}</td></tr>

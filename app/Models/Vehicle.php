@@ -21,4 +21,19 @@ class Vehicle extends Model
     {
         return trim("{$this->year} {$this->make} {$this->model} {$this->derivative}");
     }
+
+    /**
+     * The full VIN is stored (needed for the provider lookup and any
+     * future audit trail) but must never be shown to the customer —
+     * reports only ever display the last 5 characters, matching standard
+     * practice for vehicle-history products.
+     */
+    public function maskedVin(): ?string
+    {
+        if (! $this->vin) {
+            return null;
+        }
+
+        return '••••••••••••'.substr($this->vin, -5);
+    }
 }

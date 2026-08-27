@@ -166,7 +166,7 @@
                                 @php $field = $importPreview['fields'][$key] ?? ['found' => false, 'value' => null]; @endphp
                                 <li class="flex items-start gap-2">
                                     <span class="{{ $field['found'] ? 'text-green-600' : 'text-gray-300' }}">{{ $field['found'] ? '✓' : '⚠' }}</span>
-                                    <span>{{ $label }}@if ($field['found']): {{ \Illuminate\Support\Str::limit((string) $field['value'], 60) }}@endif</span>
+                                    <span>{{ $label }}@if ($field['found']): {{ $key === 'vin' ? '••••••••••••'.substr((string) $field['value'], -5) : \Illuminate\Support\Str::limit((string) $field['value'], 60) }}@endif</span>
                                 </li>
                             @endforeach
                         </ul>

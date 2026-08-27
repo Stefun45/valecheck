@@ -27,7 +27,7 @@
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Vehicle Summary</h3>
             <dl class="space-y-1 text-sm">
-                <div class="flex justify-between"><dt class="text-gray-500">VIN</dt><dd class="text-vale-navy font-mono">{{ $vehicle->vin ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">VIN</dt><dd class="text-vale-navy font-mono">{{ $vehicle->maskedVin() ?? '—' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Year</dt><dd class="text-vale-navy">{{ $vehicle->year ?? '—' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Engine</dt><dd class="text-vale-navy">{{ $vehicle->engine ?? '—' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Fuel</dt><dd class="text-vale-navy">{{ $vehicle->fuel ?? '—' }}</dd></div>

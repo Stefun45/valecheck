@@ -686,4 +686,27 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSeeText('Valuation unavailable for this vehicle.')
             ->assertSeeText('No finance marker found');
     }
+
+    public function test_the_full_vin_never_appears_in_the_report_or_pdf_only_the_last_five(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+        $check->vehicle->update(['vin' => 'WVWZZZ1JZXW000001']);
+
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Test summary.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertDontSee('WVWZZZ1JZXW000001')
+            ->assertSeeText('00001');
+
+        $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
+        $this->assertStringNotContainsString('WVWZZZ1JZXW000001', $pdfHtml);
+        $this->assertStringContainsString('00001', $pdfHtml);
+    }
 }
