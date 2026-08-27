@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CaptureReferralCode;
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\RequireSitePassword;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+        ]);
+
+        $middleware->web(prepend: [
+            RequireSitePassword::class,
         ]);
 
         $middleware->web(append: [

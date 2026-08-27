@@ -18,6 +18,13 @@ return [
     // feature. Credit packs are unaffected by this flag.
     'subscriptions_enabled' => env('SUBSCRIPTIONS_ENABLED', false),
 
+    // Temporary pre-launch gate — when set, the entire site requires this
+    // password (HTTP Basic Auth) before anyone can reach it, so it can't be
+    // stumbled onto and used for free before payments are fully tested.
+    // Empty/unset is a complete no-op — clear it in production to go fully
+    // live with no code changes. See App\Http\Middleware\RequireSitePassword.
+    'site_password' => env('SITE_PASSWORD'),
+
     'vat' => [
         'rate' => 0.20,
     ],
