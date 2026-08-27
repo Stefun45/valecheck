@@ -177,6 +177,26 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSee('drag and drop photographs');
     }
 
+    public function test_plus_details_step_only_asks_for_asking_price(): void
+    {
+        // Mileage and listing description only feed Rebuild's AI-generated
+        // explanation — Plus's headline is a deterministic comparison of
+        // asking price against the computed valuation, so mileage/listing
+        // description aren't collected for Plus at all.
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'AB12CDE')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->call('choose', 'plus')
+            ->assertSet('step', 'details')
+            ->assertSee('Asking price')
+            ->assertDontSee('Mileage')
+            ->assertDontSee('Listing description');
+    }
+
     public function test_user_can_submit_a_rebuild_check_funded_by_a_purchased_credit(): void
     {
         Storage::fake('local');

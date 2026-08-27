@@ -107,21 +107,28 @@
     @if ($step === 'details')
         <div class="mb-8">
             <h1 class="font-display font-bold text-2xl text-vale-navy">Tell us about the listing</h1>
-            <p class="text-gray-500 mt-1">The more detail you give us, the more accurate your {{ $type === 'rebuild' ? 'ValeCheck Rebuild' : 'ValeCheck Plus' }} report.</p>
+            <p class="text-gray-500 mt-1">
+                @if ($type === 'rebuild')
+                    The more detail you give us, the more accurate your ValeCheck Rebuild report.
+                @else
+                    Add the asking price if you have it, so we can show you how it compares to our valuation — everything else is optional.
+                @endif
+            </p>
         </div>
 
         <form wire:submit="submit" class="space-y-6">
-            <div class="grid sm:grid-cols-2 gap-4">
+            <div class="grid {{ $type === 'rebuild' ? 'sm:grid-cols-2' : 'max-w-sm' }} gap-4">
                 <div>
-                    <x-input-label for="mileage" value="Mileage" />
-                    <x-text-input wire:model="mileage" id="mileage" type="number" class="block mt-1 w-full" />
-                    <x-input-error :messages="$errors->get('mileage')" class="mt-2" />
-                </div>
-                <div>
-                    <x-input-label for="asking_price" value="Asking price (£)" />
+                    <x-input-label for="asking_price" value="Asking price (£, optional)" />
                     <x-text-input wire:model="asking_price" id="asking_price" type="number" step="0.01" class="block mt-1 w-full" />
+                    <x-input-error :messages="$errors->get('asking_price')" class="mt-2" />
                 </div>
                 @if ($type === 'rebuild')
+                    <div>
+                        <x-input-label for="mileage" value="Mileage" />
+                        <x-text-input wire:model="mileage" id="mileage" type="number" class="block mt-1 w-full" />
+                        <x-input-error :messages="$errors->get('mileage')" class="mt-2" />
+                    </div>
                     <div>
                         <x-input-label for="current_bid" value="Current bid (£)" />
                         <x-text-input wire:model="current_bid" id="current_bid" type="number" step="0.01" class="block mt-1 w-full" />
@@ -186,12 +193,12 @@
                 @endif
             </div>
 
-            <div>
-                <x-input-label for="listing_description" value="Listing description" />
-                <textarea wire:model="listing_description" id="listing_description" rows="4" class="block mt-1 w-full rounded-md border-gray-300 text-vale-navy shadow-sm focus:border-vale-red focus:ring-vale-red"></textarea>
-            </div>
-
             @if ($type === 'rebuild')
+                <div>
+                    <x-input-label for="listing_description" value="Listing description" />
+                    <textarea wire:model="listing_description" id="listing_description" rows="4" class="block mt-1 w-full rounded-md border-gray-300 text-vale-navy shadow-sm focus:border-vale-red focus:ring-vale-red"></textarea>
+                </div>
+
                 <div>
                     <x-input-label value="Photographs" />
 
