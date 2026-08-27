@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\VehicleCheck\ShowCheck;
 use App\Livewire\VehicleCheck\StartCheck;
 use App\Models\Payment;
 use App\Models\SubscriptionUsage;
@@ -349,6 +350,26 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertNull($check->damageAnalysis);
         $this->assertNull($check->repairEstimate);
         $this->assertNull($check->bidRecommendation);
+    }
+
+    public function test_a_completed_plus_report_shows_the_same_full_vehicle_check_as_check(): void
+    {
+        // Plus = Check + valuation, not valuation instead of Check — the
+        // report must include everything Check's report does (vehicle
+        // spec, stolen/scrapped markers, full MOT history) on top of its
+        // own valuation content.
+        $user = $this->verifiedUser();
+
+        $check = $this->completeViaPurchase($user, VehicleCheck::TYPE_PLUS, 'PL2VFUL');
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Vehicle Summary')
+            ->assertSeeText('Stolen / Scrapped')
+            ->assertSeeText('MOT & Mileage')
+            ->assertSeeText('Keeper / Registration History')
+            ->assertSeeText('Market Assessment');
     }
 
     public function test_a_completed_rebuild_report_has_everything_plus_has_all_the_way(): void
