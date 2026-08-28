@@ -7,6 +7,7 @@ use App\Jobs\CalculateDealScore;
 use App\Jobs\CalculateMaximumBid;
 use App\Jobs\CalculateRepair;
 use App\Jobs\GenerateReport;
+use App\Jobs\RetrieveSalvageAuctionHistory;
 use App\Jobs\RetrieveValuation;
 use App\Jobs\RetrieveVehicleHistory;
 use App\Models\VehicleCheck;
@@ -32,6 +33,7 @@ class VehicleCheckPipeline
             $vehicleCheck->needsValuation() => [
                 new RetrieveVehicleHistory($id),
                 new RetrieveValuation($id),
+                new RetrieveSalvageAuctionHistory($id),
                 new GenerateReport($id),
             ],
             default => [

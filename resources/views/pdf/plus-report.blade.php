@@ -9,6 +9,7 @@
     $askingPrice = $check->asking_price ? (float) $check->asking_price : null;
     $cleanValue = $valuation?->clean_value ? (float) $valuation->clean_value : null;
     $pricePositionPct = ($askingPrice && $cleanValue) ? (($askingPrice - $cleanValue) / $cleanValue) * 100 : null;
+    $reportUrl = route('vehicle-checks.show', $check);
 @endphp
 
 @section('content')
@@ -90,6 +91,8 @@
             <p style="color:#999; font-size:9px; margin-top:6px;">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
         @endif
     </div>
+
+    @include('pdf.partials.salvage-auction-history', ['salvageAuctionCheck' => $check->salvageAuctionCheck, 'reportUrl' => $reportUrl])
 
     <div class="section">
         <div class="section-title">Keeper / Registration History</div>

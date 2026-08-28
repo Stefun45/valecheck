@@ -6,6 +6,7 @@ use App\Livewire\VehicleCheck\ShowCheck;
 use App\Livewire\VehicleCheck\StartCheck;
 use App\Models\Payment;
 use App\Models\Report;
+use App\Models\SalvageAuctionCheck;
 use App\Models\SubscriptionUsage;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -719,6 +720,80 @@ class VehicleCheckFlowTest extends TestCase
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Valuation unavailable for this vehicle.')
             ->assertSeeText('No finance marker found');
+    }
+
+    public function test_a_plus_report_shows_salvage_auction_photos_and_details_when_a_record_is_found(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+        SalvageAuctionCheck::create([
+            'vehicle_check_id' => $check->id,
+            'record_found' => true,
+            'records' => [[
+                'lotDescription' => 'Category N — front end collision damage',
+                'lotDate' => '2024-03-01',
+                'mileage' => 32000,
+                'primaryDamageDescription' => 'Front bumper and headlight',
+                'secondaryDamageDescription' => 'Nearside front wing',
+                'location' => 'Copart Bedford',
+                'imageUrls' => ['https://example.com/photo1.jpg'],
+            ]],
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Salvage Auction History')
+            ->assertSeeText('Copart Bedford')
+            ->assertSeeText('Front bumper and headlight')
+            ->assertSeeHtml('https://example.com/photo1.jpg');
+
+        // Photographs are shown on the web report (browser-fetched) but not
+        // embedded in the PDF, since dompdf has isRemoteEnabled disabled to
+        // avoid server-side SSRF on third-party-sourced image URLs.
+        $pdfHtml = view('pdf.plus-report', ['check' => $check])->render();
+
+        $this->assertStringContainsString('Salvage Auction History', $pdfHtml);
+        $this->assertStringContainsString('Copart Bedford', $pdfHtml);
+        $this->assertStringNotContainsString('https://example.com/photo1.jpg', $pdfHtml);
+        $this->assertStringContainsString(route('vehicle-checks.show', $check), $pdfHtml);
+    }
+
+    public function test_a_plus_report_shows_no_salvage_record_found_when_there_is_none(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+        SalvageAuctionCheck::create(['vehicle_check_id' => $check->id, 'record_found' => false, 'records' => []]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('No salvage auction record found for this vehicle.');
+    }
+
+    public function test_a_completed_purchase_creates_a_salvage_auction_check_for_plus_but_not_for_check(): void
+    {
+        $plusUser = $this->verifiedUser();
+        $plusCheck = $this->completeViaPurchase($plusUser, VehicleCheck::TYPE_PLUS, 'SA1VAGE');
+        $this->assertNotNull($plusCheck->salvageAuctionCheck);
+
+        $checkUser = $this->verifiedUser();
+        $basicCheck = $this->completeViaPurchase($checkUser, VehicleCheck::TYPE_CHECK, 'SA1VNFD');
+        $this->assertNull($basicCheck->fresh()->salvageAuctionCheck);
     }
 
     public function test_the_full_vin_never_appears_in_the_report_or_pdf_only_the_last_five(): void

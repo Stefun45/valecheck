@@ -180,6 +180,11 @@ class VehicleCheck extends Model
         return $this->hasOne(Report::class);
     }
 
+    public function salvageAuctionCheck(): HasOne
+    {
+        return $this->hasOne(SalvageAuctionCheck::class);
+    }
+
     public function aiUsages(): HasMany
     {
         return $this->hasMany(AiUsage::class);
