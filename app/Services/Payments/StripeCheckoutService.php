@@ -64,6 +64,39 @@ class StripeCheckoutService
         );
     }
 
+    public function checkoutForVehicleCheckUpgrade(VehicleCheck $check): Checkout
+    {
+        $price = $this->pricing->forProduct('plus_upgrade');
+        $label = config('valecheck.pricing.plus_upgrade.label');
+
+        $payment = Payment::create([
+            'user_id' => $check->user_id,
+            'type' => Payment::TYPE_PLUS_UPGRADE,
+            'description' => "{$label} — {$check->registration}",
+            'gross' => $price->gross,
+            'net' => $price->net,
+            'vat' => $price->vat,
+            'vat_rate' => $price->vatRate,
+            'currency' => $price->currency,
+            'status' => Payment::STATUS_PENDING,
+        ]);
+
+        return $check->user->checkoutCharge(
+            $this->toMinorUnits($price->gross),
+            $label,
+            1,
+            [
+                'success_url' => route('vehicle-checks.show', $check).'?paid=1',
+                'cancel_url' => route('vehicle-checks.show', $check),
+                'metadata' => [
+                    'kind' => 'vehicle_check_upgrade',
+                    'vehicle_check_id' => (string) $check->id,
+                    'payment_id' => (string) $payment->id,
+                ],
+            ],
+        );
+    }
+
     public function checkoutForCreditPack(User $user, string $packKey): Checkout
     {
         $price = $this->pricing->forCreditPack($packKey);

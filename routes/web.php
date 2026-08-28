@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportPdfController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\VehicleCheckCheckoutController;
+use App\Http\Controllers\VehicleCheckUpgradeController;
 use App\Livewire\VehicleCheck\ReportHistory;
 use App\Livewire\VehicleCheck\ShowCheck;
 use App\Livewire\VehicleCheck\StartCheck;
@@ -52,6 +53,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('checkout/vehicle-check/{vehicleCheck}', [VehicleCheckCheckoutController::class, 'show'])
         ->name('checkout.vehicle-check');
+
+    Route::get('checkout/vehicle-check/{vehicleCheck}/upgrade', [VehicleCheckUpgradeController::class, 'show'])
+        ->name('checkout.vehicle-check.upgrade');
 
     Route::post('billing/credit-pack', [BillingController::class, 'creditPack'])->name('billing.credit-pack');
     Route::post('billing/subscribe', [BillingController::class, 'subscription'])->name('billing.subscribe');

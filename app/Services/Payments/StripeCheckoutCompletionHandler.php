@@ -63,6 +63,7 @@ class StripeCheckoutCompletionHandler
 
         match ($metadata['kind'] ?? null) {
             'vehicle_check' => $this->handleVehicleCheckPayment($metadata, $payment),
+            'vehicle_check_upgrade' => $this->handleVehicleCheckUpgradePayment($metadata, $payment),
             'credit_pack' => $this->handleCreditPackPayment($metadata, $payment),
             default => Log::warning("Stripe checkout.session.completed with unknown metadata kind for payment #{$payment->id}."),
         };
@@ -79,6 +80,29 @@ class StripeCheckoutCompletionHandler
         $check->update(['payment_id' => $payment->id]);
 
         $this->pipeline->dispatch($check);
+    }
+
+    /**
+     * Reuses the same VehicleCheck row rather than creating a new one —
+     * only eligible (completed Check) rows are flipped, so a re-delivered
+     * webhook or a stale/already-upgraded check is a safe no-op.
+     */
+    private function handleVehicleCheckUpgradePayment(array $metadata, Payment $payment): void
+    {
+        $check = VehicleCheck::find($metadata['vehicle_check_id'] ?? null);
+
+        if (! $check || ! $check->isUpgradeable()) {
+            return;
+        }
+
+        $check->update([
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_PROCESSING,
+            'upgrade_payment_id' => $payment->id,
+            'upgraded_at' => now(),
+        ]);
+
+        $this->pipeline->dispatchUpgrade($check);
     }
 
     private function handleCreditPackPayment(array $metadata, Payment $payment): void

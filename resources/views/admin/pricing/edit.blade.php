@@ -51,6 +51,16 @@
                         @endunless
                     </div>
 
+                    <div>
+                        <x-input-label for="plus_upgrade" value="Upgrade to ValeCheck Plus" />
+                        <div class="relative mt-1">
+                            <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">£</span>
+                            <x-text-input id="plus_upgrade" name="plus_upgrade" type="number" step="0.01" min="0.01" class="block w-full pl-7" value="{{ old('plus_upgrade', $prices['plus_upgrade'] ?? '') }}" required />
+                        </div>
+                        <x-input-error :messages="$errors->get('plus_upgrade')" class="mt-2" />
+                        <p class="text-xs text-gray-500 mt-2">Shown on a completed ValeCheck report to upgrade that same report to Plus, without checking the vehicle again.</p>
+                    </div>
+
                     <div class="flex justify-between items-center pt-2">
                         <a href="{{ route('admin.dashboard') }}" class="text-sm text-gray-500 hover:text-vale-navy">Cancel</a>
                         <x-primary-button type="submit">Save Prices</x-primary-button>

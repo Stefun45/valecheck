@@ -92,6 +92,8 @@
         @endif
     </div>
 
+    @include('pdf.partials.tax-cost', ['taxCost' => $check->taxCost])
+
     @include('pdf.partials.salvage-auction-history', ['salvageAuctionCheck' => $check->salvageAuctionCheck, 'reportUrl' => $reportUrl])
 
     <div class="section">

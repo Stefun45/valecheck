@@ -25,6 +25,8 @@ use App\Services\Valuation\OneAutoMarketValuationProvider;
 use App\Services\VehicleData\MockVehicleDataProvider;
 use App\Services\VehicleData\OneAutoVehicleDataProvider;
 use App\Services\VehicleData\VehicleDataProvider;
+use App\Services\VehicleTax\MockVehicleTaxCostProvider;
+use App\Services\VehicleTax\VehicleTaxCostProvider;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -98,6 +100,14 @@ class AppServiceProvider extends ServiceProvider
                 'oneauto' => new OneAutoSalvageAuctionProvider($app->make(OneAutoClient::class)),
                 default => new MockSalvageAuctionProvider,
             };
+        });
+
+        // TODO: no OneAutoVehicleTaxCostProvider yet — needs the real
+        // "Vehicle Tax from VRM" endpoint path and response schema before
+        // it can be built without guessing at field names. Always mock
+        // until that's added here.
+        $this->app->bind(VehicleTaxCostProvider::class, function () {
+            return new MockVehicleTaxCostProvider;
         });
     }
 

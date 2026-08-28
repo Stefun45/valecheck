@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'listing_url', 'auction_name', 'current_bid', 'asking_price',
     'listing_description', 'listing_import_id', 'listing_data_sources', 'discount_code',
     'failure_reason', 'started_at', 'completed_at', 'expires_at', 'purged_at',
+    'upgrade_payment_id', 'upgraded_at',
 ])]
 class VehicleCheck extends Model
 {
@@ -40,6 +41,8 @@ class VehicleCheck extends Model
     public const STAGE_LABELS = [
         'retrieving_history' => 'Checking vehicle history...',
         'retrieving_valuation' => 'Checking market value...',
+        'retrieving_tax_cost' => 'Checking tax cost...',
+        'retrieving_salvage_auction_history' => 'Checking salvage auction history...',
         'analysing_images' => 'Analysing photographs...',
         'calculating_repair' => 'Estimating repairs...',
         'calculating_maximum_bid' => 'Estimating maximum bid...',
@@ -57,7 +60,17 @@ class VehicleCheck extends Model
             'completed_at' => 'datetime',
             'expires_at' => 'datetime',
             'purged_at' => 'datetime',
+            'upgraded_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Only a completed Check can be upgraded to Plus — anything already
+     * Plus/Rebuild, or not yet completed, has nothing to upgrade.
+     */
+    public function isUpgradeable(): bool
+    {
+        return $this->type === self::TYPE_CHECK && $this->status === self::STATUS_COMPLETED;
     }
 
     public function isPurged(): bool
@@ -183,6 +196,11 @@ class VehicleCheck extends Model
     public function salvageAuctionCheck(): HasOne
     {
         return $this->hasOne(SalvageAuctionCheck::class);
+    }
+
+    public function taxCost(): HasOne
+    {
+        return $this->hasOne(VehicleTaxCost::class);
     }
 
     public function aiUsages(): HasMany

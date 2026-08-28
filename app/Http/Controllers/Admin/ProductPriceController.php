@@ -22,6 +22,7 @@ class ProductPriceController extends Controller
             'check' => ['required', 'numeric', 'min:0.01'],
             'plus' => ['required', 'numeric', 'min:0.01'],
             'rebuild' => ['required', 'numeric', 'min:0.01'],
+            'plus_upgrade' => ['required', 'numeric', 'min:0.01'],
         ]);
 
         foreach ($validated as $type => $gross) {

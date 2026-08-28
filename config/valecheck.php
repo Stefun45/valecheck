@@ -59,6 +59,15 @@ return [
             'tagline' => 'Know the damage. Know the numbers.',
             'gross' => 14.99,
         ],
+        // A one-off top-up for an existing completed ValeCheck report,
+        // reusing the same VehicleCheck row rather than starting a new one —
+        // only the Plus-exclusive jobs run (valuation, salvage, tax cost),
+        // never a second AutoCheck call, since that's already paid for.
+        // See VehicleCheckPipeline::dispatchUpgrade().
+        'plus_upgrade' => [
+            'label' => 'Upgrade to ValeCheck Plus',
+            'gross' => 3.50,
+        ],
         // Priced off the current ValeCheck Plus gross price (admin-editable,
         // see PricingService::forCreditPack()) rather than a static amount,
         // so a pricing change here always stays in step with it.

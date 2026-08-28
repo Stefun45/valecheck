@@ -102,6 +102,8 @@
             @endif
         </div>
 
+        @include('livewire.vehicle-check.partials.tax-cost', ['taxCost' => $check->taxCost])
+
         @include('livewire.vehicle-check.partials.salvage-auction-history', ['salvageAuctionCheck' => $check->salvageAuctionCheck])
 
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">

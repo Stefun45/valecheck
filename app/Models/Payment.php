@@ -19,6 +19,8 @@ class Payment extends Model
 
     public const TYPE_REBUILD = 'rebuild';
 
+    public const TYPE_PLUS_UPGRADE = 'plus_upgrade';
+
     public const TYPE_CREDIT_PACK = 'credit_pack';
 
     public const TYPE_SUBSCRIPTION = 'subscription';
