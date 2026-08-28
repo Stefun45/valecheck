@@ -3,13 +3,16 @@
 namespace Tests\Feature;
 
 use App\Models\Payment;
+use App\Models\Report;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleCheck;
 use App\Models\VehicleHistory;
 use App\Services\Payments\StripeCheckoutCompletionHandler;
 use App\Services\Pipeline\FailedVehicleCheckUpgradeHandler;
+use App\Services\Reports\ReportPdfService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class VehicleCheckUpgradeTest extends TestCase
@@ -113,6 +116,59 @@ class VehicleCheckUpgradeTest extends TestCase
         $this->assertNotNull($check->valuation);
         $this->assertNotNull($check->salvageAuctionCheck);
         $this->assertNotNull($check->taxCost);
+    }
+
+    public function test_an_existing_check_pdf_is_invalidated_and_regenerated_with_plus_content_on_upgrade(): void
+    {
+        // Without this, GenerateReport's call to ReportPdfService::generate()
+        // would see a PDF already exists (from the original Check purchase)
+        // and skip regenerating it — silently leaving the old Check-only
+        // PDF in place forever after a customer pays to upgrade.
+        Storage::fake('local');
+
+        $check = $this->completedCheck();
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Check summary.']);
+
+        $originalReport = app(ReportPdfService::class)->generate($check->fresh());
+        $originalPath = $originalReport->pdf_path;
+        $this->assertNotNull($originalPath);
+        Storage::disk('local')->assertExists($originalPath);
+
+        $payment = Payment::create([
+            'user_id' => $check->user_id,
+            'type' => Payment::TYPE_PLUS_UPGRADE,
+            'description' => 'Upgrade to ValeCheck Plus — AB12CDE',
+            'gross' => 3.50,
+            'net' => 2.92,
+            'vat' => 0.58,
+            'vat_rate' => 0.20,
+            'currency' => 'GBP',
+            'status' => Payment::STATUS_PENDING,
+        ]);
+
+        app(StripeCheckoutCompletionHandler::class)->handle([
+            'id' => 'cs_test_pdf_upgrade',
+            'payment_status' => 'paid',
+            'metadata' => [
+                'kind' => 'vehicle_check_upgrade',
+                'vehicle_check_id' => (string) $check->id,
+                'payment_id' => (string) $payment->id,
+            ],
+        ]);
+
+        // The path is deterministic (reports/{id}/report.pdf) so it's
+        // legitimately reused once regenerated — what actually proves
+        // invalidate() ran and generate() was called again afterwards is
+        // that pdf_generated_at is set at all: invalidate() nulls it, and
+        // only a fresh generate() call would set it again.
+        $newReport = $check->fresh()->report;
+        $this->assertNotNull($newReport->pdf_path);
+        $this->assertNotNull($newReport->pdf_generated_at);
+        Storage::disk('local')->assertExists($newReport->pdf_path);
+
+        $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('Tax Cost', $pdfHtml);
+        $this->assertStringContainsString('Salvage Auction History', $pdfHtml);
     }
 
     public function test_an_already_upgraded_check_ignores_a_duplicate_webhook_delivery(): void

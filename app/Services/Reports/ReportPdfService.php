@@ -55,4 +55,26 @@ class ReportPdfService
 
         return $report->fresh();
     }
+
+    /**
+     * Forces the next generate() call to produce a fresh PDF instead of
+     * returning the cached one — needed whenever a report's underlying
+     * data genuinely changes after it was first generated, which is no
+     * longer never (see the Check-to-Plus upgrade path).
+     */
+    public function invalidate(VehicleCheck $check): void
+    {
+        $report = $check->report;
+
+        if (! $report || ! $report->pdf_path) {
+            return;
+        }
+
+        Storage::disk($report->pdf_disk)->delete($report->pdf_path);
+
+        $report->update([
+            'pdf_path' => null,
+            'pdf_generated_at' => null,
+        ]);
+    }
 }

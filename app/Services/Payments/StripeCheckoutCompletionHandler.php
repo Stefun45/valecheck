@@ -11,6 +11,7 @@ use App\Models\VehicleCheck;
 use App\Services\Affiliate\AffiliateCommissionService;
 use App\Services\Credits\CreditLedgerService;
 use App\Services\Pipeline\VehicleCheckPipeline;
+use App\Services\Reports\ReportPdfService;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -26,6 +27,7 @@ class StripeCheckoutCompletionHandler
         private readonly CreditLedgerService $ledger,
         private readonly VehicleCheckPipeline $pipeline,
         private readonly AffiliateCommissionService $commissions,
+        private readonly ReportPdfService $pdfService,
     ) {}
 
     /**
@@ -94,6 +96,12 @@ class StripeCheckoutCompletionHandler
         if (! $check || ! $check->isUpgradeable()) {
             return;
         }
+
+        // The existing Check-only PDF must not be served after the report
+        // becomes Plus — without this, GenerateReport's later call to
+        // ReportPdfService::generate() would see a PDF already exists and
+        // skip regenerating it entirely, silently leaving the old content.
+        $this->pdfService->invalidate($check);
 
         $check->update([
             'type' => VehicleCheck::TYPE_PLUS,
