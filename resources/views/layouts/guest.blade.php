@@ -27,6 +27,8 @@
             <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white border border-gray-200 shadow-sm overflow-hidden sm:rounded-lg">
                 {{ $slot }}
             </div>
+
+            @include('partials.footer')
         </div>
     </body>
 </html>

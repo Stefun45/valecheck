@@ -709,4 +709,29 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringNotContainsString('WVWZZZ1JZXW000001', $pdfHtml);
         $this->assertStringContainsString('00001', $pdfHtml);
     }
+
+    public function test_the_report_attributes_identity_and_provenance_data_to_experian(): void
+    {
+        // A condition of Experian's B2C compliance approval — attribution
+        // must appear next to the sections actually sourced from them, not
+        // stamped across the whole report (MOT/tax and valuation come from
+        // different providers).
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Test summary.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('provided by Experian');
+
+        $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('provided by Experian', $pdfHtml);
+    }
 }

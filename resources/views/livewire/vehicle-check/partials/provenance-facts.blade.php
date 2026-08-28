@@ -45,3 +45,5 @@
         <p class="text-vale-navy mt-1">Scrapped: No marker found</p>
     @endif
 </div>
+
+<p class="text-xs text-gray-400 sm:col-span-2">Vehicle identity and provenance data provided by Experian.</p>

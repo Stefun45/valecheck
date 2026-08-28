@@ -28,6 +28,9 @@ Route::get('/', function (PricingService $pricing) {
 
 Route::post('stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])->name('cashier.webhook');
 
+Route::view('terms', 'legal.terms')->name('legal.terms');
+Route::view('privacy', 'legal.privacy')->name('legal.privacy');
+
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
