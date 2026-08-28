@@ -768,4 +768,60 @@ class VehicleCheckFlowTest extends TestCase
         $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
         $this->assertStringContainsString('provided by Experian', $pdfHtml);
     }
+
+    public function test_market_assessment_shows_a_visual_bar_per_value_scaled_to_the_highest(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        VehicleValuation::create([
+            'vehicle_check_id' => $check->id,
+            'clean_value' => 10000,
+            'trade_value' => 5000,
+            'retail_value' => 10000,
+            'private_value' => 7500,
+            'confidence' => 'medium',
+        ]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        $html = Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])->html();
+
+        // Trade value (£5,000) is half of the highest value shown (£10,000
+        // retail), so its bar should be scaled to roughly 50% width.
+        $this->assertMatchesRegularExpression('/Trade value.*?width:\s*50%/s', $html);
+        $this->assertMatchesRegularExpression('/Retail value.*?width:\s*100%/s', $html);
+    }
+
+    public function test_mot_results_are_shown_as_coloured_badges(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'mot_history' => [
+                ['test_date' => '2024-06-01', 'result' => 'pass', 'mileage' => 20000, 'advisories' => []],
+                ['test_date' => '2023-06-01', 'result' => 'fail', 'mileage' => 15000, 'advisories' => []],
+            ],
+        ]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        $html = Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])->html();
+
+        $this->assertStringContainsString('bg-green-50 text-green-700', $html);
+        $this->assertStringContainsString('bg-red-50 text-vale-red', $html);
+    }
 }

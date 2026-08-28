@@ -1,7 +1,7 @@
 {{-- Shared by check-report.blade.php and plus-report.blade.php — keep in
      sync so the two report types never silently drift apart again. --}}
 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
-    <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">MOT &amp; Mileage</h3>
+    <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="calendar" />MOT &amp; Mileage</h3>
     @if ($history?->mot_history)
         <div x-data="{ open: null }">
             <table class="w-full text-sm">
@@ -21,7 +21,13 @@
                             @if ($advisories) @click="open = open === {{ $i }} ? null : {{ $i }}" @endif
                         >
                             <td class="py-2 text-vale-navy">{{ isset($test['test_date']) ? \Illuminate\Support\Carbon::parse($test['test_date'])->format('d M Y') : '—' }}</td>
-                            <td class="py-2 capitalize {{ strtolower($test['result'] ?? '') === 'fail' ? 'text-vale-red font-semibold' : 'text-vale-navy' }}">{{ $test['result'] ?? '—' }}</td>
+                            <td class="py-2">
+                                @if (isset($test['result']))
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize {{ strtolower($test['result']) === 'fail' ? 'bg-red-50 text-vale-red' : 'bg-green-50 text-green-700' }}">{{ $test['result'] }}</span>
+                                @else
+                                    <span class="text-vale-navy">—</span>
+                                @endif
+                            </td>
                             <td class="py-2 text-vale-navy">{{ isset($test['mileage']) ? number_format($test['mileage']).' mi' : '—' }}</td>
                             <td class="py-2 text-right">
                                 @if ($advisories)

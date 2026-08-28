@@ -49,13 +49,13 @@
     </div>
 
     <div class="mt-8 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-        <h2 class="text-sm font-bold uppercase tracking-widest text-gray-400">Summary</h2>
+        <h2 class="flex items-center gap-1.5 text-sm font-bold uppercase tracking-widest text-gray-400"><x-section-icon name="document" />Summary</h2>
         <p class="text-vale-navy mt-2">{{ $report?->headline_summary }}</p>
     </div>
 
     <div class="grid sm:grid-cols-2 gap-4 mt-6">
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Vehicle Summary</h3>
+            <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="identity" />Vehicle Summary</h3>
             <dl class="space-y-1 text-sm">
                 <div class="flex justify-between"><dt class="text-gray-500">VIN</dt><dd class="text-vale-navy font-mono">{{ $vehicle->maskedVin() ?? '—' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Year</dt><dd class="text-vale-navy">{{ $vehicle->year ?? '—' }}</dd></div>
@@ -73,21 +73,37 @@
         @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $history])
 
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Market Assessment</h3>
+            <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="chart-bar" />Market Assessment</h3>
             @if ($cleanValue === null)
                 <p class="text-gray-400">Valuation unavailable for this vehicle.</p>
             @else
-                <dl class="grid sm:grid-cols-3 gap-4 text-sm">
-                    <div><dt class="text-gray-400">Trade value</dt><dd class="text-vale-navy font-semibold">{{ $valuation->trade_value ? '£'.number_format($valuation->trade_value, 0) : '—' }}</dd></div>
-                    <div><dt class="text-gray-400">Retail value</dt><dd class="text-vale-navy font-semibold">{{ $valuation->retail_value ? '£'.number_format($valuation->retail_value, 0) : '—' }}</dd></div>
-                    <div><dt class="text-gray-400">Private value</dt><dd class="text-vale-navy font-semibold">{{ $valuation->private_value ? '£'.number_format($valuation->private_value, 0) : '—' }}</dd></div>
-                </dl>
+                @php
+                    $marketValues = [
+                        ['label' => 'Trade value', 'value' => $valuation->trade_value],
+                        ['label' => 'Retail value', 'value' => $valuation->retail_value],
+                        ['label' => 'Private value', 'value' => $valuation->private_value],
+                    ];
+                    $maxMarketValue = max(1, ...array_map(fn ($v) => (float) ($v['value'] ?? 0), $marketValues));
+                @endphp
+                <div class="space-y-2.5">
+                    @foreach ($marketValues as $mv)
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">{{ $mv['label'] }}</span>
+                                <span class="text-vale-navy font-semibold">{{ $mv['value'] ? '£'.number_format($mv['value'], 0) : '—' }}</span>
+                            </div>
+                            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-vale-navy rounded-full" style="width: {{ $mv['value'] ? max(4, round(($mv['value'] / $maxMarketValue) * 100)) : 0 }}%"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
                 <p class="text-xs text-gray-400 mt-3">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
             @endif
         </div>
 
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Keeper / Registration History</h3>
+            <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="user" />Keeper / Registration History</h3>
             <p class="text-vale-navy">Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
             <p class="text-vale-navy mt-1">Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
             <p class="text-vale-navy mt-1">Imported: {{ is_null($history?->imported) ? 'Unavailable' : ($history->imported ? 'Yes' : 'No') }}</p>
@@ -95,7 +111,7 @@
 
         @if (! empty($report?->listing_gaps))
             <div class="bg-red-50 border border-red-200 rounded-xl p-5 sm:col-span-2">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-vale-red mb-3">Important Warnings</h3>
+                <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-vale-red mb-3"><x-section-icon name="warning" />Important Warnings</h3>
                 <ul class="list-disc list-inside space-y-1 text-vale-navy text-sm">
                     @foreach ($report->listing_gaps as $gap)
                         <li>{{ $gap }}</li>
@@ -106,7 +122,7 @@
 
         @if (! empty($report?->things_to_check))
             <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Things You Need To Check</h3>
+                <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="document" />Things You Need To Check</h3>
                 <ul class="list-disc list-inside space-y-1 text-vale-navy text-sm">
                     @foreach ($report->things_to_check as $item)
                         <li>{{ $item }}</li>

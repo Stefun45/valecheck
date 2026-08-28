@@ -19,13 +19,13 @@
     </div>
 
     <div class="mt-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-        <h2 class="text-sm font-bold uppercase tracking-widest text-gray-400">Overall History Assessment</h2>
+        <h2 class="flex items-center gap-1.5 text-sm font-bold uppercase tracking-widest text-gray-400"><x-section-icon name="document" />Overall History Assessment</h2>
         <p class="text-vale-navy mt-2">{{ $report?->headline_summary }}</p>
     </div>
 
     <div class="grid sm:grid-cols-2 gap-4 mt-6">
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Vehicle Summary</h3>
+            <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="identity" />Vehicle Summary</h3>
             <dl class="space-y-1 text-sm">
                 <div class="flex justify-between"><dt class="text-gray-500">VIN</dt><dd class="text-vale-navy font-mono">{{ $vehicle->maskedVin() ?? '—' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Year</dt><dd class="text-vale-navy">{{ $vehicle->year ?? '—' }}</dd></div>
@@ -43,7 +43,7 @@
         @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $history])
 
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
-            <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Keeper / Registration History</h3>
+            <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="user" />Keeper / Registration History</h3>
             <p class="text-vale-navy">Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
             <p class="text-vale-navy mt-1">Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
             <p class="text-vale-navy mt-1">Imported: {{ is_null($history?->imported) ? 'Unavailable' : ($history->imported ? 'Yes' : 'No') }}</p>
@@ -51,7 +51,7 @@
 
         @if (! empty($report?->listing_gaps))
             <div class="bg-red-50 border border-red-200 rounded-xl p-5 sm:col-span-2">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-vale-red mb-3">Important Warnings</h3>
+                <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-vale-red mb-3"><x-section-icon name="warning" />Important Warnings</h3>
                 <ul class="list-disc list-inside space-y-1 text-vale-navy text-sm">
                     @foreach ($report->listing_gaps as $gap)
                         <li>{{ $gap }}</li>

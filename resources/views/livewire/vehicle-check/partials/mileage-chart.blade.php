@@ -36,7 +36,7 @@
 
 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2" @if ($hasEnoughPoints) x-data="{ hovered: null, labels: {{ $labels }} }" @endif>
     <div class="flex items-center justify-between mb-3">
-        <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400">Mileage Over Time</h3>
+        <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400"><x-section-icon name="trending-up" />Mileage Over Time</h3>
         @if ($hasEnoughPoints)
             <p class="text-xs font-semibold text-vale-navy" x-show="hovered !== null">
                 <span x-text="hovered !== null ? labels[hovered] : ''"></span>

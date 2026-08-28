@@ -6,7 +6,7 @@
      and clean (navy). Collapsing "unavailable" into "clean" is exactly
      the bug that took VehicleMatic out of production. --}}
 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-    <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Write-Off History</h3>
+    <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="warning" />Write-Off History</h3>
     @if (is_null($history))
         <p class="text-gray-400">Write-off data unavailable.</p>
     @elseif ($history->isWrittenOff())
@@ -18,7 +18,7 @@
 </div>
 
 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-    <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Finance</h3>
+    <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="finance" />Finance</h3>
     @if (is_null($history?->finance_marker))
         <p class="text-gray-400">Finance data unavailable.</p>
     @elseif ($history->finance_marker)
@@ -29,7 +29,7 @@
 </div>
 
 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-    <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Stolen / Scrapped</h3>
+    <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="shield" />Stolen / Scrapped</h3>
     @if (is_null($history?->stolen_marker))
         <p class="text-gray-400">Stolen check unavailable.</p>
     @elseif ($history->stolen_marker)
