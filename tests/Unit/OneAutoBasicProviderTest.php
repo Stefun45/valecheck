@@ -45,7 +45,15 @@ class OneAutoBasicProviderTest extends TestCase
                             'first_registration_date' => '2019-03-15',
                         ],
                         'mot_tests' => [
-                            ['mot_test_date' => '2025-03-12', 'mot_test_result' => 'PASSED', 'mot_expiry_date' => now()->addMonths(6)->toDateString()],
+                            [
+                                'mot_test_date' => '2025-03-12',
+                                'mot_test_result' => 'PASSED',
+                                'mot_expiry_date' => now()->addMonths(6)->toDateString(),
+                                'observation_mileage' => 48210,
+                                'reason_for_refusal_and_comments' => [
+                                    ['type' => 'ADVISORY', 'comments' => 'Nearside front tyre worn close to the legal limit'],
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -63,6 +71,12 @@ class OneAutoBasicProviderTest extends TestCase
         $this->assertSame(2019, $preview->yearOfManufacture);
         $this->assertSame('Valid', $preview->motStatus);
         $this->assertSame('Taxed', $preview->taxStatus);
+        $this->assertSame('2026-09-01', $preview->taxExpiryDate);
+        $this->assertCount(1, $preview->motHistory);
+        $this->assertSame('2025-03-12', $preview->motHistory[0]['test_date']);
+        $this->assertSame('PASSED', $preview->motHistory[0]['result']);
+        $this->assertSame(48210, $preview->motHistory[0]['mileage']);
+        $this->assertSame(['Nearside front tyre worn close to the legal limit'], $preview->motHistory[0]['advisories']);
     }
 
     public function test_an_expired_mot_is_reported_as_expired_not_valid(): void

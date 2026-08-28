@@ -21,5 +21,16 @@ final readonly class VehicleSpecPreview
         public ?int $engineCapacity,
         public ?string $motStatus,
         public ?string $taxStatus,
+        public ?string $taxExpiryDate = null,
+        /**
+         * Full MOT test history, same shape as VehicleData::$motHistory
+         * (test_date, result, mileage, advisories) — only ever populated by
+         * providers that genuinely return per-test detail (One Auto's MOT
+         * History & Tax Status call). DVLA VES has no MOT test history at
+         * all, so it's always empty there.
+         *
+         * @var array<int, array{test_date: ?string, result: ?string, mileage: ?int, advisories: array<int, string>}>
+         */
+        public array $motHistory = [],
     ) {}
 }

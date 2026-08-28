@@ -21,6 +21,7 @@ class DvlaVesProviderTest extends TestCase
                 'engineCapacity' => 1500,
                 'motStatus' => 'Valid',
                 'taxStatus' => 'Taxed',
+                'taxDueDate' => '2026-11-01',
             ], 200),
         ]);
 
@@ -31,6 +32,10 @@ class DvlaVesProviderTest extends TestCase
         $this->assertSame('FORD', $result->make);
         $this->assertSame('BLUE', $result->colour);
         $this->assertSame(2018, $result->yearOfManufacture);
+        $this->assertSame('2026-11-01', $result->taxExpiryDate);
+        // VES has no MOT test history at all — that's DVSA data, a
+        // different service entirely.
+        $this->assertSame([], $result->motHistory);
 
         Http::assertSent(function ($request) {
             return $request->url() === 'https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles'

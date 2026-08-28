@@ -183,6 +183,53 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSee('drag and drop photographs');
     }
 
+    public function test_the_confirmation_step_shows_full_mot_history_and_a_mileage_chart_when_the_preview_includes_it(): void
+    {
+        // The free preview reuses the same MOT History & Tax Status call the
+        // paid report uses, so it's already fetched — showing the full
+        // history and chart here costs nothing extra, unlike provenance/
+        // valuation/salvage which are separate paid calls.
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'AB12CDE')
+            ->set('previewStatus', 'found')
+            ->set('vehiclePreview', [
+                'make' => 'FORD',
+                'model' => 'FIESTA',
+                'colour' => 'BLUE',
+                'fuel_type' => 'PETROL',
+                'year' => 2019,
+                'engine_capacity' => null,
+                'mot_status' => 'Valid',
+                'tax_status' => 'Taxed',
+                'tax_expiry_date' => '2027-05-01',
+                'mot_history' => [
+                    ['test_date' => '2023-06-01', 'result' => 'PASSED', 'mileage' => 20000, 'advisories' => []],
+                    ['test_date' => '2024-06-01', 'result' => 'FAILED', 'mileage' => 28000, 'advisories' => ['Front tyre worn']],
+                ],
+            ])
+            ->assertSee('until 01 May 2027')
+            ->assertSee('MOT &amp; Mileage', false)
+            ->assertSee('Mileage Over Time')
+            ->assertSeeHtml('bg-red-50 text-vale-red');
+    }
+
+    public function test_the_confirmation_step_has_no_mot_section_when_the_preview_has_no_mot_history(): void
+    {
+        // DVLA VES (and the mock DVLA provider used by default in tests)
+        // never returns MOT test history — only One Auto's MOT/Tax call
+        // does — so this must degrade cleanly, not error.
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'AB12CDE')
+            ->call('lookupVehicle')
+            ->assertDontSee('Mileage Over Time');
+    }
+
     public function test_plus_details_step_only_asks_for_asking_price(): void
     {
         // Mileage and listing description only feed Rebuild's AI-generated
@@ -885,9 +932,12 @@ class VehicleCheckFlowTest extends TestCase
 
         VehicleHistory::create([
             'vehicle_check_id' => $check->id,
+            // Real casing from the One Auto API is 'PASSED'/'FAILED', not
+            // 'pass'/'fail' — this exact fixture previously let a bug slip
+            // through where every genuine failure rendered as a green pass.
             'mot_history' => [
-                ['test_date' => '2024-06-01', 'result' => 'pass', 'mileage' => 20000, 'advisories' => []],
-                ['test_date' => '2023-06-01', 'result' => 'fail', 'mileage' => 15000, 'advisories' => []],
+                ['test_date' => '2024-06-01', 'result' => 'PASSED', 'mileage' => 20000, 'advisories' => []],
+                ['test_date' => '2023-06-01', 'result' => 'FAILED', 'mileage' => 15000, 'advisories' => []],
             ],
         ]);
         Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Test.']);
@@ -898,5 +948,10 @@ class VehicleCheckFlowTest extends TestCase
 
         $this->assertStringContainsString('bg-green-50 text-green-700', $html);
         $this->assertStringContainsString('bg-red-50 text-vale-red', $html);
+
+        // Pin the association the other way too — a FAILED test must never
+        // be the one that gets the green class.
+        $this->assertMatchesRegularExpression('/bg-green-50 text-green-700">PASSED/', $html);
+        $this->assertMatchesRegularExpression('/bg-red-50 text-vale-red">FAILED/', $html);
     }
 }

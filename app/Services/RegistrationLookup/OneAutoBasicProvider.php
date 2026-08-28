@@ -45,6 +45,16 @@ class OneAutoBasicProvider implements VehicleSpecPreviewProvider
             engineCapacity: null, // Not returned by this endpoint.
             motStatus: $this->motStatus($tests),
             taxStatus: $mot['dvla_data']['tax_status'] ?? null,
+            taxExpiryDate: $mot['dvla_data']['tax_expiry_date'] ?? null,
+            motHistory: array_map(fn (array $test) => [
+                'test_date' => $test['mot_test_date'] ?? null,
+                'result' => $test['mot_test_result'] ?? null,
+                'mileage' => $test['observation_mileage'] ?? null,
+                'advisories' => array_map(
+                    fn (array $c) => $c['comments'] ?? '',
+                    $test['reason_for_refusal_and_comments'] ?? [],
+                ),
+            ], $tests),
         );
     }
 

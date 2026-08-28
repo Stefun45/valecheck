@@ -10,7 +10,7 @@
             @foreach (array_reverse($history->mot_history) as $test)
                 <tr>
                     <td>{{ isset($test['test_date']) ? \Illuminate\Support\Carbon::parse($test['test_date'])->format('d M Y') : '—' }}</td>
-                    <td class="{{ strtolower($test['result'] ?? '') === 'fail' ? 'warn' : '' }}">{{ ucfirst($test['result'] ?? '—') }}</td>
+                    <td class="{{ str_contains(strtolower($test['result'] ?? ''), 'fail') ? 'warn' : '' }}">{{ ucfirst($test['result'] ?? '—') }}</td>
                     <td>{{ isset($test['mileage']) ? number_format($test['mileage']).' mi' : '—' }}</td>
                 </tr>
                 @if (! empty($test['advisories']))

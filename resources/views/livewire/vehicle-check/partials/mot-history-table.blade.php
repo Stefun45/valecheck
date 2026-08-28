@@ -23,7 +23,7 @@
                             <td class="py-2 text-vale-navy">{{ isset($test['test_date']) ? \Illuminate\Support\Carbon::parse($test['test_date'])->format('d M Y') : '—' }}</td>
                             <td class="py-2">
                                 @if (isset($test['result']))
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize {{ strtolower($test['result']) === 'fail' ? 'bg-red-50 text-vale-red' : 'bg-green-50 text-green-700' }}">{{ $test['result'] }}</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize {{ str_contains(strtolower($test['result']), 'fail') ? 'bg-red-50 text-vale-red' : 'bg-green-50 text-green-700' }}">{{ $test['result'] }}</span>
                                 @else
                                     <span class="text-vale-navy">—</span>
                                 @endif

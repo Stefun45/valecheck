@@ -121,6 +121,8 @@ class StartCheck extends Component
                 'engine_capacity' => $result->engineCapacity,
                 'mot_status' => $result->motStatus,
                 'tax_status' => $result->taxStatus,
+                'tax_expiry_date' => $result->taxExpiryDate,
+                'mot_history' => $result->motHistory,
             ];
             $this->previewStatus = 'found';
         } catch (Throwable) {

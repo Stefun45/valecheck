@@ -44,12 +44,25 @@
                             @if($vehiclePreview['fuel_type'] ?? null) &middot; {{ ucwords(strtolower($vehiclePreview['fuel_type'])) }} @endif
                         </p>
                         <p class="text-xs mt-1">
-                            <span class="{{ ($vehiclePreview['tax_status'] ?? null) === 'Taxed' ? 'text-green-600' : 'text-vale-red' }}">Tax: {{ $vehiclePreview['tax_status'] ?? 'Unknown' }}</span>
+                            <span class="{{ ($vehiclePreview['tax_status'] ?? null) === 'Taxed' ? 'text-green-600' : 'text-vale-red' }}">
+                                Tax: {{ $vehiclePreview['tax_status'] ?? 'Unknown' }}
+                                @if ($vehiclePreview['tax_expiry_date'] ?? null) (until {{ \Illuminate\Support\Carbon::parse($vehiclePreview['tax_expiry_date'])->format('d M Y') }}) @endif
+                            </span>
                             <span class="text-gray-300 mx-1">&middot;</span>
                             <span class="{{ ($vehiclePreview['mot_status'] ?? null) === 'Valid' ? 'text-green-600' : 'text-vale-red' }}">MOT: {{ $vehiclePreview['mot_status'] ?? 'Unknown' }}</span>
                         </p>
                     </div>
                 </div>
+
+                @if (! empty($vehiclePreview['mot_history']))
+                    @php
+                        $previewHistory = new \App\Models\VehicleHistory(['mot_history' => $vehiclePreview['mot_history'], 'mileage_anomaly' => false]);
+                    @endphp
+                    <div class="grid sm:grid-cols-2 gap-4 mt-4">
+                        @include('livewire.vehicle-check.partials.mileage-chart', ['history' => $previewHistory])
+                        @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $previewHistory])
+                    </div>
+                @endif
 
                 <p class="text-sm text-vale-navy font-semibold mt-4">Is this your vehicle?</p>
                 <div class="flex gap-3 mt-2">
