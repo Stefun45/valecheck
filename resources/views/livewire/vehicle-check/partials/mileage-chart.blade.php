@@ -21,22 +21,35 @@
             $x = $count > 1 ? $pad + ($i / ($count - 1)) * ($chartWidth - $pad * 2) : $chartWidth / 2;
             $y = $pad + ($chartHeight - $pad * 2) - ((($point['mileage'] - $minMileage) / $range) * ($chartHeight - $pad * 2));
 
-            return ['x' => round($x, 1), 'y' => round($y, 1), 'mileage' => $point['mileage'], 'date' => $point['test_date']];
+            return [
+                'x' => round($x, 1),
+                'y' => round($y, 1),
+                'mileage' => $point['mileage'],
+                'label' => \Illuminate\Support\Carbon::parse($point['test_date'])->format('d M Y').' — '.number_format($point['mileage']).' mi',
+            ];
         });
 
         $polylinePoints = $coords->map(fn ($c) => "{$c['x']},{$c['y']}")->implode(' ');
+        $labels = \Illuminate\Support\Js::from($coords->pluck('label'));
     }
 @endphp
 
-<div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
-    <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Mileage Over Time</h3>
+<div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2" @if ($hasEnoughPoints) x-data="{ hovered: null, labels: {{ $labels }} }" @endif>
+    <div class="flex items-center justify-between mb-3">
+        <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400">Mileage Over Time</h3>
+        @if ($hasEnoughPoints)
+            <p class="text-xs font-semibold text-vale-navy" x-show="hovered !== null">
+                <span x-text="hovered !== null ? labels[hovered] : ''"></span>
+            </p>
+        @endif
+    </div>
     @if ($hasEnoughPoints)
         <svg viewBox="0 0 {{ $chartWidth }} {{ $chartHeight }}" preserveAspectRatio="none" class="w-full h-40">
             <polyline points="{{ $polylinePoints }}" fill="none" stroke="#10243A" stroke-width="2" vector-effect="non-scaling-stroke" />
-            @foreach ($coords as $c)
-                <circle cx="{{ $c['x'] }}" cy="{{ $c['y'] }}" r="4" fill="#E31B23">
-                    <title>{{ \Illuminate\Support\Carbon::parse($c['date'])->format('d M Y') }} — {{ number_format($c['mileage']) }} mi</title>
-                </circle>
+            @foreach ($coords as $i => $c)
+                {{-- Larger invisible circle gives an easy-to-hit hover target; the small visible dot just reacts to it. --}}
+                <circle cx="{{ $c['x'] }}" cy="{{ $c['y'] }}" r="14" fill="transparent" style="cursor: pointer;" x-on:mouseenter="hovered = {{ $i }}" x-on:mouseleave="hovered = null" />
+                <circle cx="{{ $c['x'] }}" cy="{{ $c['y'] }}" r="4" :fill="hovered === {{ $i }} ? '#10243A' : '#E31B23'" style="pointer-events: none;" />
             @endforeach
         </svg>
         <div class="flex justify-between text-[10px] text-gray-400 mt-1">

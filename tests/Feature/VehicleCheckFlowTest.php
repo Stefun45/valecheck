@@ -532,6 +532,36 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringContainsString('Offside rear brake disc worn', $pdfHtml);
     }
 
+    public function test_mot_test_dates_show_date_only_even_when_the_provider_returns_a_full_timestamp(): void
+    {
+        // One Auto's real MOT test dates come back as full ISO datetimes
+        // (e.g. "2025-03-12T09:06:35.000Z") — the report must show just
+        // the date, not leak the time component.
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'mot_history' => [
+                ['test_date' => '2025-03-12T09:06:35.000Z', 'result' => 'pass', 'mileage' => 48210, 'advisories' => []],
+            ],
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('12 Mar 2025')
+            ->assertDontSeeText('09:06:35');
+
+        $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('12 Mar 2025', $pdfHtml);
+        $this->assertStringNotContainsString('09:06:35', $pdfHtml);
+    }
+
     public function test_a_mileage_chart_is_shown_when_there_are_at_least_two_mot_tests(): void
     {
         $user = $this->verifiedUser();
@@ -556,7 +586,11 @@ class VehicleCheckFlowTest extends TestCase
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Mileage Over Time')
             ->assertSeeHtml('<polyline')
-            ->assertDontSeeText('Not enough MOT history');
+            ->assertDontSeeText('Not enough MOT history')
+            // Hover tooltip data — each point's date + mileage available to
+            // Alpine for the on-hover label, not just a native <title>.
+            ->assertSee('01 Jun 2022 — 15,000 mi', false)
+            ->assertSee('01 Jun 2023 — 24,000 mi', false);
 
         // Must not break dompdf generation — real rendering, not just a
         // string check, since SVG support varies across PDF renderers.

@@ -20,7 +20,7 @@
                             class="border-t border-gray-100 {{ $advisories ? 'cursor-pointer hover:bg-gray-50' : '' }}"
                             @if ($advisories) @click="open = open === {{ $i }} ? null : {{ $i }}" @endif
                         >
-                            <td class="py-2 text-vale-navy">{{ $test['test_date'] ?? '—' }}</td>
+                            <td class="py-2 text-vale-navy">{{ isset($test['test_date']) ? \Illuminate\Support\Carbon::parse($test['test_date'])->format('d M Y') : '—' }}</td>
                             <td class="py-2 capitalize {{ strtolower($test['result'] ?? '') === 'fail' ? 'text-vale-red font-semibold' : 'text-vale-navy' }}">{{ $test['result'] ?? '—' }}</td>
                             <td class="py-2 text-vale-navy">{{ isset($test['mileage']) ? number_format($test['mileage']).' mi' : '—' }}</td>
                             <td class="py-2 text-right">
