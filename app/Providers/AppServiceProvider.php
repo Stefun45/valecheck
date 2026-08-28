@@ -26,6 +26,7 @@ use App\Services\VehicleData\MockVehicleDataProvider;
 use App\Services\VehicleData\OneAutoVehicleDataProvider;
 use App\Services\VehicleData\VehicleDataProvider;
 use App\Services\VehicleTax\MockVehicleTaxCostProvider;
+use App\Services\VehicleTax\OneAutoVehicleTaxCostProvider;
 use App\Services\VehicleTax\VehicleTaxCostProvider;
 use Illuminate\Support\ServiceProvider;
 
@@ -102,12 +103,11 @@ class AppServiceProvider extends ServiceProvider
             };
         });
 
-        // TODO: no OneAutoVehicleTaxCostProvider yet — needs the real
-        // "Vehicle Tax from VRM" endpoint path and response schema before
-        // it can be built without guessing at field names. Always mock
-        // until that's added here.
-        $this->app->bind(VehicleTaxCostProvider::class, function () {
-            return new MockVehicleTaxCostProvider;
+        $this->app->bind(VehicleTaxCostProvider::class, function ($app) {
+            return match (strtolower((string) config('valecheck.vehicle_data.provider'))) {
+                'oneauto' => new OneAutoVehicleTaxCostProvider($app->make(OneAutoClient::class)),
+                default => new MockVehicleTaxCostProvider,
+            };
         });
     }
 

@@ -176,12 +176,13 @@ return [
 
     // One Auto API (https://docs.oneautoapi.com/) — the paid "Full Vehicle
     // Check" equivalent (Experian AutoCheck for identity+provenance, One
-    // Auto's own MOT History & Tax Status), plus the Brego valuation and
-    // SalvageGuide Salvage Check used for ValeCheck Plus. Only ever called
-    // once a report is funded (free credit, subscription allowance, or
-    // payment) — never on demand. cost_per_lookup_net is per API call, not
-    // per report — a Check report makes 2 calls (AutoCheck + MOT/Tax),
-    // Plus makes 4 (+ Brego valuation + Salvage Check); see
+    // Auto's own MOT History & Tax Status), plus the Brego valuation,
+    // SalvageGuide Salvage Check and Vehicle Tax from VRM used for
+    // ValeCheck Plus. Only ever called once a report is funded (free
+    // credit, subscription allowance, or payment) — never on demand.
+    // cost_per_lookup_net is per API call, not per report — a Check
+    // report makes 2 calls (AutoCheck + MOT/Tax), Plus makes 5 (+ Brego
+    // valuation + Salvage Check + Vehicle Tax from VRM); see
     // ProviderLookupLog for the real count. Depends on which One Auto plan
     // tier (PrePay/Business/Enterprise/Bespoke) is active — set once
     // known, not guessed here.
