@@ -10,10 +10,10 @@
     <p class="text-vale-navy mt-1">Previous searches by other buyers/traders: {{ $history?->previous_searches ?? 'Unknown' }}</p>
     <p class="text-vale-navy mt-1">Imported: {{ is_null($history?->imported) ? 'Unavailable' : ($history->imported ? 'Yes' : 'No') }}</p>
     <p class="text-vale-navy mt-1">Previously exported: {{ is_null($history?->was_exported) ? 'Unavailable' : ($history->was_exported ? 'Yes' : 'No') }}</p>
-    <p class="mt-1 {{ is_null($history?->vrm_matches) ? 'text-gray-400' : ($history->vrm_matches ? 'text-vale-navy' : 'text-vale-red font-semibold') }}">
-        Registration matches records: {{ is_null($history?->vrm_matches) ? 'Unavailable' : ($history->vrm_matches ? 'Yes' : 'No') }}
-    </p>
-    <p class="mt-1 {{ is_null($history?->vin_matches) ? 'text-gray-400' : ($history->vin_matches ? 'text-vale-navy' : 'text-vale-red font-semibold') }}">
-        VIN matches records: {{ is_null($history?->vin_matches) ? 'Unavailable' : ($history->vin_matches ? 'Yes' : 'No') }}
-    </p>
+    {{-- vrm_matches/vin_matches are deliberately not shown here — we don't
+         have a confirmed definition from One Auto of what makes these
+         false, and the one real example we've seen was false on a
+         genuinely legitimate vehicle (most likely explained by its own
+         recorded plate-change history). Still captured and stored below,
+         just not displayed until that's understood. --}}
 </div>

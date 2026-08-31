@@ -10,10 +10,6 @@
     <p>Previous searches by other buyers/traders: {{ $history?->previous_searches ?? 'Unknown' }}</p>
     <p>Imported: {{ is_null($history?->imported) ? 'Unavailable' : ($history->imported ? 'Yes' : 'No') }}</p>
     <p>Previously exported: {{ is_null($history?->was_exported) ? 'Unavailable' : ($history->was_exported ? 'Yes' : 'No') }}</p>
-    <p class="{{ is_null($history?->vrm_matches) ? '' : ($history->vrm_matches ? 'ok' : 'warn') }}">
-        Registration matches records: {{ is_null($history?->vrm_matches) ? 'Unavailable' : ($history->vrm_matches ? 'Yes' : 'No') }}
-    </p>
-    <p class="{{ is_null($history?->vin_matches) ? '' : ($history->vin_matches ? 'ok' : 'warn') }}">
-        VIN matches records: {{ is_null($history?->vin_matches) ? 'Unavailable' : ($history->vin_matches ? 'Yes' : 'No') }}
-    </p>
+    {{-- vrm_matches/vin_matches deliberately not shown — see the web
+         partial's comment for why. --}}
 </div>

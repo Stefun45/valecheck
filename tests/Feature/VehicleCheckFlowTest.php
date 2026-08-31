@@ -843,7 +843,7 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertNull($basicCheck->fresh()->salvageAuctionCheck);
     }
 
-    public function test_keeper_history_facts_shows_identity_match_flags_including_a_mismatch_warning(): void
+    public function test_keeper_history_facts_shows_the_extra_identity_and_history_fields(): void
     {
         $user = $this->verifiedUser();
         $check = VehicleCheck::factory()->create([
@@ -861,8 +861,9 @@ class VehicleCheckFlowTest extends TestCase
             'v5c_reissues' => 5,
             'previous_searches' => 36,
             'was_exported' => false,
-            // A genuine mismatch — must render as a visible warning, not
-            // blend in with the routine facts around it.
+            // Deliberately not asserted below — see the comment on
+            // keeper-history-facts.blade.php for why these are stored but
+            // not displayed.
             'vrm_matches' => false,
             'vin_matches' => null,
         ]);
@@ -873,13 +874,12 @@ class VehicleCheckFlowTest extends TestCase
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Logbook (V5C) reissues: 5')
             ->assertSeeText('Previous searches by other buyers/traders: 36')
-            ->assertSeeText('Registration matches records: No')
-            ->assertSeeText('VIN matches records: Unavailable')
-            ->assertSeeHtml('text-vale-red font-semibold');
+            ->assertDontSeeText('Registration matches records')
+            ->assertDontSeeText('VIN matches records');
 
         $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
-        $this->assertStringContainsString('Registration matches records: No', $pdfHtml);
-        $this->assertStringContainsString('class="warn"', $pdfHtml);
+        $this->assertStringContainsString('Logbook (V5C) reissues: 5', $pdfHtml);
+        $this->assertStringNotContainsString('Registration matches records', $pdfHtml);
     }
 
     public function test_the_full_vin_never_appears_in_the_report_or_pdf_only_the_last_five(): void

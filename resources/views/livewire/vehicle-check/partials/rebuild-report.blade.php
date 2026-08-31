@@ -82,12 +82,6 @@
             <p class="text-vale-navy mt-1">Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
             <p class="text-vale-navy mt-1">Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
             <p class="text-vale-navy mt-1">Colour changes: {{ $history?->colour_changes ?? 0 }}</p>
-            <p class="mt-1 {{ is_null($history?->vrm_matches) ? 'text-gray-400' : ($history->vrm_matches ? 'text-vale-navy' : 'text-vale-red font-semibold') }}">
-                Registration matches records: {{ is_null($history?->vrm_matches) ? 'Unavailable' : ($history->vrm_matches ? 'Yes' : 'No') }}
-            </p>
-            <p class="mt-1 {{ is_null($history?->vin_matches) ? 'text-gray-400' : ($history->vin_matches ? 'text-vale-navy' : 'text-vale-red font-semibold') }}">
-                VIN matches records: {{ is_null($history?->vin_matches) ? 'Unavailable' : ($history->vin_matches ? 'Yes' : 'No') }}
-            </p>
             @if ($check->user->isDealerSubscriber())
                 <p class="{{ $history?->high_risk_marker ? 'text-vale-red font-semibold' : 'text-vale-navy' }} mt-1">
                     {{ $history?->high_risk_marker ? 'High risk marker found' : 'No high risk marker found' }}
