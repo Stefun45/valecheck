@@ -49,6 +49,34 @@ class ListingImportFlowTest extends TestCase
         Bus::assertDispatched(ImportListing::class);
     }
 
+    public function test_a_real_long_auto_trader_url_is_accepted_not_rejected_as_too_long(): void
+    {
+        // A genuine Auto Trader listing URL a user hit "over the limit" on
+        // — 546 characters, since Auto Trader carries search/finance-
+        // calculator context in the query string. The old max:500 rule
+        // (and the underlying VARCHAR(255) columns) rejected real listing
+        // URLs from one of the explicitly supported providers.
+        $url = 'https://www.autotrader.co.uk/car-details/202608255433632?sort=relevance&searchId=92a0edcd-0ff4-43e8-8512-4be82fa190c8&advertising-location=at_cars&make=Audi&multi_model=Audi%7ES3&page=1&postcode=HU6+9UF&year-from=2007&year-to=2012&fromsra=&backLinkQueryParams=advertising-location%3Dat_cars%26channel%3Dcars%26homeDeliveryAdverts%3Dexclude%26make%3DAudi%26multi_model%3DAudi%7ES3%26postcode%3DHU6%25209UF%26sort%3Drelevance%26year-from%3D2007%26year-to%3D2012%26flrfc%3D1&calc-deposit=800&calc-term=48&calc-mileage=10000&calc-selected-product=PCP';
+        $this->assertGreaterThan(500, strlen($url));
+
+        config(['valecheck.listing_import.enabled' => true]);
+        Bus::fake();
+
+        $this->actingAs($this->user());
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'AB12CDE')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->call('choose', 'rebuild')
+            ->set('listing_url', $url)
+            ->call('importListing')
+            ->assertHasNoErrors('listing_url')
+            ->assertSet('importStatus', 'importing');
+
+        $this->assertDatabaseHas('listing_imports', ['url' => $url]);
+    }
+
     public function test_import_is_declined_gracefully_when_the_feature_is_disabled(): void
     {
         config(['valecheck.listing_import.enabled' => false]);

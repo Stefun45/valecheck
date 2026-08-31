@@ -156,7 +156,7 @@ class StartCheck extends Component
      */
     public function importListing(): void
     {
-        $this->validate(['listing_url' => ['required', 'url', 'max:500']]);
+        $this->validate(['listing_url' => ['required', 'url', 'max:2048']]);
 
         if (! config('valecheck.listing_import.enabled')) {
             $this->importStatus = 'unavailable';
@@ -378,7 +378,7 @@ class StartCheck extends Component
         $this->validate([
             'registration' => ['required', 'string', 'min:2', 'max:10'],
             'mileage' => ['nullable', 'integer', 'min:0', 'max:999999'],
-            'listing_url' => ['nullable', 'url', 'max:500'],
+            'listing_url' => ['nullable', 'url', 'max:2048'],
             'auction_name' => ['nullable', 'string', 'max:255'],
             'current_bid' => ['nullable', 'numeric', 'min:0'],
             'asking_price' => ['nullable', 'numeric', 'min:0'],
