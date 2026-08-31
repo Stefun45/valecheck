@@ -23,8 +23,12 @@
                 $shortLength = round($size * 0.32);
                 $longLength = round($size * 0.58);
             @endphp
-            <div style="position:absolute; left:50%; bottom:50%; width:{{ $strokeWidth }}px; height:{{ $shortLength }}px; margin-left:-{{ round($strokeWidth / 2) }}px; background:{{ $color }}; border-radius:{{ round($strokeWidth / 2) }}px; transform-origin:50% 100%; transform:rotate(-45deg);"></div>
-            <div style="position:absolute; left:50%; bottom:50%; width:{{ $strokeWidth }}px; height:{{ $longLength }}px; margin-left:-{{ round($strokeWidth / 2) }}px; background:{{ $color }}; border-radius:{{ round($strokeWidth / 2) }}px; transform-origin:50% 100%; transform:rotate(45deg);"></div>
+            {{-- Only the free (top) end of each stroke is rounded — rounding
+                 the pivot end too would carve a notch out of the vertex
+                 where the two strokes should meet as a sharp point,
+                 making the tick read as incomplete. --}}
+            <div style="position:absolute; left:50%; bottom:50%; width:{{ $strokeWidth }}px; height:{{ $shortLength }}px; margin-left:-{{ round($strokeWidth / 2) }}px; background:{{ $color }}; border-radius:{{ round($strokeWidth / 2) }}px {{ round($strokeWidth / 2) }}px 0 0; transform-origin:50% 100%; transform:rotate(-45deg);"></div>
+            <div style="position:absolute; left:50%; bottom:50%; width:{{ $strokeWidth }}px; height:{{ $longLength }}px; margin-left:-{{ round($strokeWidth / 2) }}px; background:{{ $color }}; border-radius:{{ round($strokeWidth / 2) }}px {{ round($strokeWidth / 2) }}px 0 0; transform-origin:50% 100%; transform:rotate(45deg);"></div>
         @elseif ($tone === 'warning')
             @php
                 $barHeight = round($size * 0.35);
