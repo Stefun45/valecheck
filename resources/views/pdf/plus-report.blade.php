@@ -8,7 +8,9 @@
 
     $askingPrice = $check->asking_price ? (float) $check->asking_price : null;
     $cleanValue = $valuation?->clean_value ? (float) $valuation->clean_value : null;
-    $pricePositionPct = ($askingPrice && $cleanValue) ? (($askingPrice - $cleanValue) / $cleanValue) * 100 : null;
+    $salvageAdjustedValue = $valuation?->salvage_adjusted_value ? (float) $valuation->salvage_adjusted_value : null;
+    $effectiveValue = $salvageAdjustedValue ?? $cleanValue;
+    $pricePositionPct = ($askingPrice && $effectiveValue) ? (($askingPrice - $effectiveValue) / $effectiveValue) * 100 : null;
     $reportUrl = route('vehicle-checks.show', $check);
 @endphp
 
@@ -22,8 +24,11 @@
         <tr>
             <td width="33%">
                 <div class="section">
-                    <div class="section-title">Estimated Retail Value</div>
-                    <p style="font-size:16px; font-weight:bold;">{{ $cleanValue ? '£'.number_format($cleanValue, 0) : '—' }}</p>
+                    <div class="section-title">{{ $salvageAdjustedValue ? "Est. Value (Cat {$valuation->write_off_category_applied} Adjusted)" : 'Estimated Retail Value' }}</div>
+                    <p style="font-size:16px; font-weight:bold;">{{ $effectiveValue ? '£'.number_format($effectiveValue, 0) : '—' }}</p>
+                    @if ($salvageAdjustedValue)
+                        <p style="color:#999; font-size:9px;">Clean value: £{{ number_format($cleanValue, 0) }}</p>
+                    @endif
                 </div>
             </td>
             <td width="33%">
@@ -88,6 +93,15 @@
                     <td>{{ $valuation->private_value ? '£'.number_format($valuation->private_value, 0) : '—' }}</td>
                 </tr>
             </table>
+            @if ($salvageAdjustedValue)
+                <p class="warn" style="margin-top:6px;">Salvage-adjusted (Cat {{ $valuation->write_off_category_applied }}): £{{ number_format($salvageAdjustedValue, 0) }}</p>
+                <p style="color:#999; font-size:9px;">
+                    This vehicle has a recorded write-off — the values above assume no damage history. A flat
+                    {{ number_format($valuation->discount_applied * 100) }}% has been deducted as a rough guide, not a guarantee: actual value depends
+                    on make/model, age, mileage, specification, desirability, original damage, repair quality, documentation, market conditions and
+                    buyer perception.
+                </p>
+            @endif
             <p style="color:#999; font-size:9px; margin-top:6px;">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
         @endif
     </div>

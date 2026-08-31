@@ -6,7 +6,13 @@
 
     $askingPrice = $check->asking_price ? (float) $check->asking_price : null;
     $cleanValue = $valuation?->clean_value ? (float) $valuation->clean_value : null;
-    $pricePositionPct = ($askingPrice && $cleanValue) ? (($askingPrice - $cleanValue) / $cleanValue) * 100 : null;
+    $salvageAdjustedValue = $valuation?->salvage_adjusted_value ? (float) $valuation->salvage_adjusted_value : null;
+    // A write-off vehicle's realistic worth is the salvage-adjusted figure,
+    // not the "as if it had no history" clean value — comparing an asking
+    // price against the wrong one could tell a customer an overpriced
+    // write-off looks like a fair deal.
+    $effectiveValue = $salvageAdjustedValue ?? $cleanValue;
+    $pricePositionPct = ($askingPrice && $effectiveValue) ? (($askingPrice - $effectiveValue) / $effectiveValue) * 100 : null;
 
     // The "buying a damaged vehicle?" upsell only shows when there's an
     // actual data-backed reason to — never as a blanket sales pitch.
@@ -29,8 +35,11 @@
 
     <div class="grid sm:grid-cols-3 gap-4">
         <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
-            <p class="text-xs uppercase tracking-widest text-gray-400">Estimated Retail Value</p>
-            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">{{ $cleanValue ? '£'.number_format($cleanValue, 0) : '—' }}</p>
+            <p class="text-xs uppercase tracking-widest text-gray-400">{{ $salvageAdjustedValue ? "Est. Value (Cat {$valuation->write_off_category_applied} Adjusted)" : 'Estimated Retail Value' }}</p>
+            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">{{ $effectiveValue ? '£'.number_format($effectiveValue, 0) : '—' }}</p>
+            @if ($salvageAdjustedValue)
+                <p class="text-xs text-gray-400 mt-1">Clean value: £{{ number_format($cleanValue, 0) }}</p>
+            @endif
         </div>
         <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
             <p class="text-xs uppercase tracking-widest text-gray-400">Asking Price</p>
@@ -98,6 +107,20 @@
                         </div>
                     @endforeach
                 </div>
+                @if ($salvageAdjustedValue)
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-vale-red font-semibold">Salvage-adjusted (Cat {{ $valuation->write_off_category_applied }})</span>
+                            <span class="text-vale-red font-bold">£{{ number_format($salvageAdjustedValue, 0) }}</span>
+                        </div>
+                        <p class="text-xs text-gray-400">
+                            This vehicle has a recorded write-off — the values above assume no damage history.
+                            A flat {{ number_format($valuation->discount_applied * 100) }}% has been deducted as a rough guide, not a guarantee: actual value
+                            depends on make/model, age, mileage, specification, desirability, original damage, repair quality, documentation, market
+                            conditions and buyer perception.
+                        </p>
+                    </div>
+                @endif
                 <p class="text-xs text-gray-400 mt-3">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
             @endif
         </div>
