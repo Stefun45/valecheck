@@ -83,4 +83,37 @@ class ReportStatusSummaryTest extends TestCase
         $this->assertFalse($boxes['Finance']);
         $this->assertFalse($boxes['Stolen']);
     }
+
+    public function test_verdict_is_clean_history_only_when_every_box_is_ok(): void
+    {
+        $history = $this->historyFor([
+            'write_off_category' => null,
+            'finance_marker' => false,
+            'stolen_marker' => false,
+            'mileage_anomaly' => false,
+        ]);
+
+        $verdict = ReportStatusSummary::verdict($history);
+
+        $this->assertSame('Clean History', $verdict['label']);
+        $this->assertSame('good', $verdict['tone']);
+    }
+
+    public function test_verdict_is_issues_found_when_any_box_is_not_ok(): void
+    {
+        $history = $this->historyFor(['finance_marker' => true]);
+
+        $verdict = ReportStatusSummary::verdict($history);
+
+        $this->assertSame('Issues Found', $verdict['label']);
+        $this->assertSame('warning', $verdict['tone']);
+    }
+
+    public function test_verdict_is_a_distinct_unavailable_tone_never_folded_into_clean_or_warning(): void
+    {
+        $verdict = ReportStatusSummary::verdict(null);
+
+        $this->assertSame('Unable to Verify', $verdict['label']);
+        $this->assertSame('unavailable', $verdict['tone']);
+    }
 }

@@ -447,6 +447,13 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertNotNull($check->repairEstimate);
         $this->assertNotNull($check->bidRecommendation);
         $this->assertNotNull($check->bidRecommendation->deal_score);
+
+        // The Rebuild PDF template was never actually rendered by any
+        // test — confirm it renders without error now that it includes
+        // the shared cover-page partial too.
+        $pdfHtml = view('pdf.rebuild-report', ['check' => $check])->render();
+        $this->assertStringContainsString('XY99ZZZ', $pdfHtml);
+        $this->assertStringContainsString('page-break-after', $pdfHtml);
     }
 
     public function test_entering_a_registration_shows_a_vehicle_confirmation_before_pricing_is_shown(): void
@@ -937,6 +944,48 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringContainsString('AW58CAT', $pdfHtml);
         $this->assertStringNotContainsString('Previous searches', $pdfHtml);
         $this->assertStringNotContainsString('Registration matches records', $pdfHtml);
+    }
+
+    public function test_the_web_report_header_shows_a_verdict_badge_and_trust_strip(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => true]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Issues Found')
+            ->assertSeeText('Data provided by Experian')
+            ->assertSeeText('ICO Registered')
+            ->assertSeeHtml('<svg'); // vehicle silhouette
+    }
+
+    public function test_the_pdf_cover_page_shows_a_plate_style_registration_and_verdict(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+            'registration' => 'CV19XYZ',
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Test.']);
+
+        $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
+
+        $this->assertStringContainsString('CV19XYZ', $pdfHtml);
+        $this->assertStringContainsString('Clean History', $pdfHtml);
+        $this->assertStringContainsString('page-break-after', $pdfHtml);
+        $this->assertStringContainsString('Data provided by Experian', $pdfHtml);
     }
 
     public function test_the_full_vin_never_appears_in_the_report_or_pdf_only_the_last_five(): void

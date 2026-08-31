@@ -24,13 +24,7 @@
 @endphp
 
 <div>
-    <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-vale-red mb-2">
-        <x-application-logo text-class="text-xs" />
-        <span>· Plus</span>
-    </div>
-
-    <h1 class="font-display font-bold text-2xl text-vale-navy">{{ $vehicle->description() ?: $check->registration }}</h1>
-    <p class="text-gray-500 font-mono">{{ $check->registration }}</p>
+    @include('livewire.vehicle-check.partials.report-header', ['check' => $check, 'vehicle' => $vehicle, 'history' => $history, 'productLabel' => 'Plus'])
 
     <div class="mt-6">
         @include('livewire.vehicle-check.partials.report-status-grid', ['history' => $history])

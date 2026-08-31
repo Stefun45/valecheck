@@ -1,4 +1,7 @@
-@extends('pdf.layout', ['tag' => 'ValeCheck Plus · History & Value Report'])
+@php
+    $tag = 'ValeCheck Plus · History & Value Report';
+@endphp
+@extends('pdf.layout', ['tag' => $tag])
 
 @php
     $vehicle = $check->vehicle;
@@ -18,6 +21,8 @@
 @endphp
 
 @section('content')
+    @include('pdf.partials.cover-page', ['check' => $check, 'vehicle' => $vehicle, 'history' => $history, 'tag' => $tag])
+
     <h1>{{ $vehicle->description() ?: $check->registration }}</h1>
     <p class="reg">{{ $check->registration }}</p>
 

@@ -30,6 +30,28 @@ class ReportStatusSummary
         ];
     }
 
+    /**
+     * A single headline verdict derived from the same four boxes above —
+     * deliberately not a separate scoring system, so it can never say
+     * something the boxes underneath it don't already back up. A history
+     * lookup failure is its own distinct "unavailable" tone, never folded
+     * into either "clean" or "issues found".
+     *
+     * @return array{label: string, tone: 'good'|'warning'|'unavailable'}
+     */
+    public static function verdict(?VehicleHistory $history): array
+    {
+        if ($history === null) {
+            return ['label' => 'Unable to Verify', 'tone' => 'unavailable'];
+        }
+
+        $allOk = collect(self::forHistory($history))->every(fn (array $box) => $box['ok']);
+
+        return $allOk
+            ? ['label' => 'Clean History', 'tone' => 'good']
+            : ['label' => 'Issues Found', 'tone' => 'warning'];
+    }
+
     private static function mileageWentBackwards(VehicleHistory $history): bool
     {
         $tests = collect($history->mot_history ?? [])
