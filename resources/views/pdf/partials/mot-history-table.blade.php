@@ -7,7 +7,7 @@
     @if ($history?->mot_history)
         <table class="data">
             <tr><th>Test Date</th><th>Result</th><th>Mileage</th></tr>
-            @foreach (array_reverse($history->mot_history) as $test)
+            @foreach (collect($history->mot_history)->sortByDesc('test_date')->values() as $test)
                 <tr>
                     <td>{{ isset($test['test_date']) ? \Illuminate\Support\Carbon::parse($test['test_date'])->format('d M Y') : '—' }}</td>
                     <td class="{{ str_contains(strtolower($test['result'] ?? ''), 'fail') ? 'warn' : '' }}">{{ ucfirst($test['result'] ?? '—') }}</td>

@@ -14,7 +14,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (array_reverse($history->mot_history) as $i => $test)
+                    @foreach (collect($history->mot_history)->sortByDesc('test_date')->values() as $i => $test)
                         @php $advisories = $test['advisories'] ?? []; @endphp
                         <tr
                             class="border-t border-gray-100 {{ $advisories ? 'cursor-pointer hover:bg-gray-50' : '' }}"

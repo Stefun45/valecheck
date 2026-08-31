@@ -580,6 +580,54 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringContainsString('Offside rear brake disc worn', $pdfHtml);
     }
 
+    public function test_mot_history_is_listed_newest_test_first(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        // Stored in the order the real API actually returns it (newest
+        // first) — the table must not reverse this into oldest-first.
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'mot_history' => [
+                ['test_date' => '2025-06-01', 'result' => 'pass', 'mileage' => 40000, 'advisories' => []],
+                ['test_date' => '2024-06-01', 'result' => 'pass', 'mileage' => 32000, 'advisories' => []],
+                ['test_date' => '2023-06-01', 'result' => 'pass', 'mileage' => 24000, 'advisories' => []],
+            ],
+        ]);
+
+        $this->actingAs($user);
+
+        $html = Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])->html();
+
+        // The mileage chart (rendered earlier in the page) embeds all
+        // three dates too, in ascending order, as Alpine hover-label JSON
+        // — restrict the search to the MOT table itself so that doesn't
+        // produce a false "oldest first" reading.
+        $table = substr($html, strpos($html, 'Test Date'));
+
+        $newest = strpos($table, '01 Jun 2025');
+        $middle = strpos($table, '01 Jun 2024');
+        $oldest = strpos($table, '01 Jun 2023');
+
+        $this->assertNotFalse($newest);
+        $this->assertNotFalse($middle);
+        $this->assertNotFalse($oldest);
+        $this->assertTrue($newest < $middle && $middle < $oldest, 'Expected MOT tests listed newest first.');
+
+        $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
+        $pdfTable = substr($pdfHtml, strpos($pdfHtml, 'Test Date'));
+        $pdfNewest = strpos($pdfTable, '01 Jun 2025');
+        $pdfMiddle = strpos($pdfTable, '01 Jun 2024');
+        $pdfOldest = strpos($pdfTable, '01 Jun 2023');
+
+        $this->assertTrue($pdfNewest < $pdfMiddle && $pdfMiddle < $pdfOldest, 'Expected MOT tests listed newest first in the PDF.');
+    }
+
     public function test_mot_test_dates_show_date_only_even_when_the_provider_returns_a_full_timestamp(): void
     {
         // One Auto's real MOT test dates come back as full ISO datetimes
