@@ -96,12 +96,7 @@
 
     @include('pdf.partials.salvage-auction-history', ['salvageAuctionCheck' => $check->salvageAuctionCheck, 'reportUrl' => $reportUrl])
 
-    <div class="section">
-        <div class="section-title">Keeper / Registration History</div>
-        <p>Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
-        <p>Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
-        <p>Imported: {{ is_null($history?->imported) ? 'Unavailable' : ($history->imported ? 'Yes' : 'No') }}</p>
-    </div>
+    @include('pdf.partials.keeper-history-facts', ['history' => $history])
 
     @if (! empty($report?->listing_gaps))
         <div class="section">

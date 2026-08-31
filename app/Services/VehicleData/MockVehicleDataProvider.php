@@ -81,6 +81,13 @@ class MockVehicleDataProvider implements VehicleDataProvider
             keeperHistory: $keeperHistory,
             confidence: 'high',
             raw: ['simulated' => true, 'seed' => $seed],
+            colourChanges: ($seed % 15) === 0 ? 1 : 0,
+            wasExported: ($seed % 17) === 0,
+            vehicleIdentityChecks: 0,
+            v5cReissues: 1 + ($seed % 4),
+            previousSearches: $seed % 20,
+            vrmMatches: true,
+            vinMatches: true,
         );
     }
 

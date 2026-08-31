@@ -146,6 +146,13 @@ class VehicleCheck extends Model
             motHistory: $history?->mot_history ?? [],
             keeperHistory: $history?->keeper_history ?? [],
             confidence: $history?->confidence ?? 'medium',
+            colourChanges: $history?->colour_changes,
+            wasExported: $history?->was_exported,
+            vehicleIdentityChecks: $history?->vehicle_identity_checks,
+            v5cReissues: $history?->v5c_reissues,
+            previousSearches: $history?->previous_searches,
+            vrmMatches: $history?->vrm_matches,
+            vinMatches: $history?->vin_matches,
         );
     }
 

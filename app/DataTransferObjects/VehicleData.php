@@ -47,6 +47,17 @@ final readonly class VehicleData
         public array $keeperHistory,
         public string $confidence,
         public array $raw = [],
+        // Everything below is additive trust/identity signal, shown to
+        // every customer (unlike highRiskMarker, none of this is
+        // trade-sector-restricted) — nullable because not every provider
+        // (Mock, a future non-AutoCheck source) necessarily returns it.
+        public ?int $colourChanges = null,
+        public ?bool $wasExported = null,
+        public ?int $vehicleIdentityChecks = null,
+        public ?int $v5cReissues = null,
+        public ?int $previousSearches = null,
+        public ?bool $vrmMatches = null,
+        public ?bool $vinMatches = null,
     ) {}
 
     public function isWrittenOff(): bool

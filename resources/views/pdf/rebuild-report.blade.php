@@ -60,6 +60,14 @@
                         {{ $history?->isWrittenOff() ? "Category {$history->write_off_category} recorded" : 'No write-off history recorded' }}
                     </p>
                     <p>Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
+                    <p>Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
+                    <p>Colour changes: {{ $history?->colour_changes ?? 0 }}</p>
+                    <p class="{{ is_null($history?->vrm_matches) ? '' : ($history->vrm_matches ? 'ok' : 'warn') }}">
+                        Registration matches records: {{ is_null($history?->vrm_matches) ? 'Unavailable' : ($history->vrm_matches ? 'Yes' : 'No') }}
+                    </p>
+                    <p class="{{ is_null($history?->vin_matches) ? '' : ($history->vin_matches ? 'ok' : 'warn') }}">
+                        VIN matches records: {{ is_null($history?->vin_matches) ? 'Unavailable' : ($history->vin_matches ? 'Yes' : 'No') }}
+                    </p>
                     @if ($check->user->isDealerSubscriber())
                         <p class="{{ $history?->high_risk_marker ? 'warn' : 'ok' }}">
                             {{ $history?->high_risk_marker ? 'High risk marker found' : 'No high risk marker found' }}

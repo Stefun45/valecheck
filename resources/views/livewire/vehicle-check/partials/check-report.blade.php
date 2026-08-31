@@ -42,12 +42,7 @@
 
         @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $history])
 
-        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
-            <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="user" />Keeper / Registration History</h3>
-            <p class="text-vale-navy">Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
-            <p class="text-vale-navy mt-1">Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
-            <p class="text-vale-navy mt-1">Imported: {{ is_null($history?->imported) ? 'Unavailable' : ($history->imported ? 'Yes' : 'No') }}</p>
-        </div>
+        @include('livewire.vehicle-check.partials.keeper-history-facts', ['history' => $history])
 
         @if (! empty($report?->listing_gaps))
             <div class="bg-red-50 border border-red-200 rounded-xl p-5 sm:col-span-2">

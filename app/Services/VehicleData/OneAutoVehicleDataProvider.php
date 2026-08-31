@@ -100,6 +100,13 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
             ], $autoCheck['keeper_data_items'] ?? []),
             confidence: 'high',
             raw: ['autocheck' => $autoCheck, 'mot_and_tax' => $mot],
+            colourChanges: $autoCheck['colour_changes_qty'] ?? null,
+            wasExported: $autoCheck['was_exported'] ?? null,
+            vehicleIdentityChecks: $autoCheck['vehicle_identity_check_qty'] ?? null,
+            v5cReissues: $autoCheck['v5c_data_qty'] ?? null,
+            previousSearches: $autoCheck['previous_search_qty'] ?? null,
+            vrmMatches: $autoCheck['does_vehicle_registration_mark_match'] ?? null,
+            vinMatches: $autoCheck['does_vehicle_identification_number_match'] ?? null,
         );
     }
 

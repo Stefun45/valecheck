@@ -843,6 +843,45 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertNull($basicCheck->fresh()->salvageAuctionCheck);
     }
 
+    public function test_keeper_history_facts_shows_identity_match_flags_including_a_mismatch_warning(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'finance_marker' => false,
+            'plate_changes' => 3,
+            'colour_changes' => 0,
+            'vehicle_identity_checks' => 0,
+            'v5c_reissues' => 5,
+            'previous_searches' => 36,
+            'was_exported' => false,
+            // A genuine mismatch — must render as a visible warning, not
+            // blend in with the routine facts around it.
+            'vrm_matches' => false,
+            'vin_matches' => null,
+        ]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Logbook (V5C) reissues: 5')
+            ->assertSeeText('Previous searches by other buyers/traders: 36')
+            ->assertSeeText('Registration matches records: No')
+            ->assertSeeText('VIN matches records: Unavailable')
+            ->assertSeeHtml('text-vale-red font-semibold');
+
+        $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('Registration matches records: No', $pdfHtml);
+        $this->assertStringContainsString('class="warn"', $pdfHtml);
+    }
+
     public function test_the_full_vin_never_appears_in_the_report_or_pdf_only_the_last_five(): void
     {
         $user = $this->verifiedUser();

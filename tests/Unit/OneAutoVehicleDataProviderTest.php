@@ -249,6 +249,33 @@ class OneAutoVehicleDataProviderTest extends TestCase
         $this->assertTrue($result->stolenMarker);
     }
 
+    public function test_the_extra_identity_and_history_fields_map_correctly_on_a_real_response(): void
+    {
+        // Values taken directly from a real sandbox response (DY17BXW).
+        $this->fakeBoth(
+            $this->completeAutoCheck([
+                'colour_changes_qty' => 0,
+                'was_exported' => false,
+                'vehicle_identity_check_qty' => 0,
+                'v5c_data_qty' => 5,
+                'previous_search_qty' => 36,
+                'does_vehicle_registration_mark_match' => false,
+                'does_vehicle_identification_number_match' => null,
+            ]),
+            $this->motAndTax(),
+        );
+
+        $result = $this->provider()->getVehicle('DY17BXW');
+
+        $this->assertSame(0, $result->colourChanges);
+        $this->assertFalse($result->wasExported);
+        $this->assertSame(0, $result->vehicleIdentityChecks);
+        $this->assertSame(5, $result->v5cReissues);
+        $this->assertSame(36, $result->previousSearches);
+        $this->assertFalse($result->vrmMatches);
+        $this->assertNull($result->vinMatches);
+    }
+
     public function test_high_risk_marker_is_derived_from_its_qty_counter(): void
     {
         $this->fakeBoth(
