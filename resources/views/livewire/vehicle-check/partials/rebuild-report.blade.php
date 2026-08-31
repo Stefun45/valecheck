@@ -80,6 +80,11 @@
                 {{ $history?->finance_marker ? 'Finance marker detected' : 'No finance marker found' }}
             </p>
             <p class="text-vale-navy mt-1">Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
+            @if ($check->user->isDealerSubscriber())
+                <p class="{{ $history?->high_risk_marker ? 'text-vale-red font-semibold' : 'text-vale-navy' }} mt-1">
+                    {{ $history?->high_risk_marker ? 'High risk marker found' : 'No high risk marker found' }}
+                </p>
+            @endif
         </div>
 
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">

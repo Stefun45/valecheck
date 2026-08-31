@@ -36,6 +36,7 @@ final readonly class VehicleData
         public ?string $writeOffDate,
         public ?bool $financeMarker,
         public ?bool $stolenMarker,
+        public ?bool $highRiskMarker,
         public ?bool $scrappedMarker,
         public ?bool $imported,
         public ?bool $exported,

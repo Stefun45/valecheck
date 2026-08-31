@@ -50,6 +50,7 @@ class RetrieveVehicleHistory implements ShouldQueue
                 'write_off_date' => $data->writeOffDate,
                 'finance_marker' => $data->financeMarker,
                 'stolen_marker' => $data->stolenMarker,
+                'high_risk_marker' => $data->highRiskMarker,
                 'scrapped_marker' => $data->scrappedMarker,
                 'imported' => $data->imported,
                 'exported' => $data->exported,

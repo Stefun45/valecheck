@@ -136,6 +136,7 @@ class VehicleCheck extends Model
             writeOffDate: $history?->write_off_date?->toDateString(),
             financeMarker: (bool) $history?->finance_marker,
             stolenMarker: (bool) $history?->stolen_marker,
+            highRiskMarker: (bool) $history?->high_risk_marker,
             scrappedMarker: (bool) $history?->scrapped_marker,
             imported: (bool) $history?->imported,
             exported: (bool) $history?->exported,

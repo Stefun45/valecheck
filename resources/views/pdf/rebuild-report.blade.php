@@ -60,6 +60,11 @@
                         {{ $history?->isWrittenOff() ? "Category {$history->write_off_category} recorded" : 'No write-off history recorded' }}
                     </p>
                     <p>Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
+                    @if ($check->user->isDealerSubscriber())
+                        <p class="{{ $history?->high_risk_marker ? 'warn' : 'ok' }}">
+                            {{ $history?->high_risk_marker ? 'High risk marker found' : 'No high risk marker found' }}
+                        </p>
+                    @endif
                 </div>
             </td>
             <td width="50%">

@@ -36,7 +36,7 @@
             </dl>
         </div>
 
-        @include('livewire.vehicle-check.partials.provenance-facts', ['history' => $history])
+        @include('livewire.vehicle-check.partials.provenance-facts', ['history' => $history, 'check' => $check])
 
         @include('livewire.vehicle-check.partials.mileage-chart', ['history' => $history])
 

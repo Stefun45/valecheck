@@ -44,6 +44,7 @@ class MockVehicleDataProvider implements VehicleDataProvider
         $year = 2015 + ($seed % 10);
         $financeMarker = ($seed % 4) === 0;
         $stolenMarker = false;
+        $highRiskMarker = ($seed % 13) === 0;
         $scrappedMarker = false;
         $imported = ($seed % 11) === 0;
         $mileageAnomaly = ($seed % 7) === 0;
@@ -69,6 +70,7 @@ class MockVehicleDataProvider implements VehicleDataProvider
             writeOffDate: $writeOffCategory ? Carbon::createFromDate($year + 1, 3, 15)->toDateString() : null,
             financeMarker: $financeMarker,
             stolenMarker: $stolenMarker,
+            highRiskMarker: $highRiskMarker,
             scrappedMarker: $scrappedMarker,
             imported: $imported,
             exported: false,

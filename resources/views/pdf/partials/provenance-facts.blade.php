@@ -46,3 +46,17 @@
         @endif
     </div>
 </td>
+@if ($check->user->isDealerSubscriber())
+    <td>
+        <div class="section">
+            <div class="section-title">High Risk</div>
+            @if (is_null($history?->high_risk_marker))
+                <p>High risk data unavailable.</p>
+            @elseif ($history->high_risk_marker)
+                <p class="warn">High risk marker found</p>
+            @else
+                <p class="ok">No high risk marker found</p>
+            @endif
+        </div>
+    </td>
+@endif

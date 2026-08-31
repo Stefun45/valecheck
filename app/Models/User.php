@@ -61,6 +61,21 @@ class User extends Authenticatable
         return $this->hasMany(SubscriptionUsage::class);
     }
 
+    /**
+     * Gates trade-sector-restricted report content (e.g. high-risk
+     * markers) — must never be inferred from anything else (report type,
+     * funding source, credit balance), only an active Dealer-tier
+     * subscription for today's billing period.
+     */
+    public function isDealerSubscriber(): bool
+    {
+        return $this->subscriptionUsages()
+            ->where('plan', 'dealer')
+            ->whereDate('period_start', '<=', now())
+            ->whereDate('period_end', '>=', now())
+            ->exists();
+    }
+
     public function creator(): HasOne
     {
         return $this->hasOne(Creator::class);

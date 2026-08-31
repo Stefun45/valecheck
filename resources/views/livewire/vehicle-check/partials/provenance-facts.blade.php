@@ -46,4 +46,19 @@
     @endif
 </div>
 
+@if ($check->user->isDealerSubscriber())
+    {{-- Trade-sector-restricted data — never shown to an ordinary
+         consumer, only an active Dealer-tier subscriber. --}}
+    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+        <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="warning" />High Risk</h3>
+        @if (is_null($history?->high_risk_marker))
+            <p class="text-gray-400">High risk data unavailable.</p>
+        @elseif ($history->high_risk_marker)
+            <p class="text-vale-red font-semibold">High risk marker found</p>
+        @else
+            <p class="text-vale-navy">No high risk marker found</p>
+        @endif
+    </div>
+@endif
+
 <p class="text-xs text-gray-400 sm:col-span-2">Vehicle identity and provenance data provided by Experian.</p>

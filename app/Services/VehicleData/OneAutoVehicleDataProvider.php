@@ -37,7 +37,7 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
             'vehicle_registration_mark' => $vrm,
         ], $vehicleCheckId);
 
-        foreach (['finance_data_qty', 'stolen_vehicle_data_qty', 'condition_data_qty'] as $required) {
+        foreach (['finance_data_qty', 'stolen_vehicle_data_qty', 'condition_data_qty', 'high_risk_data_qty'] as $required) {
             if (! array_key_exists($required, $autoCheck)) {
                 throw new OneAutoApiException(
                     self::AUTOCHECK_ENDPOINT,
@@ -68,6 +68,13 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
             writeOffDate: $writeOffDate,
             financeMarker: ($autoCheck['finance_data_qty'] ?? 0) > 0,
             stolenMarker: $this->isStolen($autoCheck),
+            // Trade-sector-restricted data, same category as the full-VIN
+            // disclosure restriction in One Auto's own terms — gated to
+            // Dealer subscribers in the report UI, never shown to an
+            // ordinary consumer. Still always mapped and stored regardless
+            // of who bought the report, since visibility is decided at
+            // display time, not generation time.
+            highRiskMarker: ($autoCheck['high_risk_data_qty'] ?? 0) > 0,
             scrappedMarker: $autoCheck['is_scrapped'] ?? null,
             imported: $autoCheck['is_imported'] ?? null,
             exported: $autoCheck['is_exported'] ?? null,

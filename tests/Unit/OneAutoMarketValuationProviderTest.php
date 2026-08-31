@@ -25,7 +25,7 @@ class OneAutoMarketValuationProviderTest extends TestCase
             vin: null, make: 'FORD', model: 'FIESTA', derivative: null, year: 2019,
             engine: null, fuel: null, transmission: null, colour: null, specification: null,
             writeOffCategory: null, writeOffDate: null,
-            financeMarker: false, stolenMarker: false, scrappedMarker: false, imported: false, exported: false,
+            financeMarker: false, stolenMarker: false, highRiskMarker: false, scrappedMarker: false, imported: false, exported: false,
             previousKeepers: null, plateChanges: null, mileageAnomaly: false,
             motHistory: $motHistory ?? [], keeperHistory: [], confidence: 'high',
         );

@@ -66,7 +66,7 @@
 
     <table class="grid">
         <tr>
-            @include('pdf.partials.provenance-facts', ['history' => $history])
+            @include('pdf.partials.provenance-facts', ['history' => $history, 'check' => $check])
         </tr>
     </table>
     <p style="color:#999; font-size:8px; margin:-6px 0 10px;">Vehicle identity and provenance data provided by Experian.</p>

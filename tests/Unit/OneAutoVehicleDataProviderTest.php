@@ -78,6 +78,7 @@ class OneAutoVehicleDataProviderTest extends TestCase
             'finance_data_qty' => 0,
             'stolen_vehicle_data_qty' => 0,
             'condition_data_qty' => 0,
+            'high_risk_data_qty' => 0,
             'keeper_data_items' => [['number_previous_keepers' => 2]],
             'cherished_data_qty' => 0,
         ], $overrides);
@@ -248,6 +249,16 @@ class OneAutoVehicleDataProviderTest extends TestCase
         $this->assertTrue($result->stolenMarker);
     }
 
+    public function test_high_risk_marker_is_derived_from_its_qty_counter(): void
+    {
+        $this->fakeBoth(
+            $this->completeAutoCheck(['high_risk_data_qty' => 1]),
+            $this->motAndTax(),
+        );
+
+        $this->assertTrue($this->provider()->getVehicle('AB21ABC')->highRiskMarker);
+    }
+
     public function test_a_missing_provenance_qty_field_fails_the_whole_lookup_rather_than_assuming_clean(): void
     {
         // The exact bug that took VehicleMatic out of production: a
@@ -255,6 +266,22 @@ class OneAutoVehicleDataProviderTest extends TestCase
         // "checked and clean".
         $autoCheck = $this->completeAutoCheck();
         unset($autoCheck['finance_data_qty']);
+
+        $this->fakeBoth($autoCheck, $this->motAndTax());
+
+        $this->expectException(OneAutoApiException::class);
+
+        $this->provider()->getVehicle('AB21ABC');
+    }
+
+    public function test_a_missing_high_risk_qty_field_fails_the_whole_lookup_rather_than_assuming_clean(): void
+    {
+        // High risk is trade-sector-restricted data, but it's still
+        // safety-tier provenance — an absent section must fail the lookup
+        // the same way finance/stolen/write-off do, not silently read as
+        // "no high risk marker found".
+        $autoCheck = $this->completeAutoCheck();
+        unset($autoCheck['high_risk_data_qty']);
 
         $this->fakeBoth($autoCheck, $this->motAndTax());
 
