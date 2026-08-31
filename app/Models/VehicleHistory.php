@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'vehicle_check_id', 'write_off_category', 'write_off_date', 'finance_marker',
     'stolen_marker', 'high_risk_marker', 'scrapped_marker', 'imported', 'exported', 'was_exported', 'previous_keepers',
-    'plate_changes', 'colour_changes', 'vehicle_identity_checks', 'v5c_reissues', 'previous_searches',
+    'plate_changes', 'plate_change_history', 'colour_changes', 'vehicle_identity_checks', 'v5c_reissues', 'previous_searches',
     'vrm_matches', 'vin_matches', 'mileage_anomaly', 'mot_history', 'keeper_history',
     'raw_provider_data', 'confidence',
 ])]
@@ -31,6 +31,7 @@ class VehicleHistory extends Model
             'mileage_anomaly' => 'boolean',
             'mot_history' => 'array',
             'keeper_history' => 'array',
+            'plate_change_history' => 'array',
             'raw_provider_data' => 'array',
         ];
     }

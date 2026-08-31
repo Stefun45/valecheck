@@ -4,6 +4,13 @@
     <div class="section-title">Keeper / Registration History</div>
     <p>Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
     <p>Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
+    @if (! empty($history?->plate_change_history))
+        <ul>
+            @foreach ($history->plate_change_history as $change)
+                <li>{{ isset($change['date']) ? \Illuminate\Support\Carbon::parse($change['date'])->format('d M Y') : 'Unknown date' }}: {{ $change['from'] ?? 'Unknown' }} &rarr; {{ $change['to'] ?? 'Unknown' }}</li>
+            @endforeach
+        </ul>
+    @endif
     <p>Colour changes: {{ $history?->colour_changes ?? 0 }}</p>
     <p>Vehicle identity checks: {{ $history?->vehicle_identity_checks ?? 0 }}</p>
     <p>Logbook (V5C) reissues: {{ $history?->v5c_reissues ?? 'Unknown' }}</p>

@@ -856,6 +856,10 @@ class VehicleCheckFlowTest extends TestCase
             'vehicle_check_id' => $check->id,
             'finance_marker' => false,
             'plate_changes' => 3,
+            'plate_change_history' => [
+                ['date' => '2022-11-07', 'from' => 'AW58CAT', 'to' => 'DY17BXW', 'type' => 'Data Move'],
+                ['date' => '2020-11-19', 'from' => 'DY17BXW', 'to' => 'AW58CAT', 'type' => 'Marker'],
+            ],
             'colour_changes' => 0,
             'vehicle_identity_checks' => 0,
             'v5c_reissues' => 5,
@@ -874,11 +878,14 @@ class VehicleCheckFlowTest extends TestCase
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Logbook (V5C) reissues: 5')
             ->assertSeeText('Previous searches by other buyers/traders: 36')
+            ->assertSeeText('AW58CAT')
+            ->assertSeeText('DY17BXW')
             ->assertDontSeeText('Registration matches records')
             ->assertDontSeeText('VIN matches records');
 
         $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
         $this->assertStringContainsString('Logbook (V5C) reissues: 5', $pdfHtml);
+        $this->assertStringContainsString('AW58CAT', $pdfHtml);
         $this->assertStringNotContainsString('Registration matches records', $pdfHtml);
     }
 

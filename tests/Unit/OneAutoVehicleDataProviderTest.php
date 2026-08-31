@@ -276,6 +276,34 @@ class OneAutoVehicleDataProviderTest extends TestCase
         $this->assertNull($result->vinMatches);
     }
 
+    public function test_plate_change_history_maps_every_real_transfer_not_just_the_count(): void
+    {
+        // Values taken directly from a real sandbox response (DY17BXW) —
+        // three genuine cherished-plate transfers.
+        $this->fakeBoth(
+            $this->completeAutoCheck([
+                'cherished_data_qty' => 3,
+                'cherished_data_items' => [
+                    ['cherished_plate_transfer_date' => '2022-11-07', 'previous_vehicle_registration_mark' => 'AW58CAT', 'transfer_type' => 'Data Move', 'current_vehicle_registration_mark' => 'DY17BXW'],
+                    ['cherished_plate_transfer_date' => '2020-11-19', 'previous_vehicle_registration_mark' => 'DY17BXW', 'transfer_type' => 'Marker', 'current_vehicle_registration_mark' => 'AW58CAT'],
+                    ['cherished_plate_transfer_date' => '2019-11-08', 'previous_vehicle_registration_mark' => 'DY17BXW', 'transfer_type' => 'Marker', 'current_vehicle_registration_mark' => 'M16AHW'],
+                ],
+            ]),
+            $this->motAndTax(),
+        );
+
+        $result = $this->provider()->getVehicle('DY17BXW');
+
+        $this->assertSame(3, $result->plateChanges);
+        $this->assertCount(3, $result->plateChangeHistory);
+        $this->assertSame([
+            'date' => '2022-11-07',
+            'from' => 'AW58CAT',
+            'to' => 'DY17BXW',
+            'type' => 'Data Move',
+        ], $result->plateChangeHistory[0]);
+    }
+
     public function test_high_risk_marker_is_derived_from_its_qty_counter(): void
     {
         $this->fakeBoth(

@@ -153,6 +153,7 @@ class VehicleCheck extends Model
             previousSearches: $history?->previous_searches,
             vrmMatches: $history?->vrm_matches,
             vinMatches: $history?->vin_matches,
+            plateChangeHistory: $history?->plate_change_history ?? [],
         );
     }
 

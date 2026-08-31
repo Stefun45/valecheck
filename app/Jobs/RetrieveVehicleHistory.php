@@ -57,6 +57,7 @@ class RetrieveVehicleHistory implements ShouldQueue
                 'was_exported' => $data->wasExported,
                 'previous_keepers' => $data->previousKeepers,
                 'plate_changes' => $data->plateChanges,
+                'plate_change_history' => $data->plateChangeHistory,
                 'colour_changes' => $data->colourChanges,
                 'vehicle_identity_checks' => $data->vehicleIdentityChecks,
                 'v5c_reissues' => $data->v5cReissues,

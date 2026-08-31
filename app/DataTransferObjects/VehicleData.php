@@ -58,6 +58,13 @@ final readonly class VehicleData
         public ?int $previousSearches = null,
         public ?bool $vrmMatches = null,
         public ?bool $vinMatches = null,
+        /**
+         * Full per-transfer detail behind plateChanges' bare count —
+         * each entry: {date, from, to, type}.
+         *
+         * @var array<int, array{date: ?string, from: ?string, to: ?string, type: ?string}>
+         */
+        public array $plateChangeHistory = [],
     ) {}
 
     public function isWrittenOff(): bool

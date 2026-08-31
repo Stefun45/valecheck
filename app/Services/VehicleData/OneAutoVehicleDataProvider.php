@@ -107,6 +107,12 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
             previousSearches: $autoCheck['previous_search_qty'] ?? null,
             vrmMatches: $autoCheck['does_vehicle_registration_mark_match'] ?? null,
             vinMatches: $autoCheck['does_vehicle_identification_number_match'] ?? null,
+            plateChangeHistory: array_map(fn (array $item) => [
+                'date' => $item['cherished_plate_transfer_date'] ?? null,
+                'from' => $item['previous_vehicle_registration_mark'] ?? null,
+                'to' => $item['current_vehicle_registration_mark'] ?? null,
+                'type' => $item['transfer_type'] ?? null,
+            ], $autoCheck['cherished_data_items'] ?? []),
         );
     }
 

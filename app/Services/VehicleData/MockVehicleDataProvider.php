@@ -53,6 +53,7 @@ class MockVehicleDataProvider implements VehicleDataProvider
 
         $motHistory = $this->buildMotHistory($seed, $year);
         $keeperHistory = $this->buildKeeperHistory($seed, $previousKeepers);
+        $plateChangeHistory = $this->buildPlateChangeHistory($seed, $registration, $plateChanges);
 
         return new VehicleData(
             registration: $registration,
@@ -88,6 +89,7 @@ class MockVehicleDataProvider implements VehicleDataProvider
             previousSearches: $seed % 20,
             vrmMatches: true,
             vinMatches: true,
+            plateChangeHistory: $plateChangeHistory,
         );
     }
 
@@ -129,5 +131,21 @@ class MockVehicleDataProvider implements VehicleDataProvider
         }
 
         return $history;
+    }
+
+    private function buildPlateChangeHistory(int $seed, string $currentRegistration, int $plateChanges): array
+    {
+        if ($plateChanges === 0) {
+            return [];
+        }
+
+        $simulatedPreviousPlate = 'SIM'.str_pad((string) ($seed % 100), 2, '0', STR_PAD_LEFT).'ABC';
+
+        return [[
+            'date' => Carbon::now()->subYears(2)->toDateString(),
+            'from' => $simulatedPreviousPlate,
+            'to' => $currentRegistration,
+            'type' => 'Data Move',
+        ]];
     }
 }
