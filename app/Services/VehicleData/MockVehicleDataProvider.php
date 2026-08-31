@@ -90,6 +90,7 @@ class MockVehicleDataProvider implements VehicleDataProvider
             vrmMatches: true,
             vinMatches: true,
             plateChangeHistory: $plateChangeHistory,
+            damageLocations: $writeOffCategory ? ['Front', 'FrontNearside'] : [],
         );
     }
 

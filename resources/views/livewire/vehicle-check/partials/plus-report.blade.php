@@ -6,11 +6,14 @@
 
     $askingPrice = $check->asking_price ? (float) $check->asking_price : null;
     $cleanValue = $valuation?->clean_value ? (float) $valuation->clean_value : null;
+    $categoryAdjustedLow = $valuation?->category_adjusted_value_low ? (float) $valuation->category_adjusted_value_low : null;
+    $categoryAdjustedHigh = $valuation?->category_adjusted_value_high ? (float) $valuation->category_adjusted_value_high : null;
     $salvageAdjustedValue = $valuation?->salvage_adjusted_value ? (float) $valuation->salvage_adjusted_value : null;
-    // A write-off vehicle's realistic worth is the salvage-adjusted figure,
-    // not the "as if it had no history" clean value — comparing an asking
-    // price against the wrong one could tell a customer an overpriced
-    // write-off looks like a fair deal.
+    $hasValuation = $cleanValue !== null || $categoryAdjustedLow !== null;
+    // A write-off vehicle's realistic worth is the category-adjusted (or,
+    // failing that, flat-percentage-adjusted) figure, not the "as if it
+    // had no history" clean value — comparing an asking price against the
+    // wrong one could tell a customer an overpriced write-off looks fair.
     $effectiveValue = $salvageAdjustedValue ?? $cleanValue;
     $pricePositionPct = ($askingPrice && $effectiveValue) ? (($askingPrice - $effectiveValue) / $effectiveValue) * 100 : null;
 
@@ -35,9 +38,17 @@
 
     <div class="grid sm:grid-cols-3 gap-4">
         <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
-            <p class="text-xs uppercase tracking-widest text-gray-400">{{ $salvageAdjustedValue ? "Est. Value (Cat {$valuation->write_off_category_applied} Adjusted)" : 'Estimated Retail Value' }}</p>
-            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">{{ $effectiveValue ? '£'.number_format($effectiveValue, 0) : '—' }}</p>
-            @if ($salvageAdjustedValue)
+            <p class="text-xs uppercase tracking-widest text-gray-400">{{ $categoryAdjustedLow ? "Est. Value (Cat {$valuation->write_off_category_applied})" : ($salvageAdjustedValue ? "Est. Value (Cat {$valuation->write_off_category_applied} Adjusted)" : 'Dealer Forecourt Value') }}</p>
+            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">
+                @if ($categoryAdjustedLow)
+                    £{{ number_format($categoryAdjustedLow, 0) }}&ndash;£{{ number_format($categoryAdjustedHigh, 0) }}
+                @elseif ($effectiveValue)
+                    £{{ number_format($effectiveValue, 0) }}
+                @else
+                    —
+                @endif
+            </p>
+            @if ($salvageAdjustedValue && ! $categoryAdjustedLow)
                 <p class="text-xs text-gray-400 mt-1">Clean value: £{{ number_format($cleanValue, 0) }}</p>
             @endif
         </div>
@@ -83,14 +94,48 @@
 
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm sm:col-span-2">
             <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="chart-bar" />Market Assessment</h3>
-            @if ($cleanValue === null)
+            @if (! $hasValuation)
                 <p class="text-gray-400">Valuation unavailable for this vehicle.</p>
+            @elseif ($categoryAdjustedLow)
+                <div class="bg-red-50 border border-red-100 rounded-lg p-4">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-vale-red font-semibold">Category-adjusted retail value (Cat {{ $valuation->write_off_category_applied }})</span>
+                        <span class="text-vale-red font-bold">£{{ number_format($categoryAdjustedLow, 0) }}&ndash;£{{ number_format($categoryAdjustedHigh, 0) }}</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">A real market-calibrated range for this vehicle's write-off category and damage, not a flat percentage guess.</p>
+                </div>
+                @if ($valuation->salvage_auction_bid_low)
+                    <div class="flex justify-between text-sm mt-4">
+                        <span class="text-gray-400">Salvage auction predicted bid</span>
+                        <span class="text-vale-navy font-semibold">
+                            £{{ number_format($valuation->salvage_auction_bid_low, 0) }}&ndash;£{{ number_format($valuation->salvage_auction_bid_high, 0) }}
+                            <span class="text-xs text-gray-400">(avg £{{ number_format($valuation->salvage_auction_bid_average, 0) }})</span>
+                        </span>
+                    </div>
+                @endif
+                <p class="text-xs text-gray-400 mt-3">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
+            @elseif ($salvageAdjustedValue)
+                {{-- Legacy fallback path only — see RetrieveValuation. --}}
+                <div class="flex justify-between text-sm">
+                    <span class="text-vale-red font-semibold">Salvage-adjusted (Cat {{ $valuation->write_off_category_applied }})</span>
+                    <span class="text-vale-red font-bold">£{{ number_format($salvageAdjustedValue, 0) }}</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">
+                    A flat {{ number_format($valuation->discount_applied * 100) }}% has been deducted from the clean value as a rough guide, not a
+                    guarantee: actual value depends on make/model, age, mileage, specification, desirability, original damage, repair quality,
+                    documentation, market conditions and buyer perception.
+                </p>
             @else
                 @php
                     $marketValues = [
-                        ['label' => 'Trade value', 'value' => $valuation->trade_value],
-                        ['label' => 'Retail value', 'value' => $valuation->retail_value],
-                        ['label' => 'Private value', 'value' => $valuation->private_value],
+                        ['label' => 'Dealer forecourt', 'value' => $valuation->dealer_forecourt],
+                        ['label' => 'Trade retail', 'value' => $valuation->trade_value],
+                        ['label' => 'Trade average', 'value' => $valuation->trade_average],
+                        ['label' => 'Trade poor', 'value' => $valuation->trade_poor],
+                        ['label' => 'Private clean', 'value' => $valuation->private_value],
+                        ['label' => 'Private average', 'value' => $valuation->private_average],
+                        ['label' => 'Part exchange', 'value' => $valuation->part_exchange],
+                        ['label' => 'Auction value', 'value' => $valuation->auction_value],
                     ];
                     $maxMarketValue = max(1, ...array_map(fn ($v) => (float) ($v['value'] ?? 0), $marketValues));
                 @endphp
@@ -107,21 +152,10 @@
                         </div>
                     @endforeach
                 </div>
-                @if ($salvageAdjustedValue)
-                    <div class="mt-4 pt-4 border-t border-gray-100">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-vale-red font-semibold">Salvage-adjusted (Cat {{ $valuation->write_off_category_applied }})</span>
-                            <span class="text-vale-red font-bold">£{{ number_format($salvageAdjustedValue, 0) }}</span>
-                        </div>
-                        <p class="text-xs text-gray-400">
-                            This vehicle has a recorded write-off — the values above assume no damage history.
-                            A flat {{ number_format($valuation->discount_applied * 100) }}% has been deducted as a rough guide, not a guarantee: actual value
-                            depends on make/model, age, mileage, specification, desirability, original damage, repair quality, documentation, market
-                            conditions and buyer perception.
-                        </p>
-                    </div>
+                @if ($valuation->list_price)
+                    <p class="text-xs text-gray-400 mt-3">List price when new: £{{ number_format($valuation->list_price, 0) }}.</p>
                 @endif
-                <p class="text-xs text-gray-400 mt-3">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
+                <p class="text-xs text-gray-400 mt-1">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}. Estimates are guidance only, not a guarantee of value.</p>
             @endif
         </div>
 

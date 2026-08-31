@@ -65,6 +65,15 @@ final readonly class VehicleData
          * @var array<int, array{date: ?string, from: ?string, to: ?string, type: ?string}>
          */
         public array $plateChangeHistory = [],
+        /**
+         * Damage location descriptions from the write-off record (e.g.
+         * ['Front', 'FrontNearside']) — only ever populated when
+         * writeOffCategory is set. Feeds SalvageGuide's primary_damage_desc
+         * input and, later, a historical damage-location diagram.
+         *
+         * @var array<int, string>
+         */
+        public array $damageLocations = [],
     ) {}
 
     public function isWrittenOff(): bool

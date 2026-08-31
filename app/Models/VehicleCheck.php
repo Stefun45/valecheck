@@ -154,6 +154,7 @@ class VehicleCheck extends Model
             vrmMatches: $history?->vrm_matches,
             vinMatches: $history?->vin_matches,
             plateChangeHistory: $history?->plate_change_history ?? [],
+            damageLocations: $history?->damage_locations ?? [],
         );
     }
 

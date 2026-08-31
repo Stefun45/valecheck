@@ -113,7 +113,22 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
                 'to' => $item['current_vehicle_registration_mark'] ?? null,
                 'type' => $item['transfer_type'] ?? null,
             ], $autoCheck['cherished_data_items'] ?? []),
+            damageLocations: $this->damageLocations($autoCheck),
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $autoCheck
+     * @return array<int, string>
+     */
+    private function damageLocations(array $autoCheck): array
+    {
+        $condition = $autoCheck['condition_data_items'][0] ?? [];
+
+        return array_values(array_filter(array_map(
+            fn (array $item) => $item['damage_location_desc'] ?? null,
+            $condition['damage_location_items'] ?? [],
+        )));
     }
 
     /**

@@ -950,9 +950,8 @@ class VehicleCheckFlowTest extends TestCase
         VehicleValuation::create([
             'vehicle_check_id' => $check->id,
             'clean_value' => 10000,
+            'dealer_forecourt' => 10000,
             'trade_value' => 5000,
-            'retail_value' => 10000,
-            'private_value' => 7500,
             'confidence' => 'medium',
         ]);
         Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
@@ -961,10 +960,11 @@ class VehicleCheckFlowTest extends TestCase
 
         $html = Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])->html();
 
-        // Trade value (£5,000) is half of the highest value shown (£10,000
-        // retail), so its bar should be scaled to roughly 50% width.
-        $this->assertMatchesRegularExpression('/Trade value.*?width:\s*50%/s', $html);
-        $this->assertMatchesRegularExpression('/Retail value.*?width:\s*100%/s', $html);
+        // Trade retail (£5,000) is half of the highest value shown
+        // (£10,000 dealer forecourt), so its bar should be scaled to
+        // roughly 50% width.
+        $this->assertMatchesRegularExpression('/Trade retail.*?width:\s*50%/s', $html);
+        $this->assertMatchesRegularExpression('/Dealer forecourt.*?width:\s*100%/s', $html);
     }
 
     public function test_a_written_off_vehicles_headline_value_and_price_position_use_the_salvage_adjusted_figure(): void
@@ -1016,6 +1016,104 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringContainsString('Salvage-adjusted (Cat N)', $pdfHtml);
     }
 
+    public function test_a_written_off_vehicle_with_a_real_salvageguide_range_shows_the_range_not_a_flat_figure(): void
+    {
+        // Response shapes confirmed from real/documented SalvageGuide and
+        // AutoCheck data — this is the primary (non-fallback) path now
+        // that RetrieveValuation prefers a real category-adjusted range
+        // over the flat percentage assumption.
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+            'asking_price' => 8500,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'write_off_category' => 'N', 'finance_marker' => false]);
+        VehicleValuation::create([
+            'vehicle_check_id' => $check->id,
+            'salvage_adjusted_value' => 5220,
+            'write_off_category_applied' => 'N',
+            'category_adjusted_value_low' => 4595,
+            'category_adjusted_value_high' => 5845,
+            'salvage_auction_bid_low' => 1989,
+            'salvage_auction_bid_average' => 2607,
+            'salvage_auction_bid_high' => 3438,
+            'valuation_source' => 'salvageguide',
+            'confidence' => 'medium',
+        ]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        $html = Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])->html();
+
+        $this->assertStringContainsString('Est. Value (Cat N)', $html);
+        $this->assertStringContainsString('£4,595', $html);
+        $this->assertStringContainsString('£5,845', $html);
+        $this->assertStringContainsString('Category-adjusted retail value (Cat N)', $html);
+        $this->assertStringContainsString('Salvage auction predicted bid', $html);
+        $this->assertStringContainsString('£1,989', $html);
+        $this->assertStringContainsString('£3,438', $html);
+        $this->assertStringContainsString('avg £2,607', $html);
+        // Flat-percentage legacy copy must not appear now a real range exists.
+        $this->assertStringNotContainsString('has been deducted', $html);
+
+        // £8,500 asking vs the £5,220 midpoint, not either raw bound.
+        $expectedPct = round((8500 - 5220) / 5220 * 100);
+        $this->assertStringContainsString("+{$expectedPct}%", $html);
+
+        $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('£4,595', $pdfHtml);
+        $this->assertStringContainsString('Salvage auction predicted bid', $pdfHtml);
+    }
+
+    public function test_a_clean_vehicle_with_the_full_ukvehicledata_ladder_shows_every_figure(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        VehicleValuation::create([
+            'vehicle_check_id' => $check->id,
+            'clean_value' => 13550,
+            'dealer_forecourt' => 13550,
+            'trade_value' => 12629,
+            'trade_average' => 9856,
+            'trade_poor' => 8384,
+            'private_value' => 11314,
+            'private_average' => 10884,
+            'part_exchange' => 10840,
+            'auction_value' => 10365,
+            'list_price' => 29903,
+            'valuation_source' => 'ukvehicledata',
+            'confidence' => 'medium',
+        ]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        $html = Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])->html();
+
+        $this->assertStringContainsString('Dealer Forecourt Value', $html);
+        $this->assertStringContainsString('£13,550', $html);
+        $this->assertStringContainsString('Trade average', $html);
+        $this->assertStringContainsString('Trade poor', $html);
+        $this->assertStringContainsString('Private average', $html);
+        $this->assertStringContainsString('Part exchange', $html);
+        $this->assertStringContainsString('Auction value', $html);
+        $this->assertStringContainsString('List price when new: £29,903', $html);
+
+        $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('Dealer forecourt', $pdfHtml);
+        $this->assertStringContainsString('£29,903', $pdfHtml);
+    }
+
     public function test_a_clean_vehicles_headline_value_is_unaffected_by_the_salvage_adjustment_display(): void
     {
         $user = $this->verifiedUser();
@@ -1038,7 +1136,7 @@ class VehicleCheckFlowTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
-            ->assertSeeText('Estimated Retail Value')
+            ->assertSeeText('Dealer Forecourt Value')
             ->assertDontSeeText('Salvage-adjusted')
             ->assertDontSeeText('Clean value:');
     }

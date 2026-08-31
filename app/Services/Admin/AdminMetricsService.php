@@ -48,7 +48,7 @@ class AdminMetricsService
         $totalCosts = $apiSpend + $aiSpend + $paymentCost;
         $contributionMargin = $revenue - $totalCosts;
 
-        // Check = AutoCheck + MOT/Tax (2 calls). Plus = + Brego valuation
+        // Check = AutoCheck + MOT/Tax (2 calls). Plus = + a valuation call
         // (3 calls) — unless the MOT/Tax call was already served from the
         // preview's cache, in which case actual spend is lower than this
         // estimate; see the real per-report count in Provider Lookups.
