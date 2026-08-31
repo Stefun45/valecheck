@@ -12,7 +12,11 @@
 
 <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-4 min-w-0">
-        <x-vehicle-silhouette :colour="$vehicle->colour" class="h-14 w-24 shrink-0" />
+        @if ($check->hasVehicleImage())
+            <img src="{{ $check->vehicleImageUrl() }}" alt="{{ $vehicle->description() ?: $check->registration }}" class="h-14 w-24 shrink-0 object-contain">
+        @else
+            <x-vehicle-silhouette :colour="$vehicle->colour" class="h-14 w-24 shrink-0" />
+        @endif
         <div class="min-w-0">
             <h1 class="font-display font-bold text-2xl text-vale-navy truncate">{{ $vehicle->description() ?: $check->registration }}</h1>
             <p class="text-gray-500 font-mono">{{ $check->registration }}</p>

@@ -25,6 +25,9 @@ use App\Services\Valuation\OneAutoMarketValuationProvider;
 use App\Services\VehicleData\MockVehicleDataProvider;
 use App\Services\VehicleData\OneAutoVehicleDataProvider;
 use App\Services\VehicleData\VehicleDataProvider;
+use App\Services\VehicleImagery\MockVehicleImageProvider;
+use App\Services\VehicleImagery\OneAutoVehicleImageProvider;
+use App\Services\VehicleImagery\VehicleImageProvider;
 use App\Services\VehicleTax\MockVehicleTaxCostProvider;
 use App\Services\VehicleTax\OneAutoVehicleTaxCostProvider;
 use App\Services\VehicleTax\VehicleTaxCostProvider;
@@ -107,6 +110,13 @@ class AppServiceProvider extends ServiceProvider
             return match (strtolower((string) config('valecheck.vehicle_data.provider'))) {
                 'oneauto' => new OneAutoVehicleTaxCostProvider($app->make(OneAutoClient::class)),
                 default => new MockVehicleTaxCostProvider,
+            };
+        });
+
+        $this->app->bind(VehicleImageProvider::class, function ($app) {
+            return match (strtolower((string) config('valecheck.vehicle_data.provider'))) {
+                'oneauto' => new OneAutoVehicleImageProvider($app->make(OneAutoClient::class)),
+                default => new MockVehicleImageProvider,
             };
         });
     }

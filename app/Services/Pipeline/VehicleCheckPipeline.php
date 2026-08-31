@@ -10,6 +10,7 @@ use App\Jobs\GenerateReport;
 use App\Jobs\RetrieveSalvageAuctionHistory;
 use App\Jobs\RetrieveValuation;
 use App\Jobs\RetrieveVehicleHistory;
+use App\Jobs\RetrieveVehicleImage;
 use App\Jobs\RetrieveVehicleTaxCost;
 use App\Models\VehicleCheck;
 use Illuminate\Support\Facades\Bus;
@@ -24,6 +25,7 @@ class VehicleCheckPipeline
         $jobs = match (true) {
             $vehicleCheck->needsDamageAnalysis() => [
                 new RetrieveVehicleHistory($id),
+                new RetrieveVehicleImage($id),
                 new RetrieveValuation($id),
                 new AnalyseImages($id),
                 new CalculateRepair($id),
@@ -33,6 +35,7 @@ class VehicleCheckPipeline
             ],
             $vehicleCheck->needsValuation() => [
                 new RetrieveVehicleHistory($id),
+                new RetrieveVehicleImage($id),
                 new RetrieveValuation($id),
                 new RetrieveSalvageAuctionHistory($id),
                 new RetrieveVehicleTaxCost($id),
@@ -62,6 +65,7 @@ class VehicleCheckPipeline
         $id = $vehicleCheck->id;
 
         Bus::chain([
+            new RetrieveVehicleImage($id),
             new RetrieveValuation($id),
             new RetrieveSalvageAuctionHistory($id),
             new RetrieveVehicleTaxCost($id),

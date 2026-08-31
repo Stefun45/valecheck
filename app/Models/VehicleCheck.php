@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'user_id', 'vehicle_id', 'type', 'status', 'stage', 'funding_source',
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'listing_url', 'auction_name', 'current_bid', 'asking_price',
     'listing_description', 'listing_import_id', 'listing_data_sources', 'discount_code',
     'failure_reason', 'started_at', 'completed_at', 'expires_at', 'purged_at',
-    'upgrade_payment_id', 'upgraded_at',
+    'upgrade_payment_id', 'upgraded_at', 'vehicle_image_disk', 'vehicle_image_path',
 ])]
 class VehicleCheck extends Model
 {
@@ -71,6 +72,42 @@ class VehicleCheck extends Model
     public function isUpgradeable(): bool
     {
         return $this->type === self::TYPE_CHECK && $this->status === self::STATUS_COMPLETED;
+    }
+
+    public function hasVehicleImage(): bool
+    {
+        return $this->vehicle_image_path !== null
+            && Storage::disk($this->vehicle_image_disk)->exists($this->vehicle_image_path);
+    }
+
+    /**
+     * Short-lived signed URL, matching the same pattern used for report
+     * PDFs — regenerated on every render rather than a stored permanent
+     * link, so it works identically regardless of storage disk.
+     */
+    public function vehicleImageUrl(): ?string
+    {
+        return $this->hasVehicleImage()
+            ? Storage::disk($this->vehicle_image_disk)->temporaryUrl($this->vehicle_image_path, now()->addMinutes(10))
+            : null;
+    }
+
+    /**
+     * Base64 data URI for the PDF — dompdf has isRemoteEnabled disabled
+     * (see ReportPdfService), so a normal image URL (even our own) can't
+     * be fetched; embedding the bytes directly sidesteps that entirely.
+     */
+    public function vehicleImageDataUri(): ?string
+    {
+        if (! $this->hasVehicleImage()) {
+            return null;
+        }
+
+        $disk = Storage::disk($this->vehicle_image_disk);
+        $mime = $disk->mimeType($this->vehicle_image_path) ?: 'image/png';
+        $contents = $disk->get($this->vehicle_image_path);
+
+        return 'data:'.$mime.';base64,'.base64_encode($contents);
     }
 
     public function isPurged(): bool

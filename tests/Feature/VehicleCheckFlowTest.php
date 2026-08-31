@@ -988,6 +988,53 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringContainsString('Data provided by Experian', $pdfHtml);
     }
 
+    public function test_a_report_with_no_stored_vehicle_image_falls_back_to_the_silhouette(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeHtml('viewBox="0 0 64 32"'); // vehicle silhouette, since no image was ever retrieved
+    }
+
+    public function test_a_report_with_a_stored_vehicle_image_shows_it_instead_of_the_silhouette_on_web_and_in_the_pdf(): void
+    {
+        Storage::fake('local');
+
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+            'vehicle_image_disk' => 'local',
+            'vehicle_image_path' => 'reports/vehicle-image-test.png',
+        ]);
+        Storage::disk('local')->put($check->vehicle_image_path, 'fake-image-bytes');
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertDontSeeHtml('viewBox="0 0 64 32"') // silhouette replaced
+            ->assertSeeHtml('<img');
+
+        $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
+
+        $this->assertStringContainsString('data:image/png;base64,', $pdfHtml);
+        $this->assertStringContainsString(base64_encode('fake-image-bytes'), $pdfHtml);
+    }
+
     public function test_the_full_vin_never_appears_in_the_report_or_pdf_only_the_last_five(): void
     {
         $user = $this->verifiedUser();
