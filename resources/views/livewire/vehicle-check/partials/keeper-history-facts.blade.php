@@ -14,7 +14,8 @@
     <p class="text-vale-navy mt-1">Colour changes: {{ $history?->colour_changes ?? 0 }}</p>
     <p class="text-vale-navy mt-1">Vehicle identity checks: {{ $history?->vehicle_identity_checks ?? 0 }}</p>
     <p class="text-vale-navy mt-1">Logbook (V5C) reissues: {{ $history?->v5c_reissues ?? 'Unknown' }}</p>
-    <p class="text-vale-navy mt-1">Previous searches by other buyers/traders: {{ $history?->previous_searches ?? 'Unknown' }}</p>
+    {{-- previous_searches is still captured and stored, just not shown —
+         removed from the report display on request. --}}
     <p class="text-vale-navy mt-1">Imported: {{ is_null($history?->imported) ? 'Unavailable' : ($history->imported ? 'Yes' : 'No') }}</p>
     <p class="text-vale-navy mt-1">Previously exported: {{ is_null($history?->was_exported) ? 'Unavailable' : ($history->was_exported ? 'Yes' : 'No') }}</p>
     {{-- vrm_matches/vin_matches are deliberately not shown here — we don't

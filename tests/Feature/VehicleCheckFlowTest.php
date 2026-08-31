@@ -913,9 +913,10 @@ class VehicleCheckFlowTest extends TestCase
             'v5c_reissues' => 5,
             'previous_searches' => 36,
             'was_exported' => false,
-            // Deliberately not asserted below — see the comment on
+            // Deliberately not asserted below — see the comments on
             // keeper-history-facts.blade.php for why these are stored but
-            // not displayed.
+            // not displayed (previous_searches: removed on request; vrm/vin
+            // matches: no confirmed definition of what "false" means yet).
             'vrm_matches' => false,
             'vin_matches' => null,
         ]);
@@ -925,15 +926,16 @@ class VehicleCheckFlowTest extends TestCase
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Logbook (V5C) reissues: 5')
-            ->assertSeeText('Previous searches by other buyers/traders: 36')
             ->assertSeeText('AW58CAT')
             ->assertSeeText('DY17BXW')
+            ->assertDontSeeText('Previous searches')
             ->assertDontSeeText('Registration matches records')
             ->assertDontSeeText('VIN matches records');
 
         $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
         $this->assertStringContainsString('Logbook (V5C) reissues: 5', $pdfHtml);
         $this->assertStringContainsString('AW58CAT', $pdfHtml);
+        $this->assertStringNotContainsString('Previous searches', $pdfHtml);
         $this->assertStringNotContainsString('Registration matches records', $pdfHtml);
     }
 
