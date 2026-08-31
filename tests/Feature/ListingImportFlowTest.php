@@ -96,6 +96,24 @@ class ListingImportFlowTest extends TestCase
         Bus::assertNotDispatched(ImportListing::class);
     }
 
+    public function test_the_listing_url_field_is_hidden_by_default(): void
+    {
+        // Hidden for now — see config/valecheck.php. Doesn't assert the
+        // raw config value itself (PHPUnit's <env> injection leaves it as
+        // an empty string rather than a real boolean in this test
+        // environment) — what actually matters is the observable UI
+        // behaviour asserted below.
+        $this->actingAs($this->user());
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'AB12CDE')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->call('choose', 'rebuild')
+            ->assertDontSee('Listing URL')
+            ->assertDontSeeHtml('wire:click="importListing"');
+    }
+
     public function test_a_cached_import_is_reused_without_dispatching_a_new_job(): void
     {
         config(['valecheck.listing_import.enabled' => true]);

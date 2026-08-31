@@ -231,7 +231,9 @@ return [
     | architecture and the SSRF-safe fetcher.
     */
     'listing_import' => [
-        'enabled' => env('LISTING_IMPORT_ENABLED', true),
+        // Hidden for now — flip to true (or set LISTING_IMPORT_ENABLED)
+        // to bring it back with no other code changes.
+        'enabled' => env('LISTING_IMPORT_ENABLED', false),
         'cache_hours' => 6,
         'max_images' => 30,
         'max_page_size_kb' => 5120,

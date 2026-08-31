@@ -153,6 +153,7 @@
                 @endif
             </div>
 
+            @if (config('valecheck.listing_import.enabled'))
             <div>
                 <x-input-label for="listing_url" value="Listing URL" />
                 <div class="flex flex-col sm:flex-row gap-3 mt-1">
@@ -205,6 +206,7 @@
                     </p>
                 @endif
             </div>
+            @endif
 
             @if ($type === 'rebuild')
                 <div>
