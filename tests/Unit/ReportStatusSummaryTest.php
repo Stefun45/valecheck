@@ -44,7 +44,7 @@ class ReportStatusSummaryTest extends TestCase
 
         $this->assertTrue($boxes['Mileage Trend']);
         $this->assertTrue($boxes['Write-Off History']);
-        $this->assertTrue($boxes['Outstanding Finance']);
+        $this->assertTrue($boxes['Finance']);
         $this->assertTrue($boxes['Stolen']);
     }
 
@@ -68,7 +68,7 @@ class ReportStatusSummaryTest extends TestCase
         $stolen = $this->historyFor(['stolen_marker' => true]);
 
         $this->assertFalse($this->boxesFor($writeOff)['Write-Off History']);
-        $this->assertFalse($this->boxesFor($finance)['Outstanding Finance']);
+        $this->assertFalse($this->boxesFor($finance)['Finance']);
         $this->assertFalse($this->boxesFor($stolen)['Stolen']);
     }
 
@@ -80,7 +80,7 @@ class ReportStatusSummaryTest extends TestCase
 
         $this->assertFalse($boxes['Mileage Trend']);
         $this->assertFalse($boxes['Write-Off History']);
-        $this->assertFalse($boxes['Outstanding Finance']);
+        $this->assertFalse($boxes['Finance']);
         $this->assertFalse($boxes['Stolen']);
     }
 }

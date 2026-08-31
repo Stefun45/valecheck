@@ -25,7 +25,7 @@ class ReportStatusSummary
         return [
             ['label' => 'Mileage Trend', 'ok' => $history !== null && ! self::mileageWentBackwards($history) && ! $history->mileage_anomaly],
             ['label' => 'Write-Off History', 'ok' => $history !== null && ! $history->isWrittenOff()],
-            ['label' => 'Outstanding Finance', 'ok' => $history !== null && ! $history->finance_marker],
+            ['label' => 'Finance', 'ok' => $history !== null && ! $history->finance_marker],
             ['label' => 'Stolen', 'ok' => $history !== null && ! $history->stolen_marker],
         ];
     }

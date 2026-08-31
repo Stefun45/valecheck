@@ -749,7 +749,7 @@ class VehicleCheckFlowTest extends TestCase
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Mileage Trend')
             ->assertSeeText('Write-Off History')
-            ->assertSeeText('Outstanding Finance')
+            ->assertSeeText('Finance')
             ->assertSeeText('Stolen');
 
         Storage::fake('local');
