@@ -1,4 +1,4 @@
-@extends('pdf.layout', ['tag' => 'ValeCheck Plus · History &amp; Value Report'])
+@extends('pdf.layout', ['tag' => 'ValeCheck Plus · History & Value Report'])
 
 @php
     $vehicle = $check->vehicle;
