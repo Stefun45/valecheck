@@ -150,6 +150,60 @@ class OneAutoVehicleDataProviderTest extends TestCase
         $this->assertTrue($result->isWrittenOff());
     }
 
+    public function test_write_off_category_is_parsed_from_vehicle_status_on_a_real_cat_n_response(): void
+    {
+        // Confirmed against a real sandbox Cat N response: recovered_category
+        // and recovered_category_desc are both null even though a write-off
+        // is genuinely present — this was silently missed entirely until a
+        // live test surfaced it, because the earlier test fixture above
+        // invented a 'recovered_category' field that the real API never
+        // actually populates.
+        $this->fakeBoth(
+            $this->completeAutoCheck([
+                'condition_data_qty' => 1,
+                'condition_data_items' => [
+                    [
+                        'date_of_loss' => '2025-04-06',
+                        'vehicle_status' => 'CAT N NON STRUCTURAL DAMAGE',
+                        'theft_indictor_literal' => 'NOT STOLEN',
+                        'recovered_category' => null,
+                        'recovered_category_desc' => null,
+                        'theft_indicator' => 'N',
+                        'cause_of_damage' => 'Accident',
+                        'damage_location_items' => [
+                            ['damage_location_desc' => 'Front'],
+                            ['damage_location_desc' => 'FrontNearside'],
+                        ],
+                    ],
+                ],
+            ]),
+            $this->motAndTax(),
+        );
+
+        $result = $this->provider()->getVehicle('DY17BXW');
+
+        $this->assertSame('N', $result->writeOffCategory);
+        $this->assertSame('2025-04-06', $result->writeOffDate);
+        $this->assertTrue($result->isWrittenOff());
+    }
+
+    public function test_write_off_category_s_is_parsed_from_a_structural_damage_vehicle_status(): void
+    {
+        $this->fakeBoth(
+            $this->completeAutoCheck([
+                'condition_data_qty' => 1,
+                'condition_data_items' => [
+                    ['date_of_loss' => '2024-01-01', 'vehicle_status' => 'CAT S STRUCTURAL DAMAGE', 'recovered_category' => null],
+                ],
+            ]),
+            $this->motAndTax(),
+        );
+
+        $result = $this->provider()->getVehicle('AB21ABC');
+
+        $this->assertSame('S', $result->writeOffCategory);
+    }
+
     public function test_finance_and_stolen_are_derived_from_their_qty_counters(): void
     {
         $this->fakeBoth(

@@ -93,6 +93,15 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
      * @param  array<string, mixed>  $autoCheck
      * @return array{0: ?string, 1: ?string}
      */
+    /**
+     * Confirmed against a real Cat N write-off response: recovered_category
+     * and recovered_category_desc are both null even when a write-off is
+     * genuinely present — the category is only ever embedded as free text
+     * in vehicle_status (e.g. "CAT N NON STRUCTURAL DAMAGE"). Every
+     * consumer of write_off_category (SalvageValuationService, the "not
+     * roadworthy" risk flag, report copy) expects a bare letter, so it's
+     * parsed out here rather than stored as the full description.
+     */
     private function writeOff(array $autoCheck): array
     {
         if (($autoCheck['condition_data_qty'] ?? 0) <= 0) {
@@ -101,8 +110,14 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
 
         $condition = $autoCheck['condition_data_items'][0] ?? [];
 
+        $category = $condition['recovered_category'] ?? null;
+
+        if ($category === null && preg_match('/\bCAT\s+([A-Z])\b/i', (string) ($condition['vehicle_status'] ?? ''), $matches)) {
+            $category = strtoupper($matches[1]);
+        }
+
         return [
-            $condition['recovered_category'] ?? null,
+            $category,
             $condition['date_of_loss'] ?? null,
         ];
     }
