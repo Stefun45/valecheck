@@ -83,7 +83,14 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
                     $test['reason_for_refusal_and_comments'] ?? [],
                 ),
             ], $motTests),
-            keeperHistory: [],
+            // Confirmed against a real response: keeper_data_items is a
+            // genuinely populated array with real transfer dates — this was
+            // previously hardcoded to [] and silently discarded real data,
+            // even though nothing in the report currently displays it.
+            keeperHistory: array_map(fn (array $item) => [
+                'keeper_number' => $item['number_previous_keepers'] ?? null,
+                'date_of_transfer' => $item['date_of_last_keeper_change'] ?? null,
+            ], $autoCheck['keeper_data_items'] ?? []),
             confidence: 'high',
             raw: ['autocheck' => $autoCheck, 'mot_and_tax' => $mot],
         );

@@ -129,6 +129,33 @@ class OneAutoVehicleDataProviderTest extends TestCase
         $this->assertCount(1, $result->motHistory);
         $this->assertSame(48210, $result->motHistory[0]['mileage']);
         $this->assertSame(['Nearside front tyre worn close to the legal limit'], $result->motHistory[0]['advisories']);
+        $this->assertCount(1, $result->keeperHistory);
+        $this->assertSame(2, $result->keeperHistory[0]['keeper_number']);
+    }
+
+    public function test_keeper_history_maps_every_real_transfer_not_just_the_count(): void
+    {
+        // Confirmed against a real response: keeper_data_items is a
+        // genuinely populated array with real dates — this was previously
+        // hardcoded to an empty array and silently discarded.
+        $this->fakeBoth(
+            $this->completeAutoCheck([
+                'keeper_data_items' => [
+                    ['date_last_updated' => null, 'number_previous_keepers' => 4, 'date_of_last_keeper_change' => '2025-05-16'],
+                    ['date_last_updated' => null, 'number_previous_keepers' => 3, 'date_of_last_keeper_change' => '2024-08-14'],
+                    ['date_last_updated' => null, 'number_previous_keepers' => 2, 'date_of_last_keeper_change' => '2022-12-02'],
+                    ['date_last_updated' => null, 'number_previous_keepers' => 1, 'date_of_last_keeper_change' => '2019-11-06'],
+                ],
+            ]),
+            $this->motAndTax(),
+        );
+
+        $result = $this->provider()->getVehicle('DY17BXW');
+
+        $this->assertSame(4, $result->previousKeepers);
+        $this->assertCount(4, $result->keeperHistory);
+        $this->assertSame(['keeper_number' => 4, 'date_of_transfer' => '2025-05-16'], $result->keeperHistory[0]);
+        $this->assertSame(['keeper_number' => 1, 'date_of_transfer' => '2019-11-06'], $result->keeperHistory[3]);
     }
 
     public function test_write_off_category_is_derived_from_condition_data_when_present(): void
