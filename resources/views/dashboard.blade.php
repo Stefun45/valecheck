@@ -15,12 +15,12 @@
                 <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm">Subscription activated — thank you.</div>
             @endif
 
-            <div class="flex justify-between items-center">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
                     <h3 class="font-display font-bold text-lg text-vale-navy">Start a new check</h3>
                     <p class="text-gray-500 text-sm">Enter a registration to check history, damage, value and maximum bid.</p>
                 </div>
-                <a href="{{ route('vehicle-checks.start') }}" wire:navigate class="inline-flex items-center px-5 py-2 bg-vale-red rounded-full font-semibold text-sm text-white hover:bg-red-600">
+                <a href="{{ route('vehicle-checks.start') }}" wire:navigate class="inline-flex items-center justify-center px-5 py-2 bg-vale-red rounded-full font-semibold text-sm text-white hover:bg-red-600 shrink-0">
                     New Check
                 </a>
             </div>

@@ -16,7 +16,7 @@ new class extends Component
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-200">
+<nav x-data="{ open: false }" x-on:click.outside="open = false" class="relative bg-white border-b border-gray-200">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -94,8 +94,14 @@ new class extends Component
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
+    <!-- Backdrop, sitting below the header so the hamburger/close button
+         stays clickable — dims the page content the menu now overlays,
+         instead of that content just sitting visible underneath it. -->
+    <div x-show="open" x-on:click="open = false" x-transition.opacity class="fixed inset-x-0 top-16 bottom-0 z-20 bg-black/25 sm:hidden" style="display: none;"></div>
+
+    <!-- Responsive Navigation Menu — absolutely positioned so it overlays
+         the page below the header instead of pushing content down. -->
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden absolute inset-x-0 top-full z-30 bg-white border-b border-gray-200 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
         <div class="pt-2 pb-3 space-y-1">
             @auth
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
