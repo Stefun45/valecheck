@@ -47,6 +47,19 @@ class DamageDiagramTest extends TestCase
         $this->assertSame(0, substr_count($html, 'background:#DC2626'));
     }
 
+    public function test_no_location_data_still_shows_the_diagram_greyed_out_with_a_no_data_banner(): void
+    {
+        // Confirmed real case: a genuine Cat S record where AutoCheck's own
+        // condition_data_items[0].damage_location_items came back as an
+        // empty array — the diagram should still render (not disappear),
+        // just visibly marked as having no location data rather than
+        // implying nothing was checked.
+        $html = $this->html([]);
+
+        $this->assertStringContainsString('NO DATA PROVIDED', $html);
+        $this->assertSame(0, substr_count($html, 'background:#DC2626'));
+    }
+
     public function test_it_renders_meaningfully_more_than_a_blank_page_in_dompdf(): void
     {
         $dompdf = new Dompdf(new Options);

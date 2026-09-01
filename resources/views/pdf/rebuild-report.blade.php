@@ -64,9 +64,11 @@
                     <p class="{{ $history?->isWrittenOff() ? 'warn' : 'ok' }}">
                         {{ $history?->isWrittenOff() ? "Category {$history->write_off_category} recorded" : 'No write-off history recorded' }}
                     </p>
-                    @if ($history?->isWrittenOff() && $history->formattedDamageLocations())
-                        <p>Damage area: {{ implode(', ', $history->formattedDamageLocations()) }}</p>
-                        <x-damage-diagram :locations="$history->damage_locations" />
+                    @if ($history?->isWrittenOff())
+                        @if ($history->formattedDamageLocations())
+                            <p>Damage area: {{ implode(', ', $history->formattedDamageLocations()) }}</p>
+                        @endif
+                        <x-damage-diagram :locations="$history->damage_locations ?? []" />
                     @endif
                     <p>Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
                     <p>Plate changes: {{ $history?->plate_changes ?? 0 }}</p>

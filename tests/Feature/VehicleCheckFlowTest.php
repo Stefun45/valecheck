@@ -1069,8 +1069,12 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringContainsString('Damage area: Front Nearside, Rear', $pdfHtml);
     }
 
-    public function test_a_written_off_vehicle_with_no_damage_location_data_shows_no_damage_area_line(): void
+    public function test_a_written_off_vehicle_with_no_damage_location_data_still_shows_the_diagram_greyed_out(): void
     {
+        // Confirmed real case: a genuine Cat S vehicle where AutoCheck
+        // returned an empty damage_location_items array. The diagram
+        // still shows (marked "no data provided") rather than
+        // disappearing, which would otherwise read as "we never checked".
         $user = $this->verifiedUser();
         $check = VehicleCheck::factory()->create([
             'user_id' => $user->id,
@@ -1089,7 +1093,11 @@ class VehicleCheckFlowTest extends TestCase
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertDontSeeText('Damage area:')
-            ->assertDontSeeText('Front of vehicle at top');
+            ->assertSeeText('Front of vehicle at top')
+            ->assertSeeText('NO DATA PROVIDED');
+
+        $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('NO DATA PROVIDED', $pdfHtml);
     }
 
     public function test_a_rebuild_report_shows_its_damage_area_on_web_and_pdf(): void

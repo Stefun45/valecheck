@@ -37,6 +37,7 @@
     $zones = collect($locations)->map($zoneOf)->filter()->unique()->values()->all();
     $unmapped = collect($locations)->reject(fn ($l) => $zoneOf($l) !== null)->values()->all();
     $isAll = in_array('all', $zones, true);
+    $hasNoData = empty($locations);
 
     $rows = [
         ['front-nearside', 'front', 'front-offside'],
@@ -55,12 +56,21 @@
     $normalBorder = '#D1D5DB';
 @endphp
 
-<div style="max-width:220px; margin:8px 0 0;">
+{{--
+    Always shown for a written-off vehicle, even when AutoCheck returned no
+    location breakdown at all — a real, confirmed case (a genuine Cat S
+    record where damage_location_items came back as an empty array), not a
+    mapping bug. Showing a greyed-out diagram with a "no data" banner is
+    more honest than hiding the diagram outright, which could otherwise
+    read as "we forgot to check" rather than "the provider didn't return
+    this detail".
+--}}
+<div style="max-width:220px; margin:8px 0 0; position:relative; opacity:{{ $hasNoData ? '0.6' : '1' }};">
     <table style="width:100%; border-collapse:separate; border-spacing:3px;">
         @foreach ($rows as $row)
             <tr>
                 @foreach ($row as $cell)
-                    @php $hit = $isAll || in_array($cell, $zones, true); @endphp
+                    @php $hit = ! $hasNoData && ($isAll || in_array($cell, $zones, true)); @endphp
                     <td style="text-align:center; vertical-align:middle; height:44px; font-size:8px; font-weight:bold; letter-spacing:0.5px; border-radius:5px; background:{{ $hit ? $damageColor : $normalColor }}; color:{{ $hit ? '#ffffff' : '#9CA3AF' }}; border:1px solid {{ $hit ? $damageColor : $normalBorder }};">
                         {{ $labels[$cell] }}
                     </td>
@@ -68,6 +78,11 @@
             </tr>
         @endforeach
     </table>
+    @if ($hasNoData)
+        <div style="position:absolute; top:0; left:0; width:100%; height:16px; background:#6B7280; color:#ffffff; font-size:7px; font-weight:bold; text-align:center; line-height:16px; letter-spacing:0.5px; border-radius:5px 5px 0 0;">
+            NO DATA PROVIDED
+        </div>
+    @endif
     <p style="font-size:8px; color:#9CA3AF; margin:4px 0 0; text-transform:uppercase; letter-spacing:0.5px;">Front of vehicle at top</p>
     @if (! empty($unmapped))
         <p style="font-size:9px; color:#6B7280; margin:4px 0 0;">Also reported: {{ implode(', ', $unmapped) }}</p>

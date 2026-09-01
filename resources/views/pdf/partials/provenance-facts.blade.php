@@ -12,8 +12,8 @@
             <p>Date: {{ optional($history->write_off_date)->format('d M Y') ?? 'Unknown' }}</p>
             @if ($history->formattedDamageLocations())
                 <p>Damage area: {{ implode(', ', $history->formattedDamageLocations()) }}</p>
-                <x-damage-diagram :locations="$history->damage_locations" />
             @endif
+            <x-damage-diagram :locations="$history->damage_locations ?? []" />
         @else
             <p class="ok">No write-off history recorded.</p>
         @endif
