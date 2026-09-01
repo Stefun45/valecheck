@@ -15,15 +15,15 @@
     <body class="font-sans antialiased bg-white text-vale-navy">
 
         <header class="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                <x-application-logo text-class="text-lg" />
-                <nav class="flex items-center gap-4 text-sm">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+                <x-application-logo text-class="text-base sm:text-lg" />
+                <nav class="flex items-center gap-2 sm:gap-4 text-sm shrink-0">
                     @auth
-                        <a href="{{ route('dashboard') }}" class="font-medium text-vale-navy hover:text-vale-red">Dashboard</a>
+                        <a href="{{ route('dashboard') }}" class="font-medium text-vale-navy hover:text-vale-red whitespace-nowrap">Dashboard</a>
                     @else
-                        <a href="{{ route('login') }}" class="font-medium text-vale-navy hover:text-vale-red">Sign in</a>
-                        <a href="{{ route('register') }}" class="font-medium text-vale-navy hover:text-vale-red">Register</a>
-                        <a href="{{ route('vehicle-checks.start') }}" class="inline-flex items-center px-5 py-2 bg-vale-red rounded-full font-semibold text-sm text-white hover:bg-red-600 transition">Check Your Vehicle</a>
+                        <a href="{{ route('login') }}" class="font-medium text-vale-navy hover:text-vale-red whitespace-nowrap">Sign in</a>
+                        <a href="{{ route('register') }}" class="hidden sm:inline font-medium text-vale-navy hover:text-vale-red whitespace-nowrap">Register</a>
+                        <a href="{{ route('vehicle-checks.start') }}" class="inline-flex items-center px-3 sm:px-5 py-1.5 sm:py-2 bg-vale-red rounded-full font-semibold text-xs sm:text-sm text-white hover:bg-red-600 transition whitespace-nowrap">Check Your Vehicle</a>
                     @endauth
                 </nav>
             </div>
@@ -56,12 +56,6 @@
                     <span class="inline-flex items-center gap-1.5"><span class="text-vale-red">✓</span> DVLA Data</span>
                     <span class="inline-flex items-center gap-1.5"><span class="text-vale-red">✓</span> Secure</span>
                     <span class="inline-flex items-center gap-1.5"><span class="text-vale-red">✓</span> Instant Results</span>
-                </div>
-
-                <div class="mt-8">
-                    <a href="{{ route('vehicle-checks.start') }}" class="inline-flex items-center px-5 py-2.5 border-2 border-vale-red text-vale-red rounded-full font-semibold text-sm hover:bg-vale-red hover:text-white transition">
-                        Check Your Vehicle
-                    </a>
                 </div>
             </div>
         </section>
