@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'user_id', 'vehicle_id', 'type', 'status', 'stage', 'funding_source',
@@ -63,6 +64,38 @@ class VehicleCheck extends Model
             'purged_at' => 'datetime',
             'upgraded_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $check) {
+            $check->public_id ??= self::generateUniquePublicId();
+        });
+    }
+
+    /**
+     * Not mass-assignable (deliberately absent from Fillable) — always
+     * generated server-side via the creating event above, never settable
+     * by a caller.
+     */
+    private static function generateUniquePublicId(): string
+    {
+        do {
+            $candidate = Str::random(11);
+        } while (self::where('public_id', $candidate)->exists());
+
+        return $candidate;
+    }
+
+    /**
+     * Customer-facing routes (checks/{vehicleCheck}, its PDF download, and
+     * both checkout routes) resolve on this short random identifier
+     * instead of the sequential `id` — a low sequential number in the URL
+     * would otherwise reveal roughly how many checks have ever been run.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
     }
 
     /**

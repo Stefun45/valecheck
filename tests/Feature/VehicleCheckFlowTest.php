@@ -557,6 +557,23 @@ class VehicleCheckFlowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_the_sequential_id_does_not_resolve_the_report_only_the_public_id_does(): void
+    {
+        // A guessable sequential number in the URL would reveal roughly
+        // how many checks have ever been run - the route only resolves
+        // by the random public_id now.
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user)
+            ->get("/checks/{$check->id}")
+            ->assertNotFound();
+
+        $this->actingAs($user)
+            ->get("/checks/{$check->public_id}")
+            ->assertOk();
+    }
+
     public function test_mot_advisories_are_shown_on_the_report_and_in_the_pdf(): void
     {
         $user = $this->verifiedUser();
