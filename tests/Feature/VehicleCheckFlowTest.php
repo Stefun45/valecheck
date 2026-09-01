@@ -1061,8 +1061,8 @@ class VehicleCheckFlowTest extends TestCase
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Damage area: Front Nearside, Rear')
             ->assertSeeText('Front of vehicle at top')
-            ->assertSeeHtml('F/NS')
-            ->assertSeeHtml('REAR');
+            ->assertSeeHtml('left:18%; top:14%')
+            ->assertSeeHtml('left:50%; top:94%');
 
         $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
         $this->assertStringContainsString('Front of vehicle at top', $pdfHtml);
@@ -1094,10 +1094,10 @@ class VehicleCheckFlowTest extends TestCase
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertDontSeeText('Damage area:')
             ->assertSeeText('Front of vehicle at top')
-            ->assertSeeText('NO DATA PROVIDED');
+            ->assertSeeText('NO DATA');
 
         $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
-        $this->assertStringContainsString('NO DATA PROVIDED', $pdfHtml);
+        $this->assertStringContainsString('NO DATA', $pdfHtml);
     }
 
     public function test_a_rebuild_report_shows_its_damage_area_on_web_and_pdf(): void
@@ -1136,7 +1136,7 @@ class VehicleCheckFlowTest extends TestCase
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Damage area: Front Offside')
-            ->assertSeeHtml('F/OS');
+            ->assertSeeHtml('left:82%; top:14%');
 
         $pdfHtml = view('pdf.rebuild-report', ['check' => $check->fresh()])->render();
         $this->assertStringContainsString('Damage area: Front Offside', $pdfHtml);
