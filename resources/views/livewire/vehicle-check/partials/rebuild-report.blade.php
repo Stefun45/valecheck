@@ -72,6 +72,7 @@
             </p>
             @if ($history?->isWrittenOff() && $history->formattedDamageLocations())
                 <p class="text-sm text-gray-500 mt-1">Damage area: {{ implode(', ', $history->formattedDamageLocations()) }}</p>
+                <x-damage-diagram :locations="$history->damage_locations" />
             @endif
             <p class="{{ $history?->finance_marker ? 'text-vale-red font-semibold' : 'text-vale-navy' }} mt-1">
                 {{ $history?->finance_marker ? 'Finance marker detected' : 'No finance marker found' }}

@@ -1059,9 +1059,13 @@ class VehicleCheckFlowTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
-            ->assertSeeText('Damage area: Front Nearside, Rear');
+            ->assertSeeText('Damage area: Front Nearside, Rear')
+            ->assertSeeText('Front of vehicle at top')
+            ->assertSeeHtml('F/NS')
+            ->assertSeeHtml('REAR');
 
         $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('Front of vehicle at top', $pdfHtml);
         $this->assertStringContainsString('Damage area: Front Nearside, Rear', $pdfHtml);
     }
 
@@ -1084,7 +1088,8 @@ class VehicleCheckFlowTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
-            ->assertDontSeeText('Damage area:');
+            ->assertDontSeeText('Damage area:')
+            ->assertDontSeeText('Front of vehicle at top');
     }
 
     public function test_a_rebuild_report_shows_its_damage_area_on_web_and_pdf(): void
@@ -1122,10 +1127,12 @@ class VehicleCheckFlowTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
-            ->assertSeeText('Damage area: Front Offside');
+            ->assertSeeText('Damage area: Front Offside')
+            ->assertSeeHtml('F/OS');
 
         $pdfHtml = view('pdf.rebuild-report', ['check' => $check->fresh()])->render();
         $this->assertStringContainsString('Damage area: Front Offside', $pdfHtml);
+        $this->assertStringContainsString('Front of vehicle at top', $pdfHtml);
     }
 
     public function test_the_full_vin_never_appears_in_the_report_or_pdf_only_the_last_five(): void

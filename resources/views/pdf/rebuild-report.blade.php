@@ -66,6 +66,7 @@
                     </p>
                     @if ($history?->isWrittenOff() && $history->formattedDamageLocations())
                         <p>Damage area: {{ implode(', ', $history->formattedDamageLocations()) }}</p>
+                        <x-damage-diagram :locations="$history->damage_locations" />
                     @endif
                     <p>Previous keepers: {{ $history?->previous_keepers ?? 'Unknown' }}</p>
                     <p>Plate changes: {{ $history?->plate_changes ?? 0 }}</p>
