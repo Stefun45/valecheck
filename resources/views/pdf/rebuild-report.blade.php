@@ -93,6 +93,9 @@
                     <p>Clean value: £{{ number_format($valuation->clean_value ?? 0, 0) }}</p>
                     @if ($valuation?->write_off_category_applied)
                         <p>Salvage-adjusted ({{ $valuation->write_off_category_applied }}): £{{ number_format($valuation->salvage_adjusted_value ?? 0, 0) }}</p>
+                        @if ($valuation->category_adjusted_value_low)
+                            <p style="color:#999; font-size:9px;">A conservative estimate, not the top of the category's range.</p>
+                        @endif
                     @endif
                 </div>
             </td>

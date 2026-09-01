@@ -101,6 +101,9 @@
             <p class="text-vale-navy">Clean value: £{{ number_format($valuation->clean_value ?? 0, 0) }}</p>
             @if ($valuation?->write_off_category_applied)
                 <p class="text-vale-navy mt-1">Salvage-adjusted ({{ $valuation->write_off_category_applied }}): £{{ number_format($valuation->salvage_adjusted_value ?? 0, 0) }}</p>
+                @if ($valuation->category_adjusted_value_low)
+                    <p class="text-xs text-gray-400 mt-1">A conservative estimate, not the top of the category's range.</p>
+                @endif
             @endif
             <p class="text-xs text-gray-400 mt-2">Confidence: {{ ucfirst($valuation->confidence ?? 'medium') }}</p>
         </div>
