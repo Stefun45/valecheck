@@ -42,41 +42,43 @@
     $isAll = in_array('all', $zones, true);
     $hasNoData = empty($locations);
 
-    // Pin centre coordinates within the 100x200 viewBox.
+    // Pin centre coordinates within the 200x100 viewBox — front on the
+    // right, matching the orientation of the existing vehicle-silhouette
+    // component used elsewhere in the report.
     $positions = [
-        'front-nearside' => [25, 25],
-        'front' => [50, 15],
-        'front-offside' => [75, 25],
-        'nearside' => [18, 100],
-        'roof' => [50, 100],
-        'offside' => [82, 100],
-        'rear-nearside' => [25, 175],
-        'rear' => [50, 185],
-        'rear-offside' => [75, 175],
+        'front-nearside' => [175, 25],
+        'front' => [185, 50],
+        'front-offside' => [175, 75],
+        'nearside' => [100, 18],
+        'roof' => [100, 50],
+        'offside' => [100, 82],
+        'rear-nearside' => [25, 25],
+        'rear' => [15, 50],
+        'rear-offside' => [25, 75],
     ];
 
     $pinZones = $isAll ? array_keys($positions) : array_intersect(array_keys($positions), $zones);
 @endphp
 
-<div style="max-width:130px;" class="mt-2">
-    <svg viewBox="0 0 100 200" width="100" height="200" xmlns="http://www.w3.org/2000/svg" style="opacity: {{ $hasNoData ? '0.5' : '1' }}">
-        {{-- Body — moderate corner rounding leaves real flat side walls
+<div style="max-width:220px;" class="mt-2">
+    <svg viewBox="0 0 200 100" width="200" height="100" xmlns="http://www.w3.org/2000/svg" style="opacity: {{ $hasNoData ? '0.5' : '1' }}">
+        {{-- Body — moderate corner rounding leaves real flat sides
              (unlike a heavily-rounded ellipse) for the wheels to sit
              flush against, so they read as attached rather than
              floating. --}}
-        <rect x="15" y="10" width="70" height="180" rx="22" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" />
+        <rect x="10" y="15" width="180" height="70" rx="22" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" />
 
         {{-- Cabin/roof glass panel — a distinct shaded shape rather
              than bare lines floating in empty space. --}}
-        <rect x="27" y="52" width="46" height="96" rx="14" fill="#D1D5DB" />
+        <rect x="52" y="27" width="96" height="46" rx="14" fill="#D1D5DB" />
 
         {{-- Wheels: dark tyre + lighter hub, overlapping the body's
-             flat sides so they look integrated, not detached. --}}
-        @foreach ([35, 133] as $wheelY)
-            <rect x="5" y="{{ $wheelY }}" width="18" height="32" rx="5" fill="#374151" />
-            <rect x="9" y="{{ $wheelY + 7 }}" width="10" height="18" rx="3" fill="#9CA3AF" />
-            <rect x="77" y="{{ $wheelY }}" width="18" height="32" rx="5" fill="#374151" />
-            <rect x="81" y="{{ $wheelY + 7 }}" width="10" height="18" rx="3" fill="#9CA3AF" />
+             flat top/bottom edges so they look integrated, not detached. --}}
+        @foreach ([35, 133] as $wheelX)
+            <rect x="{{ $wheelX }}" y="5" width="32" height="18" rx="5" fill="#374151" />
+            <rect x="{{ $wheelX + 7 }}" y="9" width="18" height="10" rx="3" fill="#9CA3AF" />
+            <rect x="{{ $wheelX }}" y="77" width="32" height="18" rx="5" fill="#374151" />
+            <rect x="{{ $wheelX + 7 }}" y="81" width="18" height="10" rx="3" fill="#9CA3AF" />
         @endforeach
 
         @if (! $hasNoData)
@@ -89,7 +91,7 @@
     @if ($hasNoData)
         <p class="text-xs text-gray-400 mt-1">No damage location data provided.</p>
     @endif
-    <p class="text-xs text-gray-400 uppercase tracking-wide mt-1">Front of vehicle at top</p>
+    <p class="text-xs text-gray-400 uppercase tracking-wide mt-1">Front of vehicle on the right</p>
     @if (! empty($unmapped))
         <p class="text-xs text-gray-500 mt-1">Also reported: {{ implode(', ', $unmapped) }}</p>
     @endif

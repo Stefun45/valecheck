@@ -21,7 +21,7 @@ class DamageDiagramTest extends TestCase
         $html = $this->html(['FrontNearside']);
 
         $this->assertSame(1, $this->pinCount($html));
-        $this->assertStringContainsString('cx="25" cy="25"', $html);
+        $this->assertStringContainsString('cx="175" cy="25"', $html);
     }
 
     public function test_a_generic_rear_code_places_only_the_rear_pin(): void
@@ -29,7 +29,7 @@ class DamageDiagramTest extends TestCase
         $html = $this->html(['Rear']);
 
         $this->assertSame(1, $this->pinCount($html));
-        $this->assertStringContainsString('cx="50" cy="185"', $html);
+        $this->assertStringContainsString('cx="15" cy="50"', $html);
     }
 
     public function test_an_all_over_code_places_a_pin_at_every_zone(): void
