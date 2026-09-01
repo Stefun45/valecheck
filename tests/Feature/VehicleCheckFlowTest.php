@@ -574,6 +574,22 @@ class VehicleCheckFlowTest extends TestCase
             ->assertOk();
     }
 
+    public function test_the_download_pdf_button_opens_in_a_new_tab(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => $check->type, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeHtml('href="'.route('vehicle-checks.pdf', $check).'" target="_blank"');
+    }
+
     public function test_mot_advisories_are_shown_on_the_report_and_in_the_pdf(): void
     {
         $user = $this->verifiedUser();

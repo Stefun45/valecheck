@@ -28,7 +28,7 @@
                         <div class="flex flex-col items-end gap-1">
                             <a href="{{ route('vehicle-checks.show', $check) }}" wire:navigate class="text-sm font-semibold text-vale-red hover:text-red-600">View</a>
                             @if ($check->status === \App\Models\VehicleCheck::STATUS_COMPLETED)
-                                <a href="{{ route('vehicle-checks.pdf', $check) }}" class="text-xs text-gray-500 hover:text-vale-navy">Download PDF</a>
+                                <a href="{{ route('vehicle-checks.pdf', $check) }}" target="_blank" rel="noopener" class="text-xs text-gray-500 hover:text-vale-navy">Download PDF</a>
                                 @if ($check->expires_at)
                                     <span class="text-[10px] text-gray-400">Available until {{ $check->expires_at->format('d M Y') }}</span>
                                 @endif

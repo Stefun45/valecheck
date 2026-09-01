@@ -48,4 +48,18 @@ class ReportHistoryTest extends TestCase
     {
         $this->get(route('reports.index'))->assertRedirect(route('login'));
     }
+
+    public function test_the_download_pdf_link_opens_in_a_new_tab(): void
+    {
+        $user = User::factory()->create();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('reports.index'))
+            ->assertOk()
+            ->assertSeeHtml('href="'.route('vehicle-checks.pdf', $check).'" target="_blank"');
+    }
 }
