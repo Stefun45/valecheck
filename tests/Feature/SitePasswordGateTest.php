@@ -60,4 +60,26 @@ class SitePasswordGateTest extends TestCase
 
         $this->get('/up')->assertOk();
     }
+
+    public function test_a_whitelisted_ip_skips_the_password_entirely(): void
+    {
+        config([
+            'valecheck.site_password' => 'letmein',
+            'valecheck.site_password_ip_whitelist' => ['77.98.90.235'],
+        ]);
+
+        $this->call('GET', '/', server: ['REMOTE_ADDR' => '77.98.90.235'])
+            ->assertOk();
+    }
+
+    public function test_a_non_whitelisted_ip_is_still_gated(): void
+    {
+        config([
+            'valecheck.site_password' => 'letmein',
+            'valecheck.site_password_ip_whitelist' => ['77.98.90.235'],
+        ]);
+
+        $this->call('GET', '/', server: ['REMOTE_ADDR' => '1.2.3.4'])
+            ->assertUnauthorized();
+    }
 }

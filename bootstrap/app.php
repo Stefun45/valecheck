@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust the platform's own load balancer (Laravel Cloud) so
+        // $request->ip() resolves to the real visitor IP from
+        // X-Forwarded-For rather than the load balancer's own address —
+        // needed for RequireSitePassword's IP whitelist to work at all.
+        $middleware->trustProxies(at: '*');
+
         $middleware->validateCsrfTokens(except: [
             'stripe/webhook',
         ]);

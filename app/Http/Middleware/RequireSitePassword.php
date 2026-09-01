@@ -14,8 +14,11 @@ use Symfony\Component\HttpFoundation\Response;
  * subscriptions_enabled — remove it to go fully live with no code changes.
  *
  * Always excludes the Stripe webhook (Stripe's servers, not a browser,
- * hit it — they can't answer a Basic Auth prompt) and the health-check
- * route (Laravel Cloud polls this to know the app is alive).
+ * hit it — they can't answer a Basic Auth prompt), the health-check route
+ * (Laravel Cloud polls this to know the app is alive), and any IP in
+ * valecheck.site_password_ip_whitelist. Relies on bootstrap/app.php
+ * trusting the platform's load balancer so $request->ip() is the real
+ * visitor IP, not the load balancer's.
  */
 class RequireSitePassword
 {
@@ -26,6 +29,10 @@ class RequireSitePassword
         $password = config('valecheck.site_password');
 
         if (empty($password) || $request->is(...self::EXEMPT_PATHS)) {
+            return $next($request);
+        }
+
+        if (in_array($request->ip(), config('valecheck.site_password_ip_whitelist'), true)) {
             return $next($request);
         }
 

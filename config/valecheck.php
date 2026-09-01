@@ -25,6 +25,14 @@ return [
     // live with no code changes. See App\Http\Middleware\RequireSitePassword.
     'site_password' => env('SITE_PASSWORD'),
 
+    // Comma-separated IPs that skip the site password entirely (e.g. the
+    // team's own office/home IP, for demoing the live site without typing
+    // the password every time). Empty/unset means no IP is exempt.
+    'site_password_ip_whitelist' => array_filter(array_map(
+        'trim',
+        explode(',', (string) env('SITE_PASSWORD_IP_WHITELIST', ''))
+    )),
+
     'vat' => [
         'rate' => 0.20,
     ],
