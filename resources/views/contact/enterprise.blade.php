@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-10">
-        <div class="max-w-lg mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
             <p class="text-gray-500 text-sm mb-6">Tell us about your volume and we'll come back to you with custom pricing.</p>
 
             @if (session('status'))

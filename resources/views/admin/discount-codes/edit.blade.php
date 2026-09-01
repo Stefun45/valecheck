@@ -4,7 +4,7 @@
     </x-slot>
 
     <div class="py-10">
-        <div class="max-w-lg mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                 <p class="text-xs uppercase tracking-widest text-gray-400 mb-4">Code: <span class="font-mono text-vale-navy">{{ $discountCode->code }}</span> (not editable)</p>
 

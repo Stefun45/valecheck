@@ -4,7 +4,7 @@
     </x-slot>
 
     <div class="py-10">
-        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <p class="text-sm text-gray-500">
                 Every One Auto API call, most recent first — one row per call, so the count of rows for a given
                 registration is the real number of calls that report made.

@@ -4,7 +4,7 @@
     </x-slot>
 
     <div class="py-10">
-        <div class="max-w-lg mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                 <p class="text-sm text-gray-500 mb-4">The affiliate must already have a ValeCheck account — enter the email they registered with.</p>
 

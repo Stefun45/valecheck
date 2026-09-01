@@ -4,7 +4,7 @@
     </x-slot>
 
     <div class="py-10">
-        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-8">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
             <div class="flex gap-4 text-sm font-semibold">
                 <a href="{{ route('admin.affiliates.index') }}" class="text-vale-red hover:text-red-600">Manage Affiliates &rarr;</a>
