@@ -1061,11 +1061,12 @@ class VehicleCheckFlowTest extends TestCase
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Damage area: Front Nearside, Rear')
             ->assertSeeText('Front of vehicle at top')
-            ->assertSeeHtml('left:18%; top:14%')
-            ->assertSeeHtml('left:50%; top:94%');
+            ->assertSeeHtml('cx="28" cy="20"')
+            ->assertSeeHtml('cx="60" cy="190"');
 
+        // The diagram is web-only (dompdf can't render SVG) — the PDF
+        // relies on the plain text line instead.
         $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
-        $this->assertStringContainsString('Front of vehicle at top', $pdfHtml);
         $this->assertStringContainsString('Damage area: Front Nearside, Rear', $pdfHtml);
     }
 
@@ -1094,10 +1095,10 @@ class VehicleCheckFlowTest extends TestCase
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertDontSeeText('Damage area:')
             ->assertSeeText('Front of vehicle at top')
-            ->assertSeeText('NO DATA');
+            ->assertSeeText('No damage location data provided.');
 
         $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
-        $this->assertStringContainsString('NO DATA', $pdfHtml);
+        $this->assertStringContainsString('No damage location data provided.', $pdfHtml);
     }
 
     public function test_a_rebuild_report_shows_its_damage_area_on_web_and_pdf(): void
@@ -1136,11 +1137,10 @@ class VehicleCheckFlowTest extends TestCase
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Damage area: Front Offside')
-            ->assertSeeHtml('left:82%; top:14%');
+            ->assertSeeHtml('cx="92" cy="20"');
 
         $pdfHtml = view('pdf.rebuild-report', ['check' => $check->fresh()])->render();
         $this->assertStringContainsString('Damage area: Front Offside', $pdfHtml);
-        $this->assertStringContainsString('Front of vehicle at top', $pdfHtml);
     }
 
     public function test_the_full_vin_never_appears_in_the_report_or_pdf_only_the_last_five(): void

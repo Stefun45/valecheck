@@ -1,13 +1,13 @@
 @props(['locations' => []])
 
 {{--
-    A top-down car outline with a pin marker at the damaged zone(s),
-    rather than a grid of labelled boxes — built entirely from plain
-    divs with inline styles (rounded rects for the body/wheels, small
-    circles for pins, positioned with percentage left/top + a translate
-    offset) so it renders identically on the web report and inside
-    dompdf, matching report-verdict-badge/pdf-status-tick's "safe
-    primitives only" approach. No SVG/CSS grid/flexbox.
+    Web-only — a real top-down car outline (SVG), not the CSS-only boxes
+    this used to be. dompdf can't render SVG reliably (confirmed
+    elsewhere in this codebase, see pdf-status-tick.blade.php), so the
+    PDF never includes this component at all — it relies on the plain
+    "Damage area: ..." text line instead. Built from simple primitives
+    (rect/line/circle) rather than hand-authored path data, matching
+    section-icon.blade.php's "no complex multi-curve paths" discipline.
 
     AutoCheck's damage_location_desc format isn't fully confirmed (see
     OneAutoMarketValuationProvider) — rather than hard-matching exact
@@ -42,52 +42,45 @@
     $isAll = in_array('all', $zones, true);
     $hasNoData = empty($locations);
 
-    // Percentage position of each zone's pin within the 120x230 car body.
+    // Pin centre coordinates within the 120x200 viewBox.
     $positions = [
-        'front-nearside' => ['top' => 14, 'left' => 18],
-        'front' => ['top' => 8, 'left' => 50],
-        'front-offside' => ['top' => 14, 'left' => 82],
-        'nearside' => ['top' => 50, 'left' => 4],
-        'roof' => ['top' => 50, 'left' => 50],
-        'offside' => ['top' => 50, 'left' => 96],
-        'rear-nearside' => ['top' => 88, 'left' => 18],
-        'rear' => ['top' => 94, 'left' => 50],
-        'rear-offside' => ['top' => 88, 'left' => 82],
+        'front-nearside' => [28, 20],
+        'front' => [60, 12],
+        'front-offside' => [92, 20],
+        'nearside' => [14, 100],
+        'roof' => [60, 100],
+        'offside' => [106, 100],
+        'rear-nearside' => [28, 180],
+        'rear' => [60, 190],
+        'rear-offside' => [92, 180],
     ];
 
     $pinZones = $isAll ? array_keys($positions) : array_intersect(array_keys($positions), $zones);
-
-    $damageColor = '#DC2626';
 @endphp
 
-<div style="max-width:220px; margin:8px 0 0;">
-    <div style="width:150px; height:230px; margin:0 auto; position:relative; opacity:{{ $hasNoData ? '0.55' : '1' }};">
-        {{-- Wheels --}}
-        <div style="position:absolute; left:-2px; top:38px; width:10px; height:24px; border-radius:4px; background:#6B7280;"></div>
-        <div style="position:absolute; right:-2px; top:38px; width:10px; height:24px; border-radius:4px; background:#6B7280;"></div>
-        <div style="position:absolute; left:-2px; bottom:38px; width:10px; height:24px; border-radius:4px; background:#6B7280;"></div>
-        <div style="position:absolute; right:-2px; bottom:38px; width:10px; height:24px; border-radius:4px; background:#6B7280;"></div>
+<div style="max-width:160px;" class="mt-2">
+    <svg viewBox="0 0 120 200" width="120" height="200" xmlns="http://www.w3.org/2000/svg" style="opacity: {{ $hasNoData ? '0.5' : '1' }}">
+        <rect x="0" y="45" width="12" height="35" rx="4" fill="#4B5563" />
+        <rect x="108" y="45" width="12" height="35" rx="4" fill="#4B5563" />
+        <rect x="0" y="120" width="12" height="35" rx="4" fill="#4B5563" />
+        <rect x="108" y="120" width="12" height="35" rx="4" fill="#4B5563" />
 
-        {{-- Body --}}
-        <div style="position:absolute; left:15px; top:0; width:120px; height:230px; border-radius:60px; background:#F3F4F6; border:2px solid #D1D5DB;">
-            <div style="position:absolute; left:20px; top:34px; width:80px; height:2px; background:#D1D5DB;"></div>
-            <div style="position:absolute; left:20px; bottom:34px; width:80px; height:2px; background:#D1D5DB;"></div>
+        <rect x="10" y="0" width="100" height="200" rx="45" ry="70" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" />
+        <line x1="25" y1="35" x2="95" y2="35" stroke="#D1D5DB" stroke-width="2" />
+        <line x1="25" y1="165" x2="95" y2="165" stroke="#D1D5DB" stroke-width="2" />
 
-            @if ($hasNoData)
-                <div style="position:absolute; left:0; top:0; width:100%; height:18px; background:#6B7280; color:#ffffff; font-size:7px; font-weight:bold; text-align:center; line-height:18px; letter-spacing:0.5px; border-radius:58px 58px 0 0;">
-                    NO DATA
-                </div>
-            @else
-                @foreach ($pinZones as $zone)
-                    @php $pos = $positions[$zone]; @endphp
-                    <div style="position:absolute; left:{{ $pos['left'] }}%; top:{{ $pos['top'] }}%; width:14px; height:14px; margin-left:-7px; margin-top:-7px; border-radius:50%; background:{{ $damageColor }}; border:2px solid #ffffff;"></div>
-                @endforeach
-            @endif
-        </div>
-    </div>
+        @if (! $hasNoData)
+            @foreach ($pinZones as $zone)
+                <circle cx="{{ $positions[$zone][0] }}" cy="{{ $positions[$zone][1] }}" r="7" fill="#DC2626" stroke="#ffffff" stroke-width="2" />
+            @endforeach
+        @endif
+    </svg>
 
-    <p style="font-size:8px; color:#9CA3AF; margin:6px 0 0; text-align:center; text-transform:uppercase; letter-spacing:0.5px;">Front of vehicle at top</p>
+    @if ($hasNoData)
+        <p class="text-xs text-gray-400 mt-1">No damage location data provided.</p>
+    @endif
+    <p class="text-xs text-gray-400 uppercase tracking-wide mt-1">Front of vehicle at top</p>
     @if (! empty($unmapped))
-        <p style="font-size:9px; color:#6B7280; margin:4px 0 0;">Also reported: {{ implode(', ', $unmapped) }}</p>
+        <p class="text-xs text-gray-500 mt-1">Also reported: {{ implode(', ', $unmapped) }}</p>
     @endif
 </div>
