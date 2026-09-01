@@ -29,7 +29,7 @@
         @include('livewire.vehicle-check.partials.report-status-grid', ['history' => $history])
     </div>
 
-    <div class="grid sm:grid-cols-3 gap-4">
+    <div class="grid {{ $askingPrice ? 'sm:grid-cols-3' : 'sm:grid-cols-1 max-w-xs' }} gap-4">
         <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
             <p class="text-xs uppercase tracking-widest text-gray-400">{{ $categoryAdjustedLow ? "Est. Value (Cat {$valuation->write_off_category_applied})" : ($salvageAdjustedValue ? "Est. Value (Cat {$valuation->write_off_category_applied} Adjusted)" : 'Dealer Forecourt Value') }}</p>
             <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">
@@ -46,20 +46,22 @@
                 <p class="text-xs text-gray-400 mt-1">Clean value: £{{ number_format($cleanValue, 0) }}</p>
             @endif
         </div>
-        <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
-            <p class="text-xs uppercase tracking-widest text-gray-400">Asking Price</p>
-            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">{{ $askingPrice ? '£'.number_format($askingPrice, 0) : '—' }}</p>
-        </div>
-        <div class="bg-vale-light-blue border border-blue-100 rounded-xl p-5 text-center">
-            <p class="text-xs uppercase tracking-widest text-vale-navy/60">Price Position</p>
-            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">
-                @if ($pricePositionPct === null)
-                    —
-                @else
-                    {{ $pricePositionPct > 0 ? '+' : '' }}{{ number_format($pricePositionPct, 0) }}%
-                @endif
-            </p>
-        </div>
+        @if ($askingPrice)
+            <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
+                <p class="text-xs uppercase tracking-widest text-gray-400">Asking Price</p>
+                <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($askingPrice, 0) }}</p>
+            </div>
+            <div class="bg-vale-light-blue border border-blue-100 rounded-xl p-5 text-center">
+                <p class="text-xs uppercase tracking-widest text-vale-navy/60">Price Position</p>
+                <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">
+                    @if ($pricePositionPct === null)
+                        —
+                    @else
+                        {{ $pricePositionPct > 0 ? '+' : '' }}{{ number_format($pricePositionPct, 0) }}%
+                    @endif
+                </p>
+            </div>
+        @endif
     </div>
 
     <div class="mt-8 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">

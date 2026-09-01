@@ -590,6 +590,57 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSeeHtml('href="'.route('vehicle-checks.pdf', $check).'" target="_blank"');
     }
 
+    public function test_asking_price_and_price_position_show_when_an_asking_price_was_given(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+            'asking_price' => 9500,
+        ]);
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        VehicleValuation::create(['vehicle_check_id' => $check->id, 'clean_value' => 10000, 'confidence' => 'medium']);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        $html = Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])->html();
+
+        $this->assertStringContainsString('Asking Price', $html);
+        $this->assertStringContainsString('£9,500', $html);
+        $this->assertStringContainsString('Price Position', $html);
+
+        $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('Asking Price', $pdfHtml);
+        $this->assertStringContainsString('Price Position', $pdfHtml);
+    }
+
+    public function test_asking_price_and_price_position_are_hidden_when_no_asking_price_was_given(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+            'asking_price' => null,
+        ]);
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        VehicleValuation::create(['vehicle_check_id' => $check->id, 'clean_value' => 10000, 'confidence' => 'medium']);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        $html = Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])->html();
+
+        $this->assertStringNotContainsString('Asking Price', $html);
+        $this->assertStringNotContainsString('Price Position', $html);
+
+        $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
+        $this->assertStringNotContainsString('Asking Price', $pdfHtml);
+        $this->assertStringNotContainsString('Price Position', $pdfHtml);
+    }
+
     public function test_mot_advisories_are_shown_on_the_report_and_in_the_pdf(): void
     {
         $user = $this->verifiedUser();

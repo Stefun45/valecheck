@@ -29,7 +29,7 @@
 
     <table class="grid">
         <tr>
-            <td width="33%">
+            <td width="{{ $askingPrice ? '33%' : '100%' }}">
                 <div class="section">
                     <div class="section-title">{{ $categoryAdjustedLow ? "Est. Value (Cat {$valuation->write_off_category_applied})" : ($salvageAdjustedValue ? "Est. Value (Cat {$valuation->write_off_category_applied} Adjusted)" : 'Dealer Forecourt Value') }}</div>
                     <p style="font-size:16px; font-weight:bold;">
@@ -47,24 +47,26 @@
                     @endif
                 </div>
             </td>
-            <td width="33%">
-                <div class="section">
-                    <div class="section-title">Asking Price</div>
-                    <p style="font-size:16px; font-weight:bold;">{{ $askingPrice ? '£'.number_format($askingPrice, 0) : '—' }}</p>
-                </div>
-            </td>
-            <td width="33%">
-                <div class="section">
-                    <div class="section-title">Price Position</div>
-                    <p style="font-size:16px; font-weight:bold;">
-                        @if ($pricePositionPct === null)
-                            —
-                        @else
-                            {{ $pricePositionPct > 0 ? '+' : '' }}{{ number_format($pricePositionPct, 0) }}%
-                        @endif
-                    </p>
-                </div>
-            </td>
+            @if ($askingPrice)
+                <td width="33%">
+                    <div class="section">
+                        <div class="section-title">Asking Price</div>
+                        <p style="font-size:16px; font-weight:bold;">£{{ number_format($askingPrice, 0) }}</p>
+                    </div>
+                </td>
+                <td width="33%">
+                    <div class="section">
+                        <div class="section-title">Price Position</div>
+                        <p style="font-size:16px; font-weight:bold;">
+                            @if ($pricePositionPct === null)
+                                —
+                            @else
+                                {{ $pricePositionPct > 0 ? '+' : '' }}{{ number_format($pricePositionPct, 0) }}%
+                            @endif
+                        </p>
+                    </div>
+                </td>
+            @endif
         </tr>
     </table>
 
