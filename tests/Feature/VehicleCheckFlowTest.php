@@ -1270,12 +1270,15 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringContainsString('Salvage-adjusted (Cat N)', $pdfHtml);
     }
 
-    public function test_a_written_off_vehicle_with_a_real_salvageguide_range_shows_the_range_not_a_flat_figure(): void
+    public function test_a_written_off_vehicle_with_a_real_salvageguide_range_shows_only_the_conservative_low_end(): void
     {
         // Response shapes confirmed from real/documented SalvageGuide and
         // AutoCheck data — this is the primary (non-fallback) path now
-        // that RetrieveValuation prefers a real category-adjusted range
-        // over the flat percentage assumption.
+        // that RetrieveValuation prefers a real category-adjusted figure
+        // over the flat percentage assumption. salvage_adjusted_value is
+        // the low end of the range (set by RetrieveValuation), not the
+        // midpoint — the report leads with a conservative estimate rather
+        // than assuming the vehicle sits at the better end of its category.
         $user = $this->verifiedUser();
         $check = VehicleCheck::factory()->create([
             'user_id' => $user->id,
@@ -1287,7 +1290,7 @@ class VehicleCheckFlowTest extends TestCase
         VehicleHistory::create(['vehicle_check_id' => $check->id, 'write_off_category' => 'N', 'finance_marker' => false]);
         VehicleValuation::create([
             'vehicle_check_id' => $check->id,
-            'salvage_adjusted_value' => 5220,
+            'salvage_adjusted_value' => 4595,
             'write_off_category_applied' => 'N',
             'category_adjusted_value_low' => 4595,
             'category_adjusted_value_high' => 5845,
@@ -1305,8 +1308,10 @@ class VehicleCheckFlowTest extends TestCase
 
         $this->assertStringContainsString('Est. Value (Cat N)', $html);
         $this->assertStringContainsString('£4,595', $html);
-        $this->assertStringContainsString('£5,845', $html);
+        // The £5,845 high end is captured but no longer shown as a range.
+        $this->assertStringNotContainsString('£4,595&ndash;£5,845', $html);
         $this->assertStringContainsString('Category-adjusted retail value (Cat N)', $html);
+        $this->assertStringContainsString('conservative', $html);
         $this->assertStringContainsString('Salvage auction predicted bid', $html);
         $this->assertStringContainsString('£1,989', $html);
         $this->assertStringContainsString('£3,438', $html);
@@ -1314,8 +1319,8 @@ class VehicleCheckFlowTest extends TestCase
         // Flat-percentage legacy copy must not appear now a real range exists.
         $this->assertStringNotContainsString('has been deducted', $html);
 
-        // £8,500 asking vs the £5,220 midpoint, not either raw bound.
-        $expectedPct = round((8500 - 5220) / 5220 * 100);
+        // £8,500 asking vs the £4,595 conservative low-end estimate, not the midpoint.
+        $expectedPct = round((8500 - 4595) / 4595 * 100);
         $this->assertStringContainsString("+{$expectedPct}%", $html);
 
         $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();

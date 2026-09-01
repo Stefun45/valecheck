@@ -126,7 +126,6 @@ class OneAutoMarketValuationProvider implements MarketValuationProvider
             source: 'salvageguide',
             categoryAdjustedLow: $low,
             categoryAdjustedHigh: $high,
-            categoryAdjustedMidpoint: round(($low + $high) / 2, 2),
             salvageAuctionBidLow: isset($result['salvage_auction_predicted_bid_low_gbp']) ? (float) $result['salvage_auction_predicted_bid_low_gbp'] : null,
             salvageAuctionBidAverage: isset($result['salvage_auction_predicted_bid_average_gbp']) ? (float) $result['salvage_auction_predicted_bid_average_gbp'] : null,
             salvageAuctionBidHigh: isset($result['salvage_auction_predicted_bid_high_gbp']) ? (float) $result['salvage_auction_predicted_bid_high_gbp'] : null,

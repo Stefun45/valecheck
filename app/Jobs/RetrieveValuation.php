@@ -27,10 +27,14 @@ class RetrieveValuation implements ShouldQueue
         $vehicleData = $check->toVehicleData();
         $valuation = $provider->getValuation($vehicleData);
 
-        if ($valuation->categoryAdjustedMidpoint !== null) {
-            // SalvageGuide returned a real market-calibrated figure — use
-            // it directly, never the flat percentage assumption below.
-            $salvageAdjustedValue = $valuation->categoryAdjustedMidpoint;
+        if ($valuation->categoryAdjustedLow !== null) {
+            // SalvageGuide returned a real market-calibrated range — use
+            // the low end as the single headline figure (not the midpoint)
+            // so the report gives a conservative estimate rather than one
+            // that assumes the vehicle is at the better end of its
+            // category/damage band. Never the flat percentage assumption
+            // below.
+            $salvageAdjustedValue = $valuation->categoryAdjustedLow;
             $writeOffCategoryApplied = $vehicleData->writeOffCategory;
             $discountApplied = null;
         } elseif ($vehicleData->isWrittenOff() && $valuation->cleanValue !== null) {

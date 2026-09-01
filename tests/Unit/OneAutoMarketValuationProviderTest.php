@@ -77,7 +77,7 @@ class OneAutoMarketValuationProviderTest extends TestCase
         $this->assertSame(9856.0, $result->tradeAverage);
         $this->assertSame(8384.0, $result->tradePoor);
         $this->assertSame(29903.0, $result->listPrice);
-        $this->assertNull($result->categoryAdjustedMidpoint);
+        $this->assertNull($result->categoryAdjustedLow);
 
         Http::assertSent(fn ($request) => $request['current_mileage'] === 28000);
     }
@@ -110,7 +110,6 @@ class OneAutoMarketValuationProviderTest extends TestCase
         $this->assertNull($result->cleanValue);
         $this->assertSame(4595.0, $result->categoryAdjustedLow);
         $this->assertSame(5845.0, $result->categoryAdjustedHigh);
-        $this->assertSame(5220.0, $result->categoryAdjustedMidpoint);
         $this->assertSame(1989.0, $result->salvageAuctionBidLow);
         $this->assertSame(2607.0, $result->salvageAuctionBidAverage);
         $this->assertSame(3438.0, $result->salvageAuctionBidHigh);
@@ -176,7 +175,7 @@ class OneAutoMarketValuationProviderTest extends TestCase
             writeOffCategory: 'N',
         ));
 
-        $this->assertNull($result->categoryAdjustedMidpoint);
+        $this->assertNull($result->categoryAdjustedLow);
         $this->assertSame('unavailable', $result->confidence);
     }
 }

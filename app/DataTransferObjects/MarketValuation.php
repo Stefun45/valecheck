@@ -34,7 +34,6 @@ final readonly class MarketValuation
         // SalvageGuide (write-off vehicles)
         public ?float $categoryAdjustedLow = null,
         public ?float $categoryAdjustedHigh = null,
-        public ?float $categoryAdjustedMidpoint = null,
         public ?float $salvageAuctionBidLow = null,
         public ?float $salvageAuctionBidAverage = null,
         public ?float $salvageAuctionBidHigh = null,

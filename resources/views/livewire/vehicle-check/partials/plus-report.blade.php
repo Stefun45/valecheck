@@ -7,7 +7,6 @@
     $askingPrice = $check->asking_price ? (float) $check->asking_price : null;
     $cleanValue = $valuation?->clean_value ? (float) $valuation->clean_value : null;
     $categoryAdjustedLow = $valuation?->category_adjusted_value_low ? (float) $valuation->category_adjusted_value_low : null;
-    $categoryAdjustedHigh = $valuation?->category_adjusted_value_high ? (float) $valuation->category_adjusted_value_high : null;
     $salvageAdjustedValue = $valuation?->salvage_adjusted_value ? (float) $valuation->salvage_adjusted_value : null;
     $hasValuation = $cleanValue !== null || $categoryAdjustedLow !== null;
     // A write-off vehicle's realistic worth is the category-adjusted (or,
@@ -34,14 +33,15 @@
         <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
             <p class="text-xs uppercase tracking-widest text-gray-400">{{ $categoryAdjustedLow ? "Est. Value (Cat {$valuation->write_off_category_applied})" : ($salvageAdjustedValue ? "Est. Value (Cat {$valuation->write_off_category_applied} Adjusted)" : 'Dealer Forecourt Value') }}</p>
             <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">
-                @if ($categoryAdjustedLow)
-                    £{{ number_format($categoryAdjustedLow, 0) }}&ndash;£{{ number_format($categoryAdjustedHigh, 0) }}
-                @elseif ($effectiveValue)
+                @if ($effectiveValue)
                     £{{ number_format($effectiveValue, 0) }}
                 @else
                     —
                 @endif
             </p>
+            @if ($categoryAdjustedLow)
+                <p class="text-xs text-gray-400 mt-1">A conservative estimate, not the top of the category's range.</p>
+            @endif
             @if ($salvageAdjustedValue && ! $categoryAdjustedLow)
                 <p class="text-xs text-gray-400 mt-1">Clean value: £{{ number_format($cleanValue, 0) }}</p>
             @endif
@@ -94,9 +94,9 @@
                 <div class="bg-red-50 border border-red-100 rounded-lg p-4">
                     <div class="flex justify-between text-sm">
                         <span class="text-vale-red font-semibold">Category-adjusted retail value (Cat {{ $valuation->write_off_category_applied }})</span>
-                        <span class="text-vale-red font-bold">£{{ number_format($categoryAdjustedLow, 0) }}&ndash;£{{ number_format($categoryAdjustedHigh, 0) }}</span>
+                        <span class="text-vale-red font-bold">£{{ number_format($categoryAdjustedLow, 0) }}</span>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">A real market-calibrated range for this vehicle's write-off category and damage, not a flat percentage guess.</p>
+                    <p class="text-xs text-gray-500 mt-1">A conservative, market-calibrated estimate for this vehicle's write-off category and damage, not a flat percentage guess.</p>
                 </div>
                 @if ($valuation->salvage_auction_bid_low)
                     <div class="flex justify-between text-sm mt-4">

@@ -73,7 +73,6 @@ class MockMarketValuationProvider implements MarketValuationProvider
             source: 'salvageguide',
             categoryAdjustedLow: $low,
             categoryAdjustedHigh: $high,
-            categoryAdjustedMidpoint: round(($low + $high) / 2, 2),
             salvageAuctionBidLow: round($wouldBeCleanRetail * 0.15, 2),
             salvageAuctionBidAverage: round($wouldBeCleanRetail * 0.20, 2),
             salvageAuctionBidHigh: round($wouldBeCleanRetail * 0.28, 2),

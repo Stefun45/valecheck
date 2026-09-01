@@ -12,7 +12,6 @@
     $askingPrice = $check->asking_price ? (float) $check->asking_price : null;
     $cleanValue = $valuation?->clean_value ? (float) $valuation->clean_value : null;
     $categoryAdjustedLow = $valuation?->category_adjusted_value_low ? (float) $valuation->category_adjusted_value_low : null;
-    $categoryAdjustedHigh = $valuation?->category_adjusted_value_high ? (float) $valuation->category_adjusted_value_high : null;
     $salvageAdjustedValue = $valuation?->salvage_adjusted_value ? (float) $valuation->salvage_adjusted_value : null;
     $hasValuation = $cleanValue !== null || $categoryAdjustedLow !== null;
     $effectiveValue = $salvageAdjustedValue ?? $cleanValue;
@@ -34,14 +33,15 @@
                 <div class="section">
                     <div class="section-title">{{ $categoryAdjustedLow ? "Est. Value (Cat {$valuation->write_off_category_applied})" : ($salvageAdjustedValue ? "Est. Value (Cat {$valuation->write_off_category_applied} Adjusted)" : 'Dealer Forecourt Value') }}</div>
                     <p style="font-size:16px; font-weight:bold;">
-                        @if ($categoryAdjustedLow)
-                            £{{ number_format($categoryAdjustedLow, 0) }}&ndash;£{{ number_format($categoryAdjustedHigh, 0) }}
-                        @elseif ($effectiveValue)
+                        @if ($effectiveValue)
                             £{{ number_format($effectiveValue, 0) }}
                         @else
                             —
                         @endif
                     </p>
+                    @if ($categoryAdjustedLow)
+                        <p style="color:#999; font-size:9px;">A conservative estimate, not the top of the category's range.</p>
+                    @endif
                     @if ($salvageAdjustedValue && ! $categoryAdjustedLow)
                         <p style="color:#999; font-size:9px;">Clean value: £{{ number_format($cleanValue, 0) }}</p>
                     @endif
@@ -101,8 +101,8 @@
         @if (! $hasValuation)
             <p>Valuation unavailable for this vehicle.</p>
         @elseif ($categoryAdjustedLow)
-            <p class="warn">Category-adjusted retail value (Cat {{ $valuation->write_off_category_applied }}): £{{ number_format($categoryAdjustedLow, 0) }}&ndash;£{{ number_format($categoryAdjustedHigh, 0) }}</p>
-            <p style="color:#999; font-size:9px;">A real market-calibrated range for this vehicle's write-off category and damage, not a flat percentage guess.</p>
+            <p class="warn">Category-adjusted retail value (Cat {{ $valuation->write_off_category_applied }}): £{{ number_format($categoryAdjustedLow, 0) }}</p>
+            <p style="color:#999; font-size:9px;">A conservative, market-calibrated estimate for this vehicle's write-off category and damage, not a flat percentage guess.</p>
             @if ($valuation->salvage_auction_bid_low)
                 <p style="margin-top:6px;">Salvage auction predicted bid: £{{ number_format($valuation->salvage_auction_bid_low, 0) }}&ndash;£{{ number_format($valuation->salvage_auction_bid_high, 0) }} (avg £{{ number_format($valuation->salvage_auction_bid_average, 0) }})</p>
             @endif
