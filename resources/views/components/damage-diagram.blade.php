@@ -42,32 +42,42 @@
     $isAll = in_array('all', $zones, true);
     $hasNoData = empty($locations);
 
-    // Pin centre coordinates within the 120x200 viewBox.
+    // Pin centre coordinates within the 100x200 viewBox.
     $positions = [
-        'front-nearside' => [28, 20],
-        'front' => [60, 12],
-        'front-offside' => [92, 20],
-        'nearside' => [14, 100],
-        'roof' => [60, 100],
-        'offside' => [106, 100],
-        'rear-nearside' => [28, 180],
-        'rear' => [60, 190],
-        'rear-offside' => [92, 180],
+        'front-nearside' => [25, 25],
+        'front' => [50, 15],
+        'front-offside' => [75, 25],
+        'nearside' => [18, 100],
+        'roof' => [50, 100],
+        'offside' => [82, 100],
+        'rear-nearside' => [25, 175],
+        'rear' => [50, 185],
+        'rear-offside' => [75, 175],
     ];
 
     $pinZones = $isAll ? array_keys($positions) : array_intersect(array_keys($positions), $zones);
 @endphp
 
-<div style="max-width:160px;" class="mt-2">
-    <svg viewBox="0 0 120 200" width="120" height="200" xmlns="http://www.w3.org/2000/svg" style="opacity: {{ $hasNoData ? '0.5' : '1' }}">
-        <rect x="0" y="45" width="12" height="35" rx="4" fill="#4B5563" />
-        <rect x="108" y="45" width="12" height="35" rx="4" fill="#4B5563" />
-        <rect x="0" y="120" width="12" height="35" rx="4" fill="#4B5563" />
-        <rect x="108" y="120" width="12" height="35" rx="4" fill="#4B5563" />
+<div style="max-width:130px;" class="mt-2">
+    <svg viewBox="0 0 100 200" width="100" height="200" xmlns="http://www.w3.org/2000/svg" style="opacity: {{ $hasNoData ? '0.5' : '1' }}">
+        {{-- Body — moderate corner rounding leaves real flat side walls
+             (unlike a heavily-rounded ellipse) for the wheels to sit
+             flush against, so they read as attached rather than
+             floating. --}}
+        <rect x="15" y="10" width="70" height="180" rx="22" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" />
 
-        <rect x="10" y="0" width="100" height="200" rx="45" ry="70" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" />
-        <line x1="25" y1="35" x2="95" y2="35" stroke="#D1D5DB" stroke-width="2" />
-        <line x1="25" y1="165" x2="95" y2="165" stroke="#D1D5DB" stroke-width="2" />
+        {{-- Cabin/roof glass panel — a distinct shaded shape rather
+             than bare lines floating in empty space. --}}
+        <rect x="27" y="52" width="46" height="96" rx="14" fill="#D1D5DB" />
+
+        {{-- Wheels: dark tyre + lighter hub, overlapping the body's
+             flat sides so they look integrated, not detached. --}}
+        @foreach ([35, 133] as $wheelY)
+            <rect x="5" y="{{ $wheelY }}" width="18" height="32" rx="5" fill="#374151" />
+            <rect x="9" y="{{ $wheelY + 7 }}" width="10" height="18" rx="3" fill="#9CA3AF" />
+            <rect x="77" y="{{ $wheelY }}" width="18" height="32" rx="5" fill="#374151" />
+            <rect x="81" y="{{ $wheelY + 7 }}" width="10" height="18" rx="3" fill="#9CA3AF" />
+        @endforeach
 
         @if (! $hasNoData)
             @foreach ($pinZones as $zone)
