@@ -42,6 +42,22 @@ class VehicleHistory extends Model
         return ! is_null($this->write_off_category) && $this->write_off_category !== 'none';
     }
 
+    /**
+     * damage_locations is stored exactly as AutoCheck returns it — single
+     * space-free words like "FrontNearside" — so this is display
+     * formatting only, matching the same regex OneAutoMarketValuationProvider
+     * uses to build the SalvageGuide primary_damage_desc parameter.
+     *
+     * @return string[]
+     */
+    public function formattedDamageLocations(): array
+    {
+        return array_map(
+            fn (string $location) => trim(preg_replace('/(?<!^)([A-Z])/', ' $1', $location)),
+            $this->damage_locations ?? [],
+        );
+    }
+
     public function vehicleCheck(): BelongsTo
     {
         return $this->belongsTo(VehicleCheck::class);

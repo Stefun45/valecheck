@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\VehicleCheck\ShowCheck;
 use App\Livewire\VehicleCheck\StartCheck;
+use App\Models\BidRecommendation;
 use App\Models\Payment;
 use App\Models\Report;
 use App\Models\SalvageAuctionCheck;
@@ -1033,6 +1034,98 @@ class VehicleCheckFlowTest extends TestCase
 
         $this->assertStringContainsString('data:image/png;base64,', $pdfHtml);
         $this->assertStringContainsString(base64_encode('fake-image-bytes'), $pdfHtml);
+    }
+
+    public function test_a_written_off_vehicle_shows_its_damage_area_on_plus_web_and_pdf(): void
+    {
+        // damage_locations was already being captured (it feeds the
+        // SalvageGuide valuation call) but was never actually shown to the
+        // customer anywhere in the report — this is what surfaces it.
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'write_off_category' => 'S',
+            'finance_marker' => false,
+            'damage_locations' => ['FrontNearside', 'Rear'],
+        ]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Damage area: Front Nearside, Rear');
+
+        $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('Damage area: Front Nearside, Rear', $pdfHtml);
+    }
+
+    public function test_a_written_off_vehicle_with_no_damage_location_data_shows_no_damage_area_line(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'write_off_category' => 'S',
+            'finance_marker' => false,
+        ]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertDontSeeText('Damage area:');
+    }
+
+    public function test_a_rebuild_report_shows_its_damage_area_on_web_and_pdf(): void
+    {
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_REBUILD,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create([
+            'vehicle_check_id' => $check->id,
+            'write_off_category' => 'N',
+            'finance_marker' => false,
+            'damage_locations' => ['FrontOffside'],
+        ]);
+        BidRecommendation::create([
+            'vehicle_check_id' => $check->id,
+            'expected_resale_value' => 10000,
+            'total_repair_cost' => 1000,
+            'auction_fees' => 200,
+            'transport_cost' => 150,
+            'service_mot_allowance' => 150,
+            'contingency' => 300,
+            'required_margin' => 1000,
+            'maximum_acquisition_price' => 7200,
+            'recommended_bid' => 6500,
+            'absolute_maximum' => 7200,
+            'recommendation' => BidRecommendation::RECOMMENDATION_BUY,
+            'deal_score' => 80,
+        ]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_REBUILD, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Damage area: Front Offside');
+
+        $pdfHtml = view('pdf.rebuild-report', ['check' => $check->fresh()])->render();
+        $this->assertStringContainsString('Damage area: Front Offside', $pdfHtml);
     }
 
     public function test_the_full_vin_never_appears_in_the_report_or_pdf_only_the_last_five(): void

@@ -10,6 +10,9 @@
         @elseif ($history->isWrittenOff())
             <p class="warn">Category {{ $history->write_off_category }} recorded</p>
             <p>Date: {{ optional($history->write_off_date)->format('d M Y') ?? 'Unknown' }}</p>
+            @if ($history->formattedDamageLocations())
+                <p>Damage area: {{ implode(', ', $history->formattedDamageLocations()) }}</p>
+            @endif
         @else
             <p class="ok">No write-off history recorded.</p>
         @endif
