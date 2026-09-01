@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\VehicleCheck;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -22,9 +22,14 @@ return new class extends Migration
             $table->string('public_id', 20)->nullable()->unique()->after('id');
         });
 
-        VehicleCheck::whereNull('public_id')
-            ->orderBy('id')
-            ->each(fn (VehicleCheck $check) => $check->update(['public_id' => Str::random(11)]));
+        // The raw query builder, not the Eloquent model — public_id is
+        // deliberately absent from VehicleCheck's Fillable list (it's
+        // never meant to be settable from outside the creating event), so
+        // $check->update(['public_id' => ...]) would be silently
+        // discarded by the same mass-assignment guard and leave every
+        // pre-existing row null. DB::table() has no concept of fillable.
+        DB::table('vehicle_checks')->whereNull('public_id')->orderBy('id')->pluck('id')
+            ->each(fn (int $id) => DB::table('vehicle_checks')->where('id', $id)->update(['public_id' => Str::random(11)]));
     }
 
     /**

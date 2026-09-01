@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleCheck;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -70,5 +71,39 @@ class VehicleCheckPublicIdTest extends TestCase
 
         $this->assertNotSame('not-fillable', $check->public_id);
         $this->assertSame(11, strlen($check->public_id));
+    }
+
+    public function test_the_backfill_migration_fills_in_a_previously_null_public_id(): void
+    {
+        // Reproduces the real production incident: the original backfill
+        // used $check->update(['public_id' => ...]), which the Eloquent
+        // model silently discarded (public_id is deliberately not
+        // Fillable), leaving every pre-existing row null and breaking
+        // every route that generates a link to it. Inserting via the raw
+        // query builder here — bypassing the creating event entirely —
+        // reproduces exactly that "row that existed before public_id"
+        // state, rather than a row the model itself already populated.
+        $user = User::factory()->create();
+        $vehicle = Vehicle::factory()->create();
+
+        $id = DB::table('vehicle_checks')->insertGetId([
+            'user_id' => $user->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_PENDING,
+            'funding_source' => 'purchase',
+            'registration' => 'AB12CDE',
+            'public_id' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $migration = require database_path('migrations/2026_09_01_174012_backfill_vehicle_checks_public_id.php');
+        $migration->up();
+
+        $publicId = DB::table('vehicle_checks')->where('id', $id)->value('public_id');
+
+        $this->assertNotNull($publicId);
+        $this->assertSame(11, strlen($publicId));
     }
 }
