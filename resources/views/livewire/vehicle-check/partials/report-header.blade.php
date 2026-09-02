@@ -13,7 +13,7 @@
 <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-4 min-w-0">
         @if ($check->hasVehicleImage())
-            <img src="{{ $check->vehicleImageUrl() }}" alt="{{ $vehicle->description() ?: $check->registration }}" class="h-14 w-24 shrink-0 object-contain">
+            <img src="{{ $check->vehicleImageUrl() }}" alt="{{ $vehicle->description() ?: $check->registration }}" class="h-24 w-40 shrink-0 object-contain">
         @else
             <x-vehicle-silhouette :colour="$vehicle->colour" class="h-14 w-24 shrink-0" />
         @endif
