@@ -2,7 +2,7 @@
 
 use App\Http\Middleware\CaptureReferralCode;
 use App\Http\Middleware\EnsureUserIsAdmin;
-use App\Http\Middleware\RequireSitePassword;
+use App\Http\Middleware\RedirectGuestsToComingSoon;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,8 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Trust the platform's own load balancer (Laravel Cloud) so
         // $request->ip() resolves to the real visitor IP from
-        // X-Forwarded-For rather than the load balancer's own address —
-        // needed for RequireSitePassword's IP whitelist to work at all.
+        // X-Forwarded-For rather than the load balancer's own address.
         $middleware->trustProxies(at: '*');
 
         $middleware->validateCsrfTokens(except: [
@@ -30,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(prepend: [
-            RequireSitePassword::class,
+            RedirectGuestsToComingSoon::class,
         ]);
 
         $middleware->web(append: [

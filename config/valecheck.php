@@ -18,27 +18,14 @@ return [
     // feature. Credit packs are unaffected by this flag.
     'subscriptions_enabled' => env('SUBSCRIPTIONS_ENABLED', false),
 
-    // Temporary pre-launch gate — when set, the entire site requires this
-    // password (HTTP Basic Auth) before anyone can reach it, so it can't be
-    // stumbled onto and used for free before payments are fully tested.
-    // Empty/unset is a complete no-op — clear it in production to go fully
-    // live with no code changes. See App\Http\Middleware\RequireSitePassword.
-    'site_password' => env('SITE_PASSWORD'),
-
-    // Comma-separated IPs that skip the site password entirely (e.g. the
-    // team's own office/home IP, for demoing the live site without typing
-    // the password every time). Empty/unset means no IP is exempt.
-    'site_password_ip_whitelist' => array_filter(array_map(
-        'trim',
-        explode(',', (string) env('SITE_PASSWORD_IP_WHITELIST', ''))
-    )),
-
-    // A single VehicleCheck's public_id (see VehicleCheck::getRouteKeyName)
-    // that skips the site password entirely — for sharing one specific
-    // report (its web view and PDF download) with an external reviewer
-    // (e.g. Experian's approval process) without giving them the site
-    // password or exempting their IP. Empty/unset exempts nothing.
-    'site_password_exempt_report' => env('SITE_PASSWORD_EXEMPT_REPORT'),
+    // Temporary pre-launch gate — a logged-out visitor sees a "coming
+    // soon" page instead of the real site, so it can't be stumbled onto
+    // and used for free before payments are fully tested. Registration is
+    // closed while this is on; the only way in is an existing account
+    // (see demo:setup-experian-account for creating one for an external
+    // reviewer). Set to false to go fully live with no code changes. See
+    // App\Http\Middleware\RedirectGuestsToComingSoon.
+    'coming_soon_enabled' => env('COMING_SOON_ENABLED', true),
 
     'vat' => [
         'rate' => 0.20,

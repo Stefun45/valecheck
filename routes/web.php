@@ -20,6 +20,10 @@ use App\Services\Pricing\PricingService;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (PricingService $pricing) {
+    if (config('valecheck.coming_soon_enabled') && auth()->guest()) {
+        return view('coming-soon');
+    }
+
     return view('welcome', [
         'checkPrice' => $pricing->forCheck(),
         'plusPrice' => $pricing->forPlus(),

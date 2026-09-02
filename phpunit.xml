@@ -52,6 +52,13 @@
             test overrides this to false per-test to cover the hidden state.
         -->
         <env name="SUBSCRIPTIONS_ENABLED" value="true"/>
+        <!--
+            Force this off so the existing test suite keeps exercising the
+            real site as a guest (browsing pricing, starting a check, etc.)
+            — ComingSoonGateTest explicitly overrides this to true per-test
+            to cover the gated state.
+        -->
+        <env name="COMING_SOON_ENABLED" value="false"/>
         <env name="REPORT_PDF_DISK" value="local"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
