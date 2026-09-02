@@ -52,6 +52,16 @@
                 </div>
             </div>
 
+            @if (! empty($preview['mot_history']))
+                @php
+                    $previewHistory = new \App\Models\VehicleHistory(['mot_history' => $preview['mot_history'], 'mileage_anomaly' => false]);
+                @endphp
+                <div class="grid sm:grid-cols-2 gap-4 mt-4">
+                    @include('livewire.vehicle-check.partials.mileage-chart', ['history' => $previewHistory])
+                    @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $previewHistory])
+                </div>
+            @endif
+
             <p class="text-sm text-vale-navy font-semibold mt-4">Is this your vehicle?</p>
             <div class="flex gap-3 mt-2">
                 <button type="button" wire:click="confirm" class="inline-flex items-center justify-center px-5 py-2 bg-vale-red rounded-full font-semibold text-xs text-white hover:bg-red-600 transition">

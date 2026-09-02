@@ -57,6 +57,7 @@ class RegistrationQuickLook extends Component
                 'mot_status' => $result->motStatus,
                 'tax_status' => $result->taxStatus,
                 'tax_expiry_date' => $result->taxExpiryDate,
+                'mot_history' => $result->motHistory,
             ];
             $this->status = 'found';
         } catch (Throwable) {
