@@ -15,14 +15,17 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Always excludes the Stripe webhook (Stripe's servers, not a browser,
  * hit it — they can't answer a Basic Auth prompt), the health-check route
- * (Laravel Cloud polls this to know the app is alive), and any IP in
- * valecheck.site_password_ip_whitelist. Relies on bootstrap/app.php
- * trusting the platform's load balancer so $request->ip() is the real
- * visitor IP, not the load balancer's.
+ * (Laravel Cloud polls this to know the app is alive), the terms and
+ * privacy pages (these must always be publicly reachable, gate or no
+ * gate — never conditional on any config), any IP in
+ * valecheck.site_password_ip_whitelist, and the one report named in
+ * valecheck.site_password_exempt_report (web view and PDF download).
+ * Relies on bootstrap/app.php trusting the platform's load balancer so
+ * $request->ip() is the real visitor IP, not the load balancer's.
  */
 class RequireSitePassword
 {
-    private const EXEMPT_PATHS = ['stripe/webhook', 'up'];
+    private const EXEMPT_PATHS = ['stripe/webhook', 'up', 'terms', 'privacy'];
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -33,6 +36,12 @@ class RequireSitePassword
         }
 
         if (in_array($request->ip(), config('valecheck.site_password_ip_whitelist'), true)) {
+            return $next($request);
+        }
+
+        $exemptReport = config('valecheck.site_password_exempt_report');
+
+        if (! empty($exemptReport) && $request->is("checks/{$exemptReport}", "checks/{$exemptReport}/pdf")) {
             return $next($request);
         }
 

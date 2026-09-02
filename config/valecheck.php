@@ -33,6 +33,13 @@ return [
         explode(',', (string) env('SITE_PASSWORD_IP_WHITELIST', ''))
     )),
 
+    // A single VehicleCheck's public_id (see VehicleCheck::getRouteKeyName)
+    // that skips the site password entirely — for sharing one specific
+    // report (its web view and PDF download) with an external reviewer
+    // (e.g. Experian's approval process) without giving them the site
+    // password or exempting their IP. Empty/unset exempts nothing.
+    'site_password_exempt_report' => env('SITE_PASSWORD_EXEMPT_REPORT'),
+
     'vat' => [
         'rate' => 0.20,
     ],

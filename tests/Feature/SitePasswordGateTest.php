@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Report;
+use App\Models\User;
+use App\Models\VehicleCheck;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -81,5 +84,47 @@ class SitePasswordGateTest extends TestCase
 
         $this->call('GET', '/', server: ['REMOTE_ADDR' => '1.2.3.4'])
             ->assertUnauthorized();
+    }
+
+    public function test_terms_and_privacy_are_never_gated_even_with_a_password_set(): void
+    {
+        config(['valecheck.site_password' => 'letmein']);
+
+        $this->get('/terms')->assertOk();
+        $this->get('/privacy')->assertOk();
+    }
+
+    public function test_the_exempt_reports_web_view_and_pdf_skip_the_password(): void
+    {
+        $user = User::factory()->create();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => $check->type, 'headline_summary' => 'Test.']);
+
+        config([
+            'valecheck.site_password' => 'letmein',
+            'valecheck.site_password_exempt_report' => $check->public_id,
+        ]);
+
+        // Still requires login (a separate barrier from the site password),
+        // so an unauthenticated hit redirects to login rather than 401ing.
+        $this->get("/checks/{$check->public_id}")->assertRedirect(route('login'));
+        $this->get("/checks/{$check->public_id}/pdf")->assertRedirect(route('login'));
+    }
+
+    public function test_a_different_reports_web_view_is_still_gated(): void
+    {
+        $user = User::factory()->create();
+        $exemptCheck = VehicleCheck::factory()->create(['user_id' => $user->id]);
+        $otherCheck = VehicleCheck::factory()->create(['user_id' => $user->id]);
+
+        config([
+            'valecheck.site_password' => 'letmein',
+            'valecheck.site_password_exempt_report' => $exemptCheck->public_id,
+        ]);
+
+        $this->get("/checks/{$otherCheck->public_id}")->assertUnauthorized();
     }
 }
