@@ -13,7 +13,9 @@
 @endphp
 <div style="text-align:center; padding:40px 0 20px;">
     @if ($check->hasVehicleImage())
-        <img src="{{ $check->vehicleImageDataUri() }}" alt="" style="max-width:320px; max-height:180px; margin-bottom:20px;">
+        <div style="margin-bottom:20px;">
+            <img src="{{ $check->vehicleImageDataUri() }}" alt="" style="max-width:320px; max-height:180px;">
+        </div>
     @endif
 
     <div style="display:inline-block; background:#FFD43B; border:2px solid #10243A; border-radius:6px; padding:10px 24px;">
