@@ -23,6 +23,19 @@ class RedirectGuestsToComingSoon
     private const EXEMPT_PATHS = [
         'stripe/webhook', 'up', 'terms', 'privacy',
         'login', 'forgot-password', 'reset-password/*',
+        // Livewire's own transport (component updates, file uploads, its
+        // JS assets) — not a page a guest can navigate to, but every
+        // Livewire component action (including the login button itself)
+        // is an AJAX call to livewire/update. Blocking it meant the login
+        // form's submission never reached Auth::attempt() at all: it was
+        // redirected before the component's own login() method ever ran,
+        // so no session was ever created and the browser just followed
+        // the redirect straight back to the coming-soon page. This is
+        // safe to exempt broadly — a guest still can't act on a
+        // protected component this way, since Livewire's own signed
+        // snapshot check rejects any update for a component they were
+        // never able to mount in the first place.
+        'livewire/*',
     ];
 
     public function handle(Request $request, Closure $next): Response

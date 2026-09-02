@@ -75,6 +75,22 @@ class ComingSoonGateTest extends TestCase
         $this->get('/up')->assertOk();
     }
 
+    public function test_livewires_own_update_endpoint_is_never_redirected_for_a_guest(): void
+    {
+        // Real production bug: every Livewire component action (including
+        // clicking "Log In" itself) is an AJAX POST to livewire/update,
+        // not a real navigation to /login. Volt::test()/Livewire::test()
+        // call component methods directly and never exercise this route
+        // at all, so they can't catch this - hitting the actual endpoint
+        // through the real HTTP kernel is the only way to.
+        config(['valecheck.coming_soon_enabled' => true]);
+
+        $response = $this->post('/livewire/update', []);
+
+        $this->assertNotSame(302, $response->getStatusCode());
+        $this->assertNotSame(route('welcome'), $response->headers->get('Location'));
+    }
+
     public function test_a_real_login_survives_the_gate_on_the_very_next_request(): void
     {
         // Deliberately not actingAs() — that sets the auth guard directly
