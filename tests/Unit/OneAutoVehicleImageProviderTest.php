@@ -33,7 +33,7 @@ class OneAutoVehicleImageProviderTest extends TestCase
                 'result' => [
                     'images' => [
                         [
-                            'image_ids' => ['front_right' => 'image-id-123'],
+                            'image_ids' => ['right' => 'image-id-123'],
                             'colour_desc_list' => ['Gray', 'Blue', 'Red'],
                         ],
                     ],
@@ -66,7 +66,7 @@ class OneAutoVehicleImageProviderTest extends TestCase
                 'result' => [
                     'images' => [
                         [
-                            'image_ids' => ['front_right' => 'image-id-123'],
+                            'image_ids' => ['right' => 'image-id-123'],
                             'colour_desc_list' => ['Gray', 'Blue'],
                         ],
                     ],
@@ -83,6 +83,85 @@ class OneAutoVehicleImageProviderTest extends TestCase
 
         Http::assertSent(fn ($request) => str_contains($request->url(), 'imagefromid')
             && $request['generic_colour_desc'] === 'Gray');
+    }
+
+    public function test_the_right_side_profile_is_preferred_when_both_sides_are_available(): void
+    {
+        Http::fake([
+            'api.oneautoapi.com/vehicleimagery/imagesearchfromvrm*' => Http::response([
+                'success' => true,
+                'result' => [
+                    'images' => [
+                        [
+                            'image_ids' => ['left' => 'left-id', 'right' => 'right-id', 'front_right' => 'corner-id'],
+                            'colour_desc_list' => ['Blue'],
+                        ],
+                    ],
+                ],
+            ], 200),
+            'api.oneautoapi.com/vehicleimagery/imagefromid*' => Http::response([
+                'success' => true,
+                'result' => ['image_url' => 'https://cdn.example.com/vehicle.png'],
+            ], 200),
+            'cdn.example.com/*' => Http::response($this->fakeBinaryPng(), 200, ['Content-Type' => 'image/png']),
+        ]);
+
+        $this->provider()->fetch('AB12CDE', 'Blue');
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'imagefromid')
+            && $request['image_id'] === 'right-id');
+    }
+
+    public function test_the_left_side_profile_is_used_when_right_is_unavailable(): void
+    {
+        Http::fake([
+            'api.oneautoapi.com/vehicleimagery/imagesearchfromvrm*' => Http::response([
+                'success' => true,
+                'result' => [
+                    'images' => [
+                        [
+                            'image_ids' => ['left' => 'left-id', 'front_right' => 'corner-id'],
+                            'colour_desc_list' => ['Blue'],
+                        ],
+                    ],
+                ],
+            ], 200),
+            'api.oneautoapi.com/vehicleimagery/imagefromid*' => Http::response([
+                'success' => true,
+                'result' => ['image_url' => 'https://cdn.example.com/vehicle.png'],
+            ], 200),
+            'cdn.example.com/*' => Http::response($this->fakeBinaryPng(), 200, ['Content-Type' => 'image/png']),
+        ]);
+
+        $this->provider()->fetch('AB12CDE', 'Blue');
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'imagefromid')
+            && $request['image_id'] === 'left-id');
+    }
+
+    public function test_a_corner_only_image_set_never_falls_back_to_a_corner_shot(): void
+    {
+        // Neither "left" nor "right" is present — only three-quarter
+        // corner angles. Per product decision, this degrades to no
+        // image rather than ever showing a corner photo.
+        Http::fake([
+            'api.oneautoapi.com/vehicleimagery/imagesearchfromvrm*' => Http::response([
+                'success' => true,
+                'result' => [
+                    'images' => [
+                        [
+                            'image_ids' => ['front_right' => 'corner-id', 'rear_left' => 'other-corner-id'],
+                            'colour_desc_list' => ['Blue'],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $result = $this->provider()->fetch('AB12CDE', 'Blue');
+
+        $this->assertFalse($result->available);
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'imagefromid'));
     }
 
     public function test_no_image_ids_returned_degrades_to_unavailable(): void
@@ -118,7 +197,7 @@ class OneAutoVehicleImageProviderTest extends TestCase
                 'success' => true,
                 'result' => [
                     'images' => [
-                        ['image_ids' => ['front_right' => 'image-id-123'], 'colour_desc_list' => ['Blue']],
+                        ['image_ids' => ['right' => 'image-id-123'], 'colour_desc_list' => ['Blue']],
                     ],
                 ],
             ], 200),
@@ -137,7 +216,7 @@ class OneAutoVehicleImageProviderTest extends TestCase
                 'success' => true,
                 'result' => [
                     'images' => [
-                        ['image_ids' => ['front_right' => 'image-id-123'], 'colour_desc_list' => ['Blue']],
+                        ['image_ids' => ['right' => 'image-id-123'], 'colour_desc_list' => ['Blue']],
                     ],
                 ],
             ], 200),
@@ -174,7 +253,7 @@ class OneAutoVehicleImageProviderTest extends TestCase
                 'success' => true,
                 'result' => [
                     'images' => [
-                        ['image_ids' => ['front_right' => 'image-id-123'], 'colour_desc_list' => ['Blue']],
+                        ['image_ids' => ['right' => 'image-id-123'], 'colour_desc_list' => ['Blue']],
                     ],
                 ],
             ], 200),
@@ -201,7 +280,7 @@ class OneAutoVehicleImageProviderTest extends TestCase
                 'success' => true,
                 'result' => [
                     'images' => [
-                        ['image_ids' => ['front_right' => 'image-id-123'], 'colour_desc_list' => ['Blue']],
+                        ['image_ids' => ['right' => 'image-id-123'], 'colour_desc_list' => ['Blue']],
                     ],
                 ],
             ], 200),

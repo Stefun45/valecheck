@@ -36,7 +36,7 @@ class OneAutoVehicleImageProvider implements VehicleImageProvider
         }
 
         $imageSet = $search['images'][0] ?? null;
-        $imageId = $imageSet['image_ids']['front_right'] ?? null;
+        $imageId = $this->pickImageId($imageSet['image_ids'] ?? []);
 
         if ($imageId === null) {
             return new VehicleImageData(available: false);
@@ -91,5 +91,19 @@ class OneAutoVehicleImageProvider implements VehicleImageProvider
         }
 
         return $available[0] ?? 'White';
+    }
+
+    /**
+     * Always a full side profile — never a front/rear three-quarter
+     * corner shot. Right (the offside/driver's side — the conventional
+     * "showroom" angle for a UK listing) is preferred over left; if
+     * neither side profile is available for this vehicle, no image is
+     * shown at all rather than falling back to a corner angle.
+     *
+     * @param  array<string, string>  $imageIds
+     */
+    private function pickImageId(array $imageIds): ?string
+    {
+        return $imageIds['right'] ?? $imageIds['left'] ?? null;
     }
 }
