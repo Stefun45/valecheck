@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Volt\Volt;
 use Tests\TestCase;
 
 class ComingSoonGateTest extends TestCase
@@ -72,6 +73,34 @@ class ComingSoonGateTest extends TestCase
         $this->assertNotSame(302, $response->getStatusCode());
 
         $this->get('/up')->assertOk();
+    }
+
+    public function test_a_real_login_survives_the_gate_on_the_very_next_request(): void
+    {
+        // Deliberately not actingAs() — that sets the auth guard directly
+        // without touching the session at all. This exercises the real
+        // login flow instead, which is closer to a genuine browser
+        // session. Note: this test still passes even with the gate
+        // wrongly prepended (verified by reverting it locally) — Laravel's
+        // test kernel doesn't reproduce the real HTTP session-timing bug
+        // that caused a production login loop, so this doesn't guarantee
+        // against that specific ordering mistake recurring. The real fix
+        // is the append (not prepend) in bootstrap/app.php, which must run
+        // after the web group's own session-starting middleware.
+        config(['valecheck.coming_soon_enabled' => true]);
+        $user = User::factory()->create();
+
+        Volt::test('pages.auth.login')
+            ->set('form.email', $user->email)
+            ->set('form.password', 'password')
+            ->call('login')
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSeeText('Coming Soon');
+
+        $this->get('/dashboard')->assertOk();
     }
 
     public function test_the_gate_is_a_complete_no_op_when_disabled(): void
