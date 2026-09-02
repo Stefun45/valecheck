@@ -20,7 +20,7 @@
     $strokeWidth = max(3, round($size * 0.16));
 @endphp
 
-<div style="width:{{ $size }}px; height:{{ $size }}px; border-radius:50%; border:{{ $circleBorder }}px solid {{ $color }}; position:relative; box-sizing:border-box;">
+<div style="width:{{ $size }}px; height:{{ $size }}px; border-radius:50%; border:{{ $circleBorder }}px solid {{ $color }}; position:relative; box-sizing:border-box; margin:0 auto;">
     @if ($ok)
         @php
             $shortLength = round($size * 0.32);
