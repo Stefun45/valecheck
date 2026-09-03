@@ -30,7 +30,10 @@ class LegalPagesTest extends TestCase
         $this->get(route('legal.privacy'))
             ->assertOk()
             ->assertSeeText('Privacy Policy')
-            ->assertSeeText('Silverback Customs UK Ltd');
+            ->assertSeeText('Silverback Customs UK Ltd')
+            // Same principle as the terms page: no need to name the
+            // underlying data aggregator to customers.
+            ->assertDontSeeText('One Auto');
     }
 
     public function test_the_business_identity_and_legal_links_appear_on_the_landing_page(): void

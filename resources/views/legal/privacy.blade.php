@@ -33,7 +33,7 @@
     <section>
         <h2 class="font-display font-bold text-lg text-vale-navy mb-2">3. Who we share it with</h2>
         <p class="text-sm text-gray-600 leading-relaxed">
-            The vehicle registration you enter is sent to One Auto API to retrieve vehicle history, MOT and
+            The vehicle registration you enter is used to retrieve vehicle history, MOT and
             valuation data — this data is sourced from providers including Experian, the DVLA and the DVSA. We use
             Stripe to process payments, Postmark to send emails, and a cloud storage provider to store generated
             report PDFs. We don't sell your personal data to anyone.
