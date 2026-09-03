@@ -43,6 +43,16 @@ class LegalPagesTest extends TestCase
             ->assertSee('href="'.route('legal.privacy').'"', false);
     }
 
+    public function test_the_landing_page_names_the_specific_experian_data_elements(): void
+    {
+        // Per Experian's own review feedback: a bare "Data provided by
+        // Experian" claim isn't specific enough anywhere it appears,
+        // including the homepage feature grid.
+        $this->get('/')
+            ->assertOk()
+            ->assertSeeText('Vehicle Summary, Write-Off History, Finance, Stolen / Scrapped, and Keeper Registration History — Data provided by Experian.');
+    }
+
     public function test_the_business_identity_appears_on_authenticated_pages_too(): void
     {
         $user = User::factory()->create();

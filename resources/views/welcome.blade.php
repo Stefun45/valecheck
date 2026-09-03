@@ -118,6 +118,7 @@
                         </div>
                     @endforeach
                 </div>
+                <p class="text-xs text-gray-400 mt-6">Vehicle Summary, Write-Off History, Finance, Stolen / Scrapped, and Keeper Registration History — Data provided by Experian.</p>
             </div>
         </section>
 
