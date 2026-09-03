@@ -23,17 +23,14 @@
         <h2 class="font-display font-bold text-lg text-vale-navy mb-2">2. Data sources and accuracy</h2>
         <p class="text-sm text-gray-600 leading-relaxed">
             Report data is sourced from third-party providers, including <strong>data provided by Experian</strong>
-            and vehicle data from the DVLA and DVSA, via One Auto API. We do not independently verify this data and
+            and vehicle data from the DVLA and DVSA. We do not independently verify this data and
             make no guarantee that it is complete, current or accurate. Where a particular check (for example
             finance, write-off or stolen status) is not returned by a data provider, the report will say so clearly
             rather than presenting the absence of data as confirmation that the vehicle is clear.
         </p>
         <p class="text-sm text-gray-600 leading-relaxed mt-3">
             To the fullest extent permitted by law, we exclude liability for errors, omissions or inaccuracies in
-            data supplied by Experian, the DVLA, the DVSA or any other third-party data provider. Where a data
-            provider offers its own guarantee in respect of specific data (for example an Experian mileage
-            guarantee), that guarantee is provided by and is the responsibility of that provider under its own
-            terms, not by us.
+            data supplied by Experian, the DVLA, the DVSA or any other third-party data provider.
         </p>
         <p class="text-sm text-gray-600 leading-relaxed mt-3">
             Market valuations, and any estimated repair costs, resale values or recommended purchase/bid amounts

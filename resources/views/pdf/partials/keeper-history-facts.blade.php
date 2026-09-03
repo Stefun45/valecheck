@@ -18,4 +18,5 @@
     <p>Previously exported: {{ is_null($history?->was_exported) ? 'Unavailable' : ($history->was_exported ? 'Yes' : 'No') }}</p>
     {{-- vrm_matches/vin_matches deliberately not shown — see the web
          partial's comment for why. --}}
+    <p style="color:#999; font-size:8px; margin-top:6px;">Keeper / Registration History — Data provided by Experian.</p>
 </div>

@@ -16,7 +16,13 @@ class LegalPagesTest extends TestCase
             ->assertOk()
             ->assertSeeText('Terms & Conditions')
             ->assertSeeText('Silverback Customs UK Ltd')
-            ->assertSeeText('data provided by Experian');
+            ->assertSeeText('data provided by Experian')
+            // Per Experian's own review feedback: no need to name One
+            // Auto (the underlying aggregator), and no data-guarantee
+            // claim, since the APIs used don't come with one.
+            ->assertDontSeeText('via One Auto API')
+            ->assertDontSeeText('One Auto')
+            ->assertDontSeeText('Experian mileage guarantee');
     }
 
     public function test_a_guest_can_view_the_privacy_page(): void

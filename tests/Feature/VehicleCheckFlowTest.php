@@ -940,7 +940,11 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSeeText('Salvage Auction History')
             ->assertSeeText('Copart Bedford')
             ->assertSeeText('Front bumper and headlight')
-            ->assertSeeHtml('https://example.com/photo1.jpg');
+            // Linked out, never embedded — Experian doesn't want salvage
+            // photographs embedded in reports using their data, and this
+            // also sidesteps image-licensing issues.
+            ->assertSeeHtml('href="https://example.com/photo1.jpg"')
+            ->assertDontSeeHtml('<img src="https://example.com/photo1.jpg"');
 
         // Photographs are shown on the web report (browser-fetched) but not
         // embedded in the PDF, since dompdf has isRemoteEnabled disabled to
@@ -1020,6 +1024,10 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSeeText('Logbook (V5C) reissues: 5')
             ->assertSeeText('AW58CAT')
             ->assertSeeText('DY17BXW')
+            // Per Experian's own review feedback: this box needs its own
+            // attribution line, since it wasn't covered by the general
+            // "Vehicle Summary..." one above the Write-Off/Finance boxes.
+            ->assertSeeText('Keeper / Registration History — Data provided by Experian.')
             ->assertDontSeeText('Previous searches')
             ->assertDontSeeText('Registration matches records')
             ->assertDontSeeText('VIN matches records');
@@ -1027,6 +1035,7 @@ class VehicleCheckFlowTest extends TestCase
         $pdfHtml = view('pdf.check-report', ['check' => $check->fresh()])->render();
         $this->assertStringContainsString('Logbook (V5C) reissues: 5', $pdfHtml);
         $this->assertStringContainsString('AW58CAT', $pdfHtml);
+        $this->assertStringContainsString('Keeper / Registration History — Data provided by Experian.', $pdfHtml);
         $this->assertStringNotContainsString('Previous searches', $pdfHtml);
         $this->assertStringNotContainsString('Registration matches records', $pdfHtml);
     }
@@ -1047,7 +1056,10 @@ class VehicleCheckFlowTest extends TestCase
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Issues Found')
-            ->assertSeeText('Data provided by Experian')
+            // Per Experian's own review feedback: the trust strip must
+            // name the specific data elements they provide, not a bare
+            // "Data provided by Experian" claim.
+            ->assertSeeText('Vehicle Summary, Write-Off History, Finance, Stolen / Scrapped, and Keeper Registration History — Data provided by Experian.')
             ->assertSeeText('ICO Registered')
             ->assertSeeHtml('<svg'); // vehicle silhouette
     }
@@ -1070,7 +1082,7 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringContainsString('CV19XYZ', $pdfHtml);
         $this->assertStringContainsString('Clean History', $pdfHtml);
         $this->assertStringContainsString('page-break-after', $pdfHtml);
-        $this->assertStringContainsString('Data provided by Experian', $pdfHtml);
+        $this->assertStringContainsString('Vehicle Summary, Write-Off History, Finance, Stolen / Scrapped, and Keeper Registration History — Data provided by Experian.', $pdfHtml);
     }
 
     public function test_a_report_with_no_stored_vehicle_image_falls_back_to_the_silhouette(): void

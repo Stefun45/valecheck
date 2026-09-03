@@ -28,7 +28,10 @@
     <x-report-verdict-badge :tone="$verdict['tone']" :label="$verdict['label']" :size="80" />
 
     <p style="color:#999; font-size:9px; margin-top:36px;">
-        Data provided by Experian &middot; ICO Registered &middot; DVLA &amp; DVSA Verified
+        Vehicle Summary, Write-Off History, Finance, Stolen / Scrapped, and Keeper Registration History — Data provided by Experian.
+    </p>
+    <p style="color:#999; font-size:9px; margin-top:4px;">
+        ICO Registered &middot; DVLA &amp; DVSA Verified
     </p>
     <p style="color:#999; font-size:9px; margin-top:4px;">
         Report generated {{ now()->format('d M Y, H:i') }}

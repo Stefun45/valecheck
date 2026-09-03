@@ -24,4 +24,5 @@
          genuinely legitimate vehicle (most likely explained by its own
          recorded plate-change history). Still captured and stored below,
          just not displayed until that's understood. --}}
+    <p class="text-xs text-gray-400 mt-3">Keeper / Registration History — Data provided by Experian.</p>
 </div>

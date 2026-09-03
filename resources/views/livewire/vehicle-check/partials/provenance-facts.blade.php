@@ -65,4 +65,4 @@
     </div>
 @endif
 
-<p class="text-xs text-gray-400 sm:col-span-2">Vehicle identity and provenance data provided by Experian.</p>
+<p class="text-xs text-gray-400 sm:col-span-2">Vehicle Summary, Write-Off History, Finance, Stolen / Scrapped — Data provided by Experian.</p>

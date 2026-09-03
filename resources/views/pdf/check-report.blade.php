@@ -39,7 +39,7 @@
             @include('pdf.partials.provenance-facts', ['history' => $history, 'check' => $check])
         </tr>
     </table>
-    <p style="color:#999; font-size:8px; margin:-6px 0 10px;">Vehicle identity and provenance data provided by Experian.</p>
+    <p style="color:#999; font-size:8px; margin:-6px 0 10px;">Vehicle Summary, Write-Off History, Finance, Stolen / Scrapped — Data provided by Experian.</p>
 
     @include('pdf.partials.mileage-chart', ['history' => $history])
 

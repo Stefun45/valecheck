@@ -25,8 +25,8 @@
     <x-report-verdict-badge :tone="$verdict['tone']" :label="$verdict['label']" :size="64" class="shrink-0" />
 </div>
 
-<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400 mt-4">
-    <span class="inline-flex items-center gap-1"><x-section-icon name="shield" :size="12" />Data provided by Experian</span>
+<p class="text-xs text-gray-400 mt-4">Vehicle Summary, Write-Off History, Finance, Stolen / Scrapped, and Keeper Registration History — Data provided by Experian.</p>
+<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400 mt-1">
     <span class="inline-flex items-center gap-1"><x-section-icon name="identity" :size="12" />ICO Registered</span>
     <span class="inline-flex items-center gap-1"><x-section-icon name="document" :size="12" />DVLA &amp; DVSA Verified</span>
 </div>

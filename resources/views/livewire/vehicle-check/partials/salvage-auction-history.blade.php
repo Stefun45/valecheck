@@ -15,9 +15,13 @@
                         <div class="flex justify-between sm:col-span-2"><dt class="text-gray-500">Location</dt><dd class="text-vale-navy">{{ $record['location'] ?? '—' }}</dd></div>
                     </dl>
                     @if (! empty($record['imageUrls']))
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
-                            @foreach ($record['imageUrls'] as $imageUrl)
-                                <img src="{{ $imageUrl }}" alt="Salvage auction photograph" loading="lazy" class="rounded-lg border border-gray-200 object-cover aspect-video w-full">
+                        {{-- Linked out, never embedded — avoids image
+                             licensing issues, and Experian doesn't want
+                             photographs embedded in reports using their
+                             data. --}}
+                        <div class="flex flex-wrap gap-3 mt-3">
+                            @foreach ($record['imageUrls'] as $index => $imageUrl)
+                                <a href="{{ $imageUrl }}" target="_blank" rel="noopener" class="text-xs text-vale-red hover:text-red-600 underline">View photo {{ $index + 1 }} &#8599;</a>
                             @endforeach
                         </div>
                     @endif
