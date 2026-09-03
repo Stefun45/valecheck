@@ -17,7 +17,7 @@
             </div>
             <button type="submit" wire:loading.attr="disabled" wire:target="check"
                 class="inline-flex items-center justify-center px-6 py-3 bg-vale-red rounded-full font-semibold text-sm text-white hover:bg-red-600 transition disabled:opacity-60">
-                <span wire:loading.remove wire:target="check">Check Vehicle &rarr;</span>
+                <span wire:loading.remove wire:target="check">Check Vehicle for Free &rarr;</span>
                 <span wire:loading wire:target="check">Checking...</span>
             </button>
         </form>
