@@ -28,6 +28,6 @@
                 </div>
             @endforeach
         </div>
-        <p class="text-xs text-gray-400 mt-3">Salvage auction photographs, where available, are shown here as taken at the time of listing.</p>
+        <p class="text-xs text-gray-400 mt-3">Salvage auction photographs, where available, are linked to their original source rather than shown here, as taken at the time of listing.</p>
     @endif
 </div>
