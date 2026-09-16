@@ -78,18 +78,36 @@ class OneAutoMarketValuationProvider implements MarketValuationProvider
             return $this->unavailable();
         }
 
+        $dealerForecourt = (float) $data['dealer_forecourt'];
+        $privateClean = isset($data['private_clean']) ? (float) $data['private_clean'] : null;
+        $privateAverage = isset($data['private_average']) ? (float) $data['private_average'] : null;
+        $tradeAverage = isset($data['trade_average']) ? (float) $data['trade_average'] : null;
+        $tradePoor = isset($data['trade_poor']) ? (float) $data['trade_poor'] : null;
+
+        // One Auto's condition-banded figures aren't guaranteed to be
+        // monotonic (seen in production: "average" returned higher than
+        // "clean" for a vehicle with sparse comparables) — clamp each
+        // worse-condition figure so it can never display as worth more
+        // than the better-condition figure in the same pair.
+        if ($privateAverage !== null && $privateClean !== null) {
+            $privateAverage = min($privateAverage, $privateClean);
+        }
+        if ($tradePoor !== null && $tradeAverage !== null) {
+            $tradePoor = min($tradePoor, $tradeAverage);
+        }
+
         return new MarketValuation(
-            cleanValue: (float) $data['dealer_forecourt'],
+            cleanValue: $dealerForecourt,
             tradeValue: isset($data['trade_retail']) ? (float) $data['trade_retail'] : null,
-            retailValue: (float) $data['dealer_forecourt'],
-            privateValue: isset($data['private_clean']) ? (float) $data['private_clean'] : null,
+            retailValue: $dealerForecourt,
+            privateValue: $privateClean,
             comparables: [],
             confidence: 'medium',
             source: 'ukvehicledata',
-            dealerForecourt: (float) $data['dealer_forecourt'],
-            tradeAverage: isset($data['trade_average']) ? (float) $data['trade_average'] : null,
-            tradePoor: isset($data['trade_poor']) ? (float) $data['trade_poor'] : null,
-            privateAverage: isset($data['private_average']) ? (float) $data['private_average'] : null,
+            dealerForecourt: $dealerForecourt,
+            tradeAverage: $tradeAverage,
+            tradePoor: $tradePoor,
+            privateAverage: $privateAverage,
             partExchange: isset($data['part_exchange']) ? (float) $data['part_exchange'] : null,
             auctionValue: isset($data['auction_value']) ? (float) $data['auction_value'] : null,
             listPrice: isset($data['list_price_inc_delivery_vat']) ? (float) $data['list_price_inc_delivery_vat'] : null,

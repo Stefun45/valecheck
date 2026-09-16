@@ -82,6 +82,39 @@ class OneAutoMarketValuationProviderTest extends TestCase
         Http::assertSent(fn ($request) => $request['current_mileage'] === 28000);
     }
 
+    public function test_a_worse_condition_figure_is_clamped_when_one_auto_returns_it_higher_than_the_better_condition(): void
+    {
+        // Reproduces a real production report where One Auto returned
+        // private_average (955) higher than private_clean (881) for a
+        // vehicle with sparse comparables — the ladder must never display
+        // "average" as worth more than "clean".
+        Http::fake([
+            'api.oneautoapi.com/ukvehicledata/valuationfromvrm/v2*' => Http::response([
+                'success' => true,
+                'result' => [
+                    'valuation_data' => [
+                        'dealer_forecourt' => 1426,
+                        'trade_retail' => 1273,
+                        'private_clean' => 881,
+                        'private_average' => 955,
+                        'part_exchange' => 974,
+                        'auction_value' => 776,
+                        'trade_average' => 627,
+                        'trade_poor' => 535,
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $result = $this->provider()->getValuation($this->vehicle([
+            ['test_date' => '2024-06-01', 'mileage' => 22083],
+        ]));
+
+        $this->assertSame(881.0, $result->privateValue);
+        $this->assertSame(881.0, $result->privateAverage);
+        $this->assertLessThanOrEqual($result->privateValue, $result->privateAverage);
+    }
+
     public function test_a_written_off_vehicle_uses_salvageguide_instead_of_uk_vehicle_data(): void
     {
         // Response shape confirmed from One Auto's own documentation example.
