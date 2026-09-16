@@ -11,6 +11,7 @@
                 <a href="{{ route('admin.discount-codes.index') }}" class="text-vale-red hover:text-red-600">Manage Discount Codes &rarr;</a>
                 <a href="{{ route('admin.pricing.edit') }}" class="text-vale-red hover:text-red-600">Edit Pricing &rarr;</a>
                 <a href="{{ route('admin.provider-lookups.index') }}" class="text-vale-red hover:text-red-600">Provider Lookups &rarr;</a>
+                <a href="{{ route('admin.provider-costs.edit') }}" class="text-vale-red hover:text-red-600">Edit Provider Costs &rarr;</a>
             </div>
 
             <div>

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\CreatorController;
 use App\Http\Controllers\Admin\DiscountCodeController;
 use App\Http\Controllers\Admin\ProductPriceController;
+use App\Http\Controllers\Admin\ProviderEndpointCostController;
 use App\Http\Controllers\Admin\ProviderLookupLogController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactController;
@@ -86,6 +87,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::put('pricing', [ProductPriceController::class, 'update'])->name('pricing.update');
 
     Route::get('provider-lookups', [ProviderLookupLogController::class, 'index'])->name('provider-lookups.index');
+
+    Route::get('provider-costs', [ProviderEndpointCostController::class, 'edit'])->name('provider-costs.edit');
+    Route::put('provider-costs', [ProviderEndpointCostController::class, 'update'])->name('provider-costs.update');
 });
 
 require __DIR__.'/auth.php';

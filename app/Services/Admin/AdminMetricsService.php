@@ -31,13 +31,12 @@ class AdminMetricsService
         $revenueExVat = (float) Payment::where('status', Payment::STATUS_PAID)->sum('net');
         $paidPaymentsCount = Payment::where('status', Payment::STATUS_PAID)->count();
 
-        // Cost per API call (not per report — a Check report makes 2 One
-        // Auto calls, Plus makes 3) times the actual number of successful
-        // calls logged, so this reflects real usage rather than an
-        // assumed count per report.
-        $costPerLookup = (float) config('valecheck.vehicle_data.oneauto.cost_per_lookup_net');
-        $successfulLookups = ProviderLookupLog::where('status', ProviderLookupLog::STATUS_SUCCESS)->count();
-        $apiSpend = $successfulLookups * $costPerLookup;
+        // Each successful call's cost is whatever was actually configured
+        // per-endpoint at the moment it was logged (snapshotted onto the
+        // row by OneAutoClient — see ProviderEndpointCost), not today's
+        // config re-applied to every historical call, so this figure is
+        // accurate for any period and unaffected by later cost edits.
+        $apiSpend = (float) ProviderLookupLog::where('status', ProviderLookupLog::STATUS_SUCCESS)->sum('cost_net');
 
         $aiSpend = (float) AiUsage::where('success', true)->get()
             ->sum(fn (AiUsage $usage) => (float) ($usage->actual_cost ?? $usage->estimated_cost ?? 0));
@@ -48,15 +47,18 @@ class AdminMetricsService
         $totalCosts = $apiSpend + $aiSpend + $paymentCost;
         $contributionMargin = $revenue - $totalCosts;
 
-        // Check = AutoCheck + MOT/Tax (2 calls). Plus = + a valuation call
-        // (3 calls) — unless the MOT/Tax call was already served from the
-        // preview's cache, in which case actual spend is lower than this
-        // estimate; see the real per-report count in Provider Lookups.
+        // Real total API spend actually logged against completed checks of
+        // this type, divided by how many there are — reflects genuine
+        // per-report cost (including any saving from a cached MOT/Tax
+        // call) rather than an assumed fixed number of calls per report.
         $avgPaymentCost = $paidPaymentsCount > 0 ? $paymentCost / $paidPaymentsCount : 0;
-        $avgCostPerCheck = $completedCheck > 0 ? (2 * $costPerLookup) + $avgPaymentCost : 0;
-        $avgCostPerPlus = $completedPlus > 0 ? (3 * $costPerLookup) + $avgPaymentCost : 0;
+        $apiSpendByType = fn (string $type) => (float) ProviderLookupLog::where('status', ProviderLookupLog::STATUS_SUCCESS)
+            ->whereHas('vehicleCheck', fn ($query) => $query->where('type', $type)->where('status', VehicleCheck::STATUS_COMPLETED))
+            ->sum('cost_net');
+        $avgCostPerCheck = $completedCheck > 0 ? ($apiSpendByType(VehicleCheck::TYPE_CHECK) / $completedCheck) + $avgPaymentCost : 0;
+        $avgCostPerPlus = $completedPlus > 0 ? ($apiSpendByType(VehicleCheck::TYPE_PLUS) / $completedPlus) + $avgPaymentCost : 0;
         $avgAiCostPerRebuild = $completedRebuild > 0 ? $aiSpend / $completedRebuild : 0;
-        $avgCostPerRebuild = $completedRebuild > 0 ? (2 * $costPerLookup) + $avgAiCostPerRebuild + $avgPaymentCost : 0;
+        $avgCostPerRebuild = $completedRebuild > 0 ? ($apiSpendByType(VehicleCheck::TYPE_REBUILD) / $completedRebuild) + $avgAiCostPerRebuild + $avgPaymentCost : 0;
 
         return [
             'users_count' => User::count(),

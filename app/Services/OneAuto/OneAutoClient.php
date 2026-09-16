@@ -2,6 +2,7 @@
 
 namespace App\Services\OneAuto;
 
+use App\Models\ProviderEndpointCost;
 use App\Models\ProviderLookupLog;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -83,6 +84,10 @@ class OneAutoClient
             'status' => $status,
             'http_status' => $httpStatus,
             'error_message' => $errorMessage ? str($errorMessage)->limit(255)->toString() : null,
+            // Snapshotted now, at the moment this call happened — never
+            // re-read later, so an admin editing costs going forward can't
+            // silently rewrite what a past call is recorded as costing.
+            'cost_net' => ProviderEndpointCost::where('endpoint', $endpoint)->value('cost_net'),
         ]);
     }
 }

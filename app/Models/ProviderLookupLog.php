@@ -13,13 +13,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 #[Fillable([
     'provider', 'endpoint', 'registration', 'vehicle_check_id',
-    'status', 'http_status', 'error_message',
+    'status', 'http_status', 'error_message', 'cost_net',
 ])]
 class ProviderLookupLog extends Model
 {
     public const STATUS_SUCCESS = 'success';
 
     public const STATUS_FAILED = 'failed';
+
+    protected function casts(): array
+    {
+        return [
+            'cost_net' => 'decimal:4',
+        ];
+    }
 
     public function vehicleCheck(): BelongsTo
     {
