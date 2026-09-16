@@ -261,6 +261,10 @@
                     @endif
                 </div>
 
+                <p class="text-center mt-10">
+                    <a href="{{ route('sample-report') }}" class="text-sm font-semibold text-vale-navy hover:text-vale-red underline">See a sample report &rarr;</a>
+                </p>
+
             </div>
         </section>
 

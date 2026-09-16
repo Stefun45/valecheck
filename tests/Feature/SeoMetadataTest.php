@@ -82,9 +82,21 @@ class SeoMetadataTest extends TestCase
         $this->assertStringContainsString('application/xml', $response->headers->get('Content-Type'));
         $response->assertSee('<loc>'.url('/').'</loc>', false);
         $response->assertSee('<loc>'.route('vehicle-checks.start').'</loc>', false);
+        $response->assertSee('<loc>'.route('sample-report').'</loc>', false);
+        $response->assertSee('<loc>'.route('faq').'</loc>', false);
         $response->assertSee('<loc>'.route('legal.terms').'</loc>', false);
         $response->assertSee('<loc>'.route('legal.privacy').'</loc>', false);
         $response->assertDontSee('dashboard', false);
+    }
+
+    public function test_the_faq_page_has_a_meta_description_and_faqpage_structured_data(): void
+    {
+        $response = $this->get(route('faq'))->assertOk();
+
+        $response->assertSee('<meta name="description" content="Answers to common questions', false);
+        $response->assertSee('"@type":"FAQPage"', false);
+        $response->assertSeeText('What is ValeCheck?');
+        $response->assertDontSee('name="robots" content="noindex', false);
     }
 
     public function test_robots_txt_points_to_the_sitemap(): void

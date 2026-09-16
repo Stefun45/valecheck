@@ -58,10 +58,13 @@ class AdminMetricsService
 
     public function compute(): array
     {
-        $completedCheck = VehicleCheck::where('status', VehicleCheck::STATUS_COMPLETED)->where('type', VehicleCheck::TYPE_CHECK)->count();
-        $completedPlus = VehicleCheck::where('status', VehicleCheck::STATUS_COMPLETED)->where('type', VehicleCheck::TYPE_PLUS)->count();
-        $completedRebuild = VehicleCheck::where('status', VehicleCheck::STATUS_COMPLETED)->where('type', VehicleCheck::TYPE_REBUILD)->count();
-        $failedChecks = VehicleCheck::where('status', VehicleCheck::STATUS_FAILED)->count();
+        // The public /sample-report demo check is excluded from every
+        // business figure below — it's not a real customer, so it must
+        // never inflate completed-check counts, revenue, or cost averages.
+        $completedCheck = VehicleCheck::where('status', VehicleCheck::STATUS_COMPLETED)->where('type', VehicleCheck::TYPE_CHECK)->where('is_sample', false)->count();
+        $completedPlus = VehicleCheck::where('status', VehicleCheck::STATUS_COMPLETED)->where('type', VehicleCheck::TYPE_PLUS)->where('is_sample', false)->count();
+        $completedRebuild = VehicleCheck::where('status', VehicleCheck::STATUS_COMPLETED)->where('type', VehicleCheck::TYPE_REBUILD)->where('is_sample', false)->count();
+        $failedChecks = VehicleCheck::where('status', VehicleCheck::STATUS_FAILED)->where('is_sample', false)->count();
 
         // Lifetime figures — kept for the avg-cost-per-report metrics
         // below, which are meant to be genuine long-run averages, not

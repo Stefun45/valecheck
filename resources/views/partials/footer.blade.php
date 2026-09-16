@@ -14,6 +14,7 @@
         Unit 2A, 35 Eastgate North, Driffield, YO25 6DG.
     </p>
     <p class="mt-3 flex items-center justify-center gap-4">
+        <a href="{{ route('faq') }}" wire:navigate class="hover:text-vale-navy">FAQs</a>
         <a href="{{ route('legal.terms') }}" wire:navigate class="hover:text-vale-navy">Terms &amp; Conditions</a>
         <a href="{{ route('legal.privacy') }}" wire:navigate class="hover:text-vale-navy">Privacy Policy</a>
     </p>

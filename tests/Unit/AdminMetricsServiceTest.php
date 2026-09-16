@@ -120,6 +120,16 @@ class AdminMetricsServiceTest extends TestCase
         $this->assertEqualsWithDelta(7.49, $metrics['max_margin_per_check'], 0.0001);
     }
 
+    public function test_a_sample_report_check_is_excluded_from_completed_check_counts(): void
+    {
+        VehicleCheck::factory()->create(['type' => VehicleCheck::TYPE_PLUS, 'status' => VehicleCheck::STATUS_COMPLETED, 'is_sample' => true]);
+        VehicleCheck::factory()->create(['type' => VehicleCheck::TYPE_PLUS, 'status' => VehicleCheck::STATUS_COMPLETED, 'is_sample' => false]);
+
+        $metrics = app(AdminMetricsService::class)->compute();
+
+        $this->assertSame(1, $metrics['plus_completed']);
+    }
+
     private function paidPayment(float $gross, ?Carbon $createdAt = null): Payment
     {
         $payment = Payment::create([

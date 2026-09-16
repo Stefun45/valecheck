@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 #[Fillable([
-    'user_id', 'vehicle_id', 'type', 'status', 'stage', 'funding_source',
+    'user_id', 'vehicle_id', 'type', 'status', 'stage', 'funding_source', 'is_sample',
     'payment_id', 'credit_transaction_id', 'registration', 'mileage',
     'listing_url', 'auction_name', 'current_bid', 'asking_price',
     'listing_description', 'listing_import_id', 'listing_data_sources', 'discount_code',
@@ -63,6 +63,7 @@ class VehicleCheck extends Model
             'expires_at' => 'datetime',
             'purged_at' => 'datetime',
             'upgraded_at' => 'datetime',
+            'is_sample' => 'boolean',
         ];
     }
 

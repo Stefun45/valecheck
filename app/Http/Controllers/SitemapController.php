@@ -18,6 +18,8 @@ class SitemapController extends Controller
     private const PAGES = [
         ['route' => 'welcome', 'changefreq' => 'weekly', 'priority' => '1.0'],
         ['route' => 'vehicle-checks.start', 'changefreq' => 'weekly', 'priority' => '0.9'],
+        ['route' => 'sample-report', 'changefreq' => 'monthly', 'priority' => '0.7'],
+        ['route' => 'faq', 'changefreq' => 'monthly', 'priority' => '0.6'],
         ['route' => 'legal.terms', 'changefreq' => 'monthly', 'priority' => '0.3'],
         ['route' => 'legal.privacy', 'changefreq' => 'monthly', 'priority' => '0.3'],
     ];

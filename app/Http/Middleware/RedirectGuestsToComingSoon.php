@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
 class RedirectGuestsToComingSoon
 {
     private const EXEMPT_PATHS = [
-        'stripe/webhook', 'up', 'terms', 'privacy', 'sitemap.xml',
+        'stripe/webhook', 'up', 'terms', 'privacy', 'faq', 'sample-report', 'sitemap.xml',
         'login', 'forgot-password', 'reset-password/*',
         // Livewire's own transport (component updates, file uploads, its
         // JS assets) — not a page a guest can navigate to, but every
