@@ -48,6 +48,37 @@ class RegistrationQuickLookTest extends TestCase
             ->assertSet('preview', null);
     }
 
+    public function test_repeated_checks_from_the_same_ip_are_rate_limited(): void
+    {
+        for ($i = 0; $i < 10; $i++) {
+            Livewire::test(RegistrationQuickLook::class)
+                ->set('registration', 'AB12CDE')
+                ->call('check')
+                ->assertSet('status', 'found');
+        }
+
+        Livewire::test(RegistrationQuickLook::class)
+            ->set('registration', 'AB12CDE')
+            ->call('check')
+            ->assertSet('status', 'rate_limited')
+            ->assertSet('preview', null);
+    }
+
+    public function test_an_invalid_format_attempt_does_not_count_towards_the_rate_limit(): void
+    {
+        for ($i = 0; $i < 20; $i++) {
+            Livewire::test(RegistrationQuickLook::class)
+                ->set('registration', 'AB1')
+                ->call('check')
+                ->assertSet('status', 'invalid');
+        }
+
+        Livewire::test(RegistrationQuickLook::class)
+            ->set('registration', 'AB12CDE')
+            ->call('check')
+            ->assertSet('status', 'found');
+    }
+
     public function test_the_free_preview_includes_full_mot_history_and_a_mileage_chart(): void
     {
         // The homepage widget must match the same-cost preview shown when

@@ -27,6 +27,10 @@
         <p class="text-xs text-vale-red mt-3">That doesn't look like a valid UK registration.</p>
     @endif
 
+    @if ($status === 'rate_limited')
+        <p class="text-xs text-gray-500 mt-3">You've made a lot of quick checks in a short space of time — please try again in a little while.</p>
+    @endif
+
     @if ($status === 'found' && $preview)
         <div class="relative bg-white border border-gray-200 rounded-xl p-5 text-left shadow-sm">
             @if ($this->usingMockData())

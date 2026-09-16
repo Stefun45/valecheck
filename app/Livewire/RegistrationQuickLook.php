@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Services\RegistrationLookup\VehicleSpecPreviewProvider;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Modelable;
 use Livewire\Component;
 use Throwable;
@@ -13,9 +14,17 @@ use Throwable;
  * One Auto's MOT History & Tax Status call. Confirming navigates into the
  * full check flow; rejecting lets the user correct the plate without
  * spending another lookup until they click again.
+ *
+ * Free, unauthenticated, and one real billable API call per distinct
+ * plate — a prime scripting target. Throttled per IP rather than a
+ * CAPTCHA: no real visitor plausibly needs more than a handful of lookups
+ * an hour, so this stays invisible to genuine use while capping the
+ * worst-case cost of a script cycling through plates from one address.
  */
 class RegistrationQuickLook extends Component
 {
+    private const MAX_ATTEMPTS_PER_HOUR = 10;
+
     #[Modelable]
     public string $registration = '';
 
@@ -33,6 +42,16 @@ class RegistrationQuickLook extends Component
 
             return;
         }
+
+        $rateLimitKey = 'registration-quick-look:'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($rateLimitKey, self::MAX_ATTEMPTS_PER_HOUR)) {
+            $this->status = 'rate_limited';
+
+            return;
+        }
+
+        RateLimiter::hit($rateLimitKey, 3600);
 
         $this->registration = $normalised;
         $this->status = 'loading';
