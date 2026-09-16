@@ -64,6 +64,23 @@ class AdminUserManagementTest extends TestCase
         $this->assertSame(0, UserProductPrice::where('user_id', $customer->id)->where('type', 'plus')->count());
     }
 
+    public function test_an_admin_can_set_a_custom_price_of_zero(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $customer = User::factory()->create();
+
+        $this->actingAs($admin)->put(route('admin.users.update-prices', $customer), [
+            'check' => '0',
+            'plus' => '',
+            'rebuild' => '',
+        ]);
+
+        // Stored as a real 0 override, not cleared — distinct from
+        // submitting an empty field, which deletes the override entirely.
+        $this->assertSame(1, UserProductPrice::where('user_id', $customer->id)->where('type', 'check')->count());
+        $this->assertSame('0.00', UserProductPrice::where('user_id', $customer->id)->where('type', 'check')->value('gross'));
+    }
+
     public function test_clearing_a_previously_set_custom_price_reverts_to_standard(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

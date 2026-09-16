@@ -9,23 +9,25 @@ use App\Models\Vehicle;
 use App\Models\VehicleCheck;
 use App\Services\Credits\CreditLedgerService;
 use App\Services\Pipeline\VehicleCheckPipeline;
+use App\Services\Pricing\PricingService;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Decides how a requested vehicle check gets funded (purchased credit,
- * subscription allowance, or a one-off Stripe purchase) and either
- * dispatches the processing pipeline immediately or leaves the check
- * "pending" for a Payment to unlock it.
+ * subscription allowance, an admin-set £0 account price, or a one-off
+ * Stripe purchase) and either dispatches the processing pipeline
+ * immediately or leaves the check "pending" for a Payment to unlock it.
  *
  * ValeCheck Plus and ValeCheck Rebuild can be funded by purchased credits or
- * a subscription allowance — the base ValeCheck product is always a one-off
- * purchase.
+ * a subscription allowance — the base ValeCheck product is otherwise always
+ * a one-off purchase, unless a per-account price override brings it to £0.
  */
 class VehicleCheckOrderService
 {
     public function __construct(
         private readonly CreditLedgerService $ledger,
         private readonly VehicleCheckPipeline $pipeline,
+        private readonly PricingService $pricing,
     ) {}
 
     /**
@@ -76,12 +78,16 @@ class VehicleCheckOrderService
                 ]);
             }
 
-            if ($fundingSource === 'credit' || $fundingSource === 'free') {
+            if ($fundingSource === 'credit') {
                 $transaction = $this->ledger->consumeCredit($user, $type, $check);
                 $check->update(['credit_transaction_id' => $transaction->id]);
                 $this->pipeline->dispatch($check);
             } elseif ($fundingSource === 'subscription') {
                 $this->consumeSubscriptionAllowance($user, $type);
+                $this->pipeline->dispatch($check);
+            } elseif ($fundingSource === 'free') {
+                // An admin-set £0 account price — no credit or payment of
+                // any kind to record, just process it directly.
                 $this->pipeline->dispatch($check);
             }
 
@@ -94,6 +100,14 @@ class VehicleCheckOrderService
 
     private function determineFundingSource(User $user, string $type): string
     {
+        // Checked first, and for every type including the base ValeCheck
+        // product — an admin-set £0 account price should never route to
+        // Stripe (which doesn't support a genuine £0 Checkout Session
+        // anyway) regardless of what type it is.
+        if ($this->pricing->forProduct($type, $user)->gross <= 0.0) {
+            return 'free';
+        }
+
         if (! in_array($type, [VehicleCheck::TYPE_PLUS, VehicleCheck::TYPE_REBUILD], true)) {
             return 'purchase';
         }

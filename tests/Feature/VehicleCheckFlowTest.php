@@ -10,6 +10,7 @@ use App\Models\Report;
 use App\Models\SalvageAuctionCheck;
 use App\Models\SubscriptionUsage;
 use App\Models\User;
+use App\Models\UserProductPrice;
 use App\Models\Vehicle;
 use App\Models\VehicleCheck;
 use App\Models\VehicleHistory;
@@ -372,6 +373,52 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertSame('subscription', $check->funding_source);
         $this->assertSame(VehicleCheck::STATUS_COMPLETED, $check->status);
         $this->assertSame(1, SubscriptionUsage::first()->used);
+    }
+
+    public function test_a_zero_priced_account_skips_checkout_entirely_even_for_the_base_valecheck(): void
+    {
+        // The base ValeCheck product is normally always 'purchase' — an
+        // admin-set £0 account price must override that, since Stripe
+        // Checkout doesn't support a genuine £0 charge anyway.
+        $user = $this->verifiedUser();
+        UserProductPrice::create(['user_id' => $user->id, 'type' => VehicleCheck::TYPE_CHECK, 'gross' => 0]);
+        $this->actingAs($user);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'FR33CAR')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->call('choose', 'check')
+            ->assertSet('step', 'confirm')
+            ->call('submit');
+
+        $check = VehicleCheck::where('registration', 'FR33CAR')->firstOrFail();
+
+        $this->assertSame('free', $check->funding_source);
+        $this->assertSame(VehicleCheck::STATUS_COMPLETED, $check->status);
+        $this->assertNull($check->credit_transaction_id);
+        $this->assertSame(0, Payment::where('user_id', $user->id)->count());
+    }
+
+    public function test_a_zero_priced_account_does_not_affect_other_users_checkout(): void
+    {
+        $vip = $this->verifiedUser();
+        UserProductPrice::create(['user_id' => $vip->id, 'type' => VehicleCheck::TYPE_CHECK, 'gross' => 0]);
+
+        $everyoneElse = User::factory()->create(['email_verified_at' => now()]);
+        $this->actingAs($everyoneElse);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'PAYING1')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->call('choose', 'check')
+            ->call('submit');
+
+        $check = VehicleCheck::where('registration', 'PAYING1')->firstOrFail();
+
+        $this->assertSame('purchase', $check->funding_source);
+        $this->assertSame(VehicleCheck::STATUS_PENDING, $check->status);
     }
 
     public function test_a_completed_check_report_has_history_but_no_valuation_or_damage_analysis(): void

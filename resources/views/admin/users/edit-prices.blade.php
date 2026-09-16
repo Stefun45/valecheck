@@ -11,7 +11,9 @@
 
                 <p class="text-sm text-gray-500 mb-6">
                     Set what this one account pays per report, overriding the standard price. Leave a field blank
-                    to charge this account the standard price shown as its placeholder.
+                    to charge this account the standard price shown as its placeholder. Set a price to <strong>0</strong>
+                    to skip the formal checkout entirely — the check goes straight to processing with no Stripe
+                    payment involved.
                 </p>
 
                 <form method="POST" action="{{ route('admin.users.update-prices', $user) }}" class="space-y-5">
@@ -28,7 +30,7 @@
                                     :name="$type"
                                     type="number"
                                     step="0.01"
-                                    min="0.01"
+                                    min="0"
                                     class="block w-full pl-7"
                                     value="{{ old($type, $overrides[$type] ?? '') }}"
                                     placeholder="{{ number_format($standardPrices[$type] ?? 0, 2) }} (standard)"

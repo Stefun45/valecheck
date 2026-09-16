@@ -39,9 +39,12 @@ class UserController extends Controller
     public function updatePrices(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
-            'check' => ['nullable', 'numeric', 'min:0.01'],
-            'plus' => ['nullable', 'numeric', 'min:0.01'],
-            'rebuild' => ['nullable', 'numeric', 'min:0.01'],
+            // 0 is allowed deliberately — a £0 account price skips Stripe
+            // Checkout entirely (see VehicleCheckOrderService), which
+            // doesn't support a genuine £0 charge anyway.
+            'check' => ['nullable', 'numeric', 'min:0'],
+            'plus' => ['nullable', 'numeric', 'min:0'],
+            'rebuild' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         foreach ($validated as $type => $gross) {
