@@ -17,6 +17,10 @@
         <p class="text-vale-navy mt-2">{{ $report?->headline_summary }}</p>
     </div>
 
+    <div class="mt-6">
+        @include('livewire.vehicle-check.partials.vehicle-timeline', ['history' => $history])
+    </div>
+
     <div class="grid sm:grid-cols-2 gap-4 mt-6">
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="identity" />Vehicle Summary</h3>

@@ -22,6 +22,8 @@
         <p>{{ $report?->headline_summary }}</p>
     </div>
 
+    @include('pdf.partials.vehicle-timeline', ['history' => $history])
+
     <div class="section">
         <div class="section-title">Vehicle Summary</div>
         <table class="data">

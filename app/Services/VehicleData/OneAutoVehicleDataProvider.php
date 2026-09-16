@@ -49,6 +49,7 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
 
         $mot = $this->motFetcher->fetch($registration, $vehicleCheckId);
         $motTests = $mot['dvsa_data']['mot_tests'] ?? [];
+        $firstRegistrationDate = $mot['dvsa_data']['dvsa_vehicle_Data']['first_registration_date'] ?? null;
 
         [$writeOffCategory, $writeOffDate] = $this->writeOff($autoCheck);
 
@@ -114,6 +115,7 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
                 'type' => $item['transfer_type'] ?? null,
             ], $autoCheck['cherished_data_items'] ?? []),
             damageLocations: $this->damageLocations($autoCheck),
+            firstRegistrationDate: $firstRegistrationDate,
         );
     }
 

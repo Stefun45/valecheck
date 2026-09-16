@@ -421,6 +421,31 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertSame(VehicleCheck::STATUS_PENDING, $check->status);
     }
 
+    public function test_the_vehicle_timeline_appears_on_both_check_and_plus_reports(): void
+    {
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+
+        $checkType = $this->completeViaPurchase($user, VehicleCheck::TYPE_CHECK, 'AB12CDE');
+        $plusType = $this->completeViaPurchase($user, VehicleCheck::TYPE_PLUS, 'CD34EFG');
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $checkType])
+            ->assertSeeText('Vehicle Timeline')
+            ->assertSeeText('First registered')
+            ->assertSeeText('Registered keeper changed');
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $plusType])
+            ->assertSeeText('Vehicle Timeline')
+            ->assertSeeText('First registered');
+
+        $checkPdfHtml = view('pdf.check-report', ['check' => $checkType->fresh()])->render();
+        $this->assertStringContainsString('Vehicle Timeline', $checkPdfHtml);
+        $this->assertStringContainsString('First registered', $checkPdfHtml);
+
+        $plusPdfHtml = view('pdf.plus-report', ['check' => $plusType->fresh()])->render();
+        $this->assertStringContainsString('Vehicle Timeline', $plusPdfHtml);
+    }
+
     public function test_a_completed_check_report_has_history_but_no_valuation_or_damage_analysis(): void
     {
         $user = $this->verifiedUser();

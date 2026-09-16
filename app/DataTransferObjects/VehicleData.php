@@ -74,6 +74,7 @@ final readonly class VehicleData
          * @var array<int, string>
          */
         public array $damageLocations = [],
+        public ?string $firstRegistrationDate = null,
     ) {}
 
     public function isWrittenOff(): bool

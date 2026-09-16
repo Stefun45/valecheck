@@ -91,6 +91,7 @@ class MockVehicleDataProvider implements VehicleDataProvider
             vinMatches: true,
             plateChangeHistory: $plateChangeHistory,
             damageLocations: $writeOffCategory ? ['Front', 'FrontNearside'] : [],
+            firstRegistrationDate: Carbon::createFromDate($year, 1 + ($seed % 12), 1 + ($seed % 28))->toDateString(),
         );
     }
 

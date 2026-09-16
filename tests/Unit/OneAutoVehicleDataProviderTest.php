@@ -276,6 +276,34 @@ class OneAutoVehicleDataProviderTest extends TestCase
         $this->assertNull($result->vinMatches);
     }
 
+    public function test_first_registration_date_is_mapped_from_the_mot_and_tax_response(): void
+    {
+        // Same response the free preview already reads this field from
+        // (OneAutoBasicProvider) — previously discarded for the paid report.
+        $this->fakeBoth(
+            $this->completeAutoCheck(),
+            [
+                'dvsa_data' => [
+                    'dvsa_vehicle_Data' => ['first_registration_date' => '2017-03-14'],
+                    'mot_tests' => [],
+                ],
+            ],
+        );
+
+        $result = $this->provider()->getVehicle('AB21ABC');
+
+        $this->assertSame('2017-03-14', $result->firstRegistrationDate);
+    }
+
+    public function test_first_registration_date_is_null_when_the_response_does_not_include_it(): void
+    {
+        $this->fakeBoth($this->completeAutoCheck(), $this->motAndTax());
+
+        $result = $this->provider()->getVehicle('AB21ABC');
+
+        $this->assertNull($result->firstRegistrationDate);
+    }
+
     public function test_plate_change_history_maps_every_real_transfer_not_just_the_count(): void
     {
         // Values taken directly from a real sandbox response (DY17BXW) —
