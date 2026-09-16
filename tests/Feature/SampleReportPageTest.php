@@ -61,4 +61,18 @@ class SampleReportPageTest extends TestCase
     {
         $this->get(route('sample-report'))->assertNotFound();
     }
+
+    public function test_the_real_registration_is_masked_and_never_shown_on_the_public_page(): void
+    {
+        $this->seedSample();
+
+        $response = $this->get(route('sample-report'))->assertOk();
+
+        $response->assertDontSeeText('SAMP01A');
+        $response->assertSeeText('AB12 SAM');
+
+        // Masking only ever happens in memory for display — the stored
+        // record still carries whatever real plate it was copied from.
+        $this->assertSame('SAMP01A', VehicleCheck::where('is_sample', true)->firstOrFail()->registration);
+    }
 }

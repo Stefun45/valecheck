@@ -45,6 +45,10 @@
             'q' => 'Do you check for outstanding finance and stolen or write-off status?',
             'a' => 'Yes, both ValeCheck and ValeCheck Plus include a finance check, a stolen/scrapped marker check, and full write-off category history, all sourced from Experian.',
         ],
+        [
+            'q' => 'What do the different write-off categories mean?',
+            'a' => 'Since October 2017, UK insurers use four categories. Category A: scrap only — the vehicle must be crushed and no parts reused. Category B: broken for parts only — the body shell must be crushed and the vehicle must never return to the road. Category S: structural damage (to the chassis or frame) that has been professionally repaired and can legally return to the road. Category N: non-structural damage (for example cosmetic or electrical) that has been repaired and can return to the road. Older reports may still show the categories these replaced — Category C (roughly equivalent to S) and Category D (roughly equivalent to N). A Category S or N history doesn\'t mean a car is unsafe, but it\'s worth knowing about and reflecting in what you\'re willing to pay.',
+        ],
     ];
 @endphp
 

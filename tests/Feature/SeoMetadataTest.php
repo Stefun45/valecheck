@@ -96,6 +96,8 @@ class SeoMetadataTest extends TestCase
         $response->assertSee('<meta name="description" content="Answers to common questions', false);
         $response->assertSee('"@type":"FAQPage"', false);
         $response->assertSeeText('What is ValeCheck?');
+        $response->assertSeeText('What do the different write-off categories mean?');
+        $response->assertSeeText('Category A: scrap only');
         $response->assertDontSee('name="robots" content="noindex', false);
     }
 
