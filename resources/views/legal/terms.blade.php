@@ -1,4 +1,7 @@
-@extends('layouts.legal', ['title' => 'Terms & Conditions'])
+@extends('layouts.legal', [
+    'title' => 'Terms & Conditions',
+    'description' => "ValeCheck's terms and conditions, covering vehicle history reports, payment, and use of the service.",
+])
 
 @section('content')
     <section>

@@ -13,6 +13,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportPdfController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\VehicleCheckCheckoutController;
 use App\Http\Controllers\VehicleCheckUpgradeController;
@@ -38,6 +39,7 @@ Route::post('stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])
 
 Route::view('terms', 'legal.terms')->name('legal.terms');
 Route::view('privacy', 'legal.privacy')->name('legal.privacy');
+Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])

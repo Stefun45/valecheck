@@ -5,7 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'ValeCheck') }}</title>
+        @php
+            $title = $title ?? config('app.name', 'ValeCheck');
+            $description = $description ?? 'ValeCheck gives UK car buyers an instant vehicle history, provenance and valuation check before they buy — write-off, finance, stolen and mileage checks in one report.';
+            $noindex = $noindex ?? true;
+        @endphp
+        <title>{{ $title }}</title>
+        @include('partials.seo-meta')
 
         @include('partials.favicons')
 

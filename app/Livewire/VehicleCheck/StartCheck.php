@@ -19,7 +19,11 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Throwable;
 
-#[Layout('layouts.app')]
+#[Layout('layouts.app', [
+    'title' => 'Check a Vehicle — ValeCheck',
+    'description' => 'Enter a UK registration to check its history, write-off, finance, stolen and mileage records, plus a valuation — from £8.99.',
+    'noindex' => false,
+])]
 class StartCheck extends Component
 {
     use WithFileUploads;

@@ -4,6 +4,41 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ config('app.name', 'ValeCheck') }} — Know Before You Buy</title>
+        @include('partials.seo-meta', [
+            'title' => config('app.name', 'ValeCheck').' — Know Before You Buy',
+            'description' => 'Instant UK vehicle history, write-off, finance, stolen and mileage checks, plus a valuation, before you buy. Free registration lookup, results in seconds.',
+            'noindex' => false,
+        ])
+
+        <script type="application/ld+json">
+            {!! json_encode([
+                '@context' => 'https://schema.org',
+                '@type' => 'Organization',
+                'name' => 'ValeCheck',
+                'legalName' => 'Silverback Customs UK Ltd',
+                'url' => url('/'),
+                'address' => [
+                    '@type' => 'PostalAddress',
+                    'streetAddress' => 'Unit 2A, 35 Eastgate North',
+                    'addressLocality' => 'Driffield',
+                    'postalCode' => 'YO25 6DG',
+                    'addressCountry' => 'GB',
+                ],
+            ], JSON_UNESCAPED_SLASHES) !!}
+        </script>
+        <script type="application/ld+json">
+            {!! json_encode([
+                '@context' => 'https://schema.org',
+                '@type' => 'Product',
+                'name' => 'ValeCheck Vehicle History Check',
+                'description' => 'UK vehicle history, write-off, finance, stolen and mileage checks.',
+                'brand' => ['@type' => 'Brand', 'name' => 'ValeCheck'],
+                'offers' => [
+                    ['@type' => 'Offer', 'name' => 'ValeCheck', 'price' => number_format($checkPrice->gross, 2, '.', ''), 'priceCurrency' => $checkPrice->currency, 'url' => url('/check')],
+                    ['@type' => 'Offer', 'name' => 'ValeCheck Plus', 'price' => number_format($plusPrice->gross, 2, '.', ''), 'priceCurrency' => $plusPrice->currency, 'url' => url('/check')],
+                ],
+            ], JSON_UNESCAPED_SLASHES) !!}
+        </script>
 
         @include('partials.favicons')
 

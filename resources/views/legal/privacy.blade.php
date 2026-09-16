@@ -1,4 +1,7 @@
-@extends('layouts.legal', ['title' => 'Privacy Policy'])
+@extends('layouts.legal', [
+    'title' => 'Privacy Policy',
+    'description' => 'How ValeCheck collects, uses, and protects your personal data when you use our vehicle history and valuation service.',
+])
 
 @section('content')
     <section>
