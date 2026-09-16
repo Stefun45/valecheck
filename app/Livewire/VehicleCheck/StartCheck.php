@@ -336,7 +336,7 @@ class StartCheck extends Component
             return;
         }
 
-        $originalPrice = $pricing->forProduct((string) $this->type);
+        $originalPrice = $pricing->forProduct((string) $this->type, auth()->user());
 
         $this->discount_code = $discount->code;
         $this->discountStatus = 'found';
@@ -446,9 +446,9 @@ class StartCheck extends Component
     public function render(PricingService $pricing)
     {
         return view('livewire.vehicle-check.start-check', [
-            'checkPrice' => $pricing->forCheck(),
-            'plusPrice' => $pricing->forPlus(),
-            'rebuildPrice' => $pricing->forRebuild(),
+            'checkPrice' => $pricing->forCheck(auth()->user()),
+            'plusPrice' => $pricing->forPlus(auth()->user()),
+            'rebuildPrice' => $pricing->forRebuild(auth()->user()),
             'plusBalance' => auth()->check() ? app(CreditLedgerService::class)->balance(auth()->user(), VehicleCheck::TYPE_PLUS) : 0,
             'rebuildBalance' => auth()->check() ? app(CreditLedgerService::class)->balance(auth()->user(), VehicleCheck::TYPE_REBUILD) : 0,
         ]);

@@ -1,0 +1,69 @@
+<?php
+
+namespace Tests\Unit;
+
+use App\Models\Payment;
+use App\Models\User;
+use App\Models\UserProductPrice;
+use App\Models\Vehicle;
+use App\Models\VehicleCheck;
+use App\Services\Payments\StripeCheckoutService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+use Throwable;
+
+class StripeCheckoutServiceCustomPriceTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /**
+     * Stripe isn't configured in the test environment (the real controller
+     * guards on this and shows a pending page instead — see
+     * VehicleCheckCheckoutController), so calling the service directly
+     * throws once it reaches the actual Stripe API call. The Payment row
+     * this test cares about is created just before that, so the price
+     * that was actually going to be charged is still verifiable.
+     */
+    public function test_a_check_belonging_to_a_user_with_a_custom_price_is_charged_that_price_not_the_standard_one(): void
+    {
+        $user = User::factory()->create();
+        UserProductPrice::create(['user_id' => $user->id, 'type' => VehicleCheck::TYPE_CHECK, 'gross' => 3.50]);
+        $vehicle = Vehicle::factory()->create();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_PENDING,
+        ]);
+
+        try {
+            app(StripeCheckoutService::class)->checkoutForVehicleCheck($check);
+        } catch (Throwable) {
+            // Expected — no real Stripe key in this environment.
+        }
+
+        $payment = Payment::where('user_id', $user->id)->firstOrFail();
+        $this->assertEqualsWithDelta(3.50, (float) $payment->gross, 0.001);
+    }
+
+    public function test_a_check_belonging_to_a_user_with_no_custom_price_is_charged_the_standard_price(): void
+    {
+        $user = User::factory()->create();
+        $vehicle = Vehicle::factory()->create();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_PENDING,
+        ]);
+
+        try {
+            app(StripeCheckoutService::class)->checkoutForVehicleCheck($check);
+        } catch (Throwable) {
+            // Expected — no real Stripe key in this environment.
+        }
+
+        $payment = Payment::where('user_id', $user->id)->firstOrFail();
+        $this->assertEqualsWithDelta(8.99, (float) $payment->gross, 0.001);
+    }
+}

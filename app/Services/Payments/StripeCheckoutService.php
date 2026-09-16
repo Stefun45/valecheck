@@ -19,7 +19,7 @@ class StripeCheckoutService
 
     public function checkoutForVehicleCheck(VehicleCheck $check): Checkout
     {
-        $originalPrice = $this->pricing->forProduct($check->type);
+        $originalPrice = $this->pricing->forProduct($check->type, $check->user);
         $label = config("valecheck.pricing.{$check->type}.label");
 
         // Re-validated here, at the point money actually changes hands —
@@ -66,7 +66,7 @@ class StripeCheckoutService
 
     public function checkoutForVehicleCheckUpgrade(VehicleCheck $check): Checkout
     {
-        $price = $this->pricing->forProduct('plus_upgrade');
+        $price = $this->pricing->forProduct('plus_upgrade', $check->user);
         $label = config('valecheck.pricing.plus_upgrade.label');
 
         $payment = Payment::create([

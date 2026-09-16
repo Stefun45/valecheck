@@ -61,6 +61,11 @@ class User extends Authenticatable
         return $this->hasMany(SubscriptionUsage::class);
     }
 
+    public function productPriceOverrides(): HasMany
+    {
+        return $this->hasMany(UserProductPrice::class);
+    }
+
     /**
      * Gates trade-sector-restricted report content (e.g. high-risk
      * markers) — must never be inferred from anything else (report type,

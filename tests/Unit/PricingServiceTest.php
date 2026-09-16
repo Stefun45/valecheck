@@ -3,6 +3,8 @@
 namespace Tests\Unit;
 
 use App\Models\ProductPrice;
+use App\Models\User;
+use App\Models\UserProductPrice;
 use App\Services\Pricing\PricingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -87,6 +89,49 @@ class PricingServiceTest extends TestCase
         $this->assertSame(49.99, $pricing->forSubscription('trader')->gross);
         $this->assertSame(94.99, $pricing->forSubscription('pro')->gross);
         $this->assertSame(149.99, $pricing->forSubscription('dealer')->gross);
+    }
+
+    public function test_a_user_with_a_custom_price_pays_that_instead_of_the_standard_price(): void
+    {
+        $user = User::factory()->create();
+        UserProductPrice::create(['user_id' => $user->id, 'type' => 'plus', 'gross' => 5.00]);
+
+        $this->assertSame(5.00, (new PricingService)->forPlus($user)->gross);
+    }
+
+    public function test_a_user_with_no_custom_price_still_pays_standard_pricing(): void
+    {
+        $user = User::factory()->create();
+
+        $this->assertSame((new PricingService)->forPlus()->gross, (new PricingService)->forPlus($user)->gross);
+    }
+
+    public function test_a_custom_price_is_scoped_to_one_product_type_only(): void
+    {
+        $user = User::factory()->create();
+        UserProductPrice::create(['user_id' => $user->id, 'type' => 'plus', 'gross' => 5.00]);
+
+        $pricing = new PricingService;
+
+        $this->assertSame(5.00, $pricing->forPlus($user)->gross);
+        $this->assertSame($pricing->forCheck()->gross, $pricing->forCheck($user)->gross);
+    }
+
+    public function test_a_custom_price_does_not_affect_what_other_users_pay(): void
+    {
+        $vip = User::factory()->create();
+        $everyoneElse = User::factory()->create();
+        UserProductPrice::create(['user_id' => $vip->id, 'type' => 'check', 'gross' => 1.00]);
+
+        $pricing = new PricingService;
+
+        $this->assertSame(1.00, $pricing->forCheck($vip)->gross);
+        $this->assertSame(8.99, $pricing->forCheck($everyoneElse)->gross);
+    }
+
+    public function test_no_user_passed_at_all_behaves_exactly_as_before(): void
+    {
+        $this->assertSame(8.99, (new PricingService)->forProduct('check')->gross);
     }
 
     public function test_gross_always_equals_net_plus_vat(): void

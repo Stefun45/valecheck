@@ -4,6 +4,8 @@ namespace App\Services\Pricing;
 
 use App\DataTransferObjects\PriceBreakdown;
 use App\Models\ProductPrice;
+use App\Models\User;
+use App\Models\UserProductPrice;
 use InvalidArgumentException;
 
 /**
@@ -16,6 +18,11 @@ use InvalidArgumentException;
  * Subscription plans are still config-only (unedited by this admin screen).
  * This service is the only place that derives net/VAT figures from a
  * gross price — nothing else in the codebase should compute VAT directly.
+ *
+ * Any product lookup can optionally be scoped to a specific user — an
+ * admin-set UserProductPrice row for that user+type takes priority over
+ * the standard price everyone else pays. Passing no user (or a user with
+ * no override) falls through to standard pricing exactly as before.
  */
 class PricingService
 {
@@ -39,24 +46,28 @@ class PricingService
         );
     }
 
-    public function forCheck(): PriceBreakdown
+    public function forCheck(?User $user = null): PriceBreakdown
     {
-        return $this->forProduct('check');
+        return $this->forProduct('check', $user);
     }
 
-    public function forPlus(): PriceBreakdown
+    public function forPlus(?User $user = null): PriceBreakdown
     {
-        return $this->forProduct('plus');
+        return $this->forProduct('plus', $user);
     }
 
-    public function forRebuild(): PriceBreakdown
+    public function forRebuild(?User $user = null): PriceBreakdown
     {
-        return $this->forProduct('rebuild');
+        return $this->forProduct('rebuild', $user);
     }
 
-    public function forProduct(string $type): PriceBreakdown
+    public function forProduct(string $type, ?User $user = null): PriceBreakdown
     {
-        $gross = ProductPrice::where('type', $type)->value('gross');
+        $gross = $user
+            ? UserProductPrice::where('user_id', $user->id)->where('type', $type)->value('gross')
+            : null;
+
+        $gross ??= ProductPrice::where('type', $type)->value('gross');
 
         return $this->breakdown((float) ($gross ?? config("valecheck.pricing.{$type}.gross")));
     }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DiscountCodeController;
 use App\Http\Controllers\Admin\ProductPriceController;
 use App\Http\Controllers\Admin\ProviderEndpointCostController;
 use App\Http\Controllers\Admin\ProviderLookupLogController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
@@ -93,6 +94,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::put('provider-costs', [ProviderEndpointCostController::class, 'update'])->name('provider-costs.update');
 
     Route::post('metrics/reset-revenue', [AdminMetricResetController::class, 'resetRevenue'])->name('metrics.reset-revenue');
+
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::get('users/{user}/prices', [UserController::class, 'editPrices'])->name('users.edit-prices');
+    Route::put('users/{user}/prices', [UserController::class, 'updatePrices'])->name('users.update-prices');
 });
 
 require __DIR__.'/auth.php';
