@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\DiscountCode;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\UserProductPrice;
@@ -65,5 +66,35 @@ class StripeCheckoutServiceCustomPriceTest extends TestCase
 
         $payment = Payment::where('user_id', $user->id)->firstOrFail();
         $this->assertEqualsWithDelta(8.99, (float) $payment->gross, 0.001);
+    }
+
+    public function test_a_discount_code_is_ignored_at_the_real_charge_point_for_a_custom_priced_account(): void
+    {
+        // The two discount mechanisms must never compound: a discount
+        // code's reduction must not be taken off an already-reduced
+        // custom price.
+        $user = User::factory()->create();
+        UserProductPrice::create(['user_id' => $user->id, 'type' => VehicleCheck::TYPE_CHECK, 'gross' => 3.50]);
+        DiscountCode::create(['code' => 'STACK', 'type' => 'percentage', 'value' => 50]);
+        $vehicle = Vehicle::factory()->create();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_PENDING,
+            'discount_code' => 'STACK',
+        ]);
+
+        try {
+            app(StripeCheckoutService::class)->checkoutForVehicleCheck($check);
+        } catch (Throwable) {
+            // Expected — no real Stripe key in this environment.
+        }
+
+        $payment = Payment::where('user_id', $user->id)->firstOrFail();
+        // Full £3.50 custom price charged — the code was rejected, not
+        // stacked on top of it.
+        $this->assertEqualsWithDelta(3.50, (float) $payment->gross, 0.001);
+        $this->assertNull($payment->discount_code_id);
     }
 }

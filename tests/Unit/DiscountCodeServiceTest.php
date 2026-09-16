@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\DiscountCode;
 use App\Models\DiscountCodeRedemption;
 use App\Models\User;
+use App\Models\UserProductPrice;
 use App\Services\Discounts\DiscountCodeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -87,6 +88,32 @@ class DiscountCodeServiceTest extends TestCase
         DiscountCode::create(['code' => 'ONEEACH3', 'type' => 'percentage', 'value' => 10, 'max_uses_per_user' => 1]);
 
         $this->assertNotNull(app(DiscountCodeService::class)->find('ONEEACH3', 'check', null));
+    }
+
+    public function test_a_code_is_rejected_for_a_user_with_a_custom_price_for_this_product(): void
+    {
+        $user = User::factory()->create();
+        UserProductPrice::create(['user_id' => $user->id, 'type' => 'check', 'gross' => 3.50]);
+        DiscountCode::create(['code' => 'STACK', 'type' => 'percentage', 'value' => 10]);
+
+        $this->assertNull(app(DiscountCodeService::class)->find('STACK', 'check', $user));
+    }
+
+    public function test_a_custom_price_for_a_different_product_does_not_block_a_code_for_this_one(): void
+    {
+        $user = User::factory()->create();
+        UserProductPrice::create(['user_id' => $user->id, 'type' => 'plus', 'gross' => 5.00]);
+        DiscountCode::create(['code' => 'NOSTACK', 'type' => 'percentage', 'value' => 10]);
+
+        $this->assertNotNull(app(DiscountCodeService::class)->find('NOSTACK', 'check', $user));
+    }
+
+    public function test_a_code_is_still_usable_by_a_user_with_no_custom_price_at_all(): void
+    {
+        $user = User::factory()->create();
+        DiscountCode::create(['code' => 'FINE10', 'type' => 'percentage', 'value' => 10]);
+
+        $this->assertNotNull(app(DiscountCodeService::class)->find('FINE10', 'check', $user));
     }
 
     public function test_apply_computes_a_percentage_discount(): void
