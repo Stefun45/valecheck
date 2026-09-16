@@ -72,4 +72,15 @@ class AdminDashboardTest extends TestCase
             ->assertSeeText('generic')
             ->assertSeeText('ebay');
     }
+
+    public function test_admin_dashboard_shows_the_max_cost_at_todays_rates_section(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSeeText("Max Cost At Today's Rates")
+            ->assertSeeText('Worst-case margin');
+    }
 }

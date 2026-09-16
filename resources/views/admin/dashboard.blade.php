@@ -56,6 +56,27 @@
             </div>
 
             <div>
+                <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Max Cost At Today's Rates</h3>
+                <p class="text-xs text-gray-400 mb-3">The worst case if every possible API call fired, at the rates currently set on <a href="{{ route('admin.provider-costs.edit') }}" class="underline hover:text-vale-navy">Provider Costs</a> — updates the moment a cost changes, unlike "Avg cost" above which reflects real past usage.</p>
+                <div class="grid sm:grid-cols-3 gap-4">
+                    @php
+                        $tiles = [
+                            'ValeCheck' => ['cost' => $metrics['max_cost_per_check'], 'margin' => $metrics['max_margin_per_check']],
+                            'Plus' => ['cost' => $metrics['max_cost_per_plus'], 'margin' => $metrics['max_margin_per_plus']],
+                            'Rebuild' => ['cost' => $metrics['max_cost_per_rebuild'], 'margin' => $metrics['max_margin_per_rebuild']],
+                        ];
+                    @endphp
+                    @foreach ($tiles as $label => $tile)
+                        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                            <p class="text-xs uppercase tracking-widest text-gray-400">{{ $label }}</p>
+                            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($tile['cost'], 2) }}</p>
+                            <p class="text-xs text-gray-400 mt-1">Worst-case margin: £{{ number_format($tile['margin'], 2) }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div>
                 <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Activity</h3>
                 <div class="grid sm:grid-cols-4 gap-4">
                     @php

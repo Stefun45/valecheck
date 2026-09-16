@@ -7,6 +7,8 @@ use App\Models\Commission;
 use App\Models\Creator;
 use App\Models\ListingImport;
 use App\Models\Payment;
+use App\Models\ProductPrice;
+use App\Models\ProviderEndpointCost;
 use App\Models\ProviderLookupLog;
 use App\Models\Referral;
 use App\Models\User;
@@ -20,6 +22,38 @@ use Laravel\Cashier\Subscription;
  */
 class AdminMetricsService
 {
+    /**
+     * Every endpoint a report type could possibly call, at the point
+     * VehicleCheckPipeline dispatches its jobs — used only for the
+     * forward-looking "worst case at today's rates" figure below, deliberately
+     * NOT for the historical spend figures above, which must stay tied to
+     * what a call actually cost when it happened. The two mutually
+     * exclusive valuation endpoints (clean vs. written-off) are handled
+     * separately in maxCostFor(), not listed here.
+     *
+     * @var array<string, list<string>>
+     */
+    private const MAX_COST_ENDPOINTS = [
+        VehicleCheck::TYPE_CHECK => [
+            'experian/autocheck/v3',
+            'oneauto/mothistoryandtaxstatus/v2',
+        ],
+        VehicleCheck::TYPE_PLUS => [
+            'experian/autocheck/v3',
+            'oneauto/mothistoryandtaxstatus/v2',
+            'vehicleimagery/imagesearchfromvrm',
+            'vehicleimagery/imagefromid',
+            'carguide/salvagecheck/v2',
+            'oneauto/vehicletaxfromvrm/v2',
+        ],
+        VehicleCheck::TYPE_REBUILD => [
+            'experian/autocheck/v3',
+            'oneauto/mothistoryandtaxstatus/v2',
+            'vehicleimagery/imagesearchfromvrm',
+            'vehicleimagery/imagefromid',
+        ],
+    ];
+
     public function compute(): array
     {
         $completedCheck = VehicleCheck::where('status', VehicleCheck::STATUS_COMPLETED)->where('type', VehicleCheck::TYPE_CHECK)->count();
@@ -60,6 +94,17 @@ class AdminMetricsService
         $avgAiCostPerRebuild = $completedRebuild > 0 ? $aiSpend / $completedRebuild : 0;
         $avgCostPerRebuild = $completedRebuild > 0 ? ($apiSpendByType(VehicleCheck::TYPE_REBUILD) / $completedRebuild) + $avgAiCostPerRebuild + $avgPaymentCost : 0;
 
+        // Worst-case API cost at TODAY's configured per-endpoint rates —
+        // unlike everything above, this deliberately reads current
+        // ProviderEndpointCost values live rather than a historical
+        // snapshot, since the whole point is "what would a report cost
+        // right now if every endpoint it could possibly call actually
+        // fired," so it updates immediately when a cost is edited.
+        $maxCostPerCheck = $this->maxCostFor(VehicleCheck::TYPE_CHECK);
+        $maxCostPerPlus = $this->maxCostFor(VehicleCheck::TYPE_PLUS);
+        $maxCostPerRebuild = $this->maxCostFor(VehicleCheck::TYPE_REBUILD);
+        $sellingPrice = ProductPrice::pluck('gross', 'type');
+
         return [
             'users_count' => User::count(),
             'checks_completed' => $completedCheck,
@@ -80,6 +125,13 @@ class AdminMetricsService
             'avg_cost_per_plus' => $avgCostPerPlus,
             'avg_cost_per_rebuild' => $avgCostPerRebuild,
 
+            'max_cost_per_check' => $maxCostPerCheck,
+            'max_cost_per_plus' => $maxCostPerPlus,
+            'max_cost_per_rebuild' => $maxCostPerRebuild,
+            'max_margin_per_check' => (float) ($sellingPrice[VehicleCheck::TYPE_CHECK] ?? 0) - $maxCostPerCheck,
+            'max_margin_per_plus' => (float) ($sellingPrice[VehicleCheck::TYPE_PLUS] ?? 0) - $maxCostPerPlus,
+            'max_margin_per_rebuild' => (float) ($sellingPrice[VehicleCheck::TYPE_REBUILD] ?? 0) - $maxCostPerRebuild,
+
             'failed_ai_calls' => AiUsage::where('success', false)->count(),
             'failed_checks' => $failedChecks,
 
@@ -89,6 +141,25 @@ class AdminMetricsService
 
             'listing_import' => $this->listingImportStats(),
         ];
+    }
+
+    private function maxCostFor(string $type): float
+    {
+        $costs = ProviderEndpointCost::pluck('cost_net', 'endpoint');
+
+        $total = collect(self::MAX_COST_ENDPOINTS[$type] ?? [])
+            ->sum(fn (string $endpoint) => (float) ($costs[$endpoint] ?? 0));
+
+        // The valuation call is one or the other, never both — take
+        // whichever currently costs more so this stays a genuine ceiling.
+        if (in_array($type, [VehicleCheck::TYPE_PLUS, VehicleCheck::TYPE_REBUILD], true)) {
+            $total += max(
+                (float) ($costs['ukvehicledata/valuationfromvrm/v2'] ?? 0),
+                (float) ($costs['salvageguide/bidpredictionfromvrm'] ?? 0),
+            );
+        }
+
+        return $total;
     }
 
     private function listingImportStats(): array
