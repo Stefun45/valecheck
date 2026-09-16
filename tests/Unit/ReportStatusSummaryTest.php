@@ -61,6 +61,41 @@ class ReportStatusSummaryTest extends TestCase
         $this->assertFalse($this->boxesFor($history)['Mileage Trend']);
     }
 
+    public function test_a_same_day_fail_then_pass_retest_with_a_slightly_lower_reading_is_not_a_backwards_flag(): void
+    {
+        // Reproduces a real production report (PN66TCY): a failed MOT
+        // fixed and retested the same day recorded 68,663 mi on the fail
+        // and 68,664 mi on the pass — a 1-mile same-day reading
+        // difference, not a genuine drop in mileage over time.
+        $history = $this->historyFor([
+            'mileage_anomaly' => false,
+            'mot_history' => [
+                ['test_date' => '2021-09-03', 'mileage' => 60519],
+                ['test_date' => '2021-09-03', 'mileage' => 60519],
+                ['test_date' => '2022-09-02', 'mileage' => 68664],
+                ['test_date' => '2022-09-02', 'mileage' => 68663],
+                ['test_date' => '2023-09-04', 'mileage' => 76575],
+                ['test_date' => '2023-09-04', 'mileage' => 76575],
+            ],
+        ]);
+
+        $this->assertTrue($this->boxesFor($history)['Mileage Trend']);
+    }
+
+    public function test_a_genuine_decrease_across_different_dates_still_warns(): void
+    {
+        $history = $this->historyFor([
+            'mileage_anomaly' => false,
+            'mot_history' => [
+                ['test_date' => '2022-06-01', 'mileage' => 30000],
+                ['test_date' => '2022-06-01', 'mileage' => 30000],
+                ['test_date' => '2023-06-01', 'mileage' => 25000],
+            ],
+        ]);
+
+        $this->assertFalse($this->boxesFor($history)['Mileage Trend']);
+    }
+
     public function test_write_off_finance_and_stolen_markers_each_warn_independently(): void
     {
         $writeOff = $this->historyFor(['write_off_category' => 'N']);

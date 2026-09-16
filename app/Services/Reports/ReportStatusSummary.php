@@ -54,13 +54,22 @@ class ReportStatusSummary
 
     private static function mileageWentBackwards(VehicleHistory $history): bool
     {
-        $tests = collect($history->mot_history ?? [])
+        // A failed MOT that's fixed and retested the same day is recorded
+        // as two separate entries with the same test_date, and the two
+        // odometer readings routinely differ by a mile or two (reading
+        // noise, or the car being driven to/from the test bay) — that is
+        // not a genuine drop in mileage over time, so same-day entries are
+        // collapsed to a single reading (the highest recorded that day)
+        // before comparing consecutive dates.
+        $mileageByDate = collect($history->mot_history ?? [])
             ->filter(fn ($test) => isset($test['mileage'], $test['test_date']))
-            ->sortBy('test_date')
+            ->groupBy('test_date')
+            ->map(fn ($testsOnDate) => $testsOnDate->max('mileage'))
+            ->sortKeys()
             ->values();
 
-        for ($i = 1; $i < $tests->count(); $i++) {
-            if ($tests[$i]['mileage'] < $tests[$i - 1]['mileage']) {
+        for ($i = 1; $i < $mileageByDate->count(); $i++) {
+            if ($mileageByDate[$i] < $mileageByDate[$i - 1]) {
                 return true;
             }
         }
