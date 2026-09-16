@@ -2,12 +2,17 @@
 
 namespace Tests\Unit;
 
+use App\Models\AdminMetricReset;
+use App\Models\FreeLookupLog;
+use App\Models\Payment;
 use App\Models\ProductPrice;
 use App\Models\ProviderEndpointCost;
 use App\Models\ProviderLookupLog;
+use App\Models\User;
 use App\Models\VehicleCheck;
 use App\Services\Admin\AdminMetricsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class AdminMetricsServiceTest extends TestCase
@@ -113,5 +118,68 @@ class AdminMetricsServiceTest extends TestCase
         $metrics = app(AdminMetricsService::class)->compute();
 
         $this->assertEqualsWithDelta(7.49, $metrics['max_margin_per_check'], 0.0001);
+    }
+
+    private function paidPayment(float $gross, ?Carbon $createdAt = null): Payment
+    {
+        $payment = Payment::create([
+            'user_id' => User::factory()->create()->id,
+            'type' => 'check',
+            'description' => 'ValeCheck',
+            'gross' => $gross,
+            'net' => $gross,
+            'vat' => 0,
+            'vat_rate' => 0,
+            'currency' => 'GBP',
+            'status' => Payment::STATUS_PAID,
+        ]);
+
+        if ($createdAt) {
+            $payment->forceFill(['created_at' => $createdAt])->save();
+        }
+
+        return $payment;
+    }
+
+    public function test_revenue_only_counts_payments_from_the_current_calendar_month(): void
+    {
+        $this->paidPayment(10.00);
+        $this->paidPayment(20.00, now()->subMonthNoOverflow()->startOfMonth());
+
+        $metrics = app(AdminMetricsService::class)->compute();
+
+        $this->assertEqualsWithDelta(10.00, $metrics['revenue'], 0.0001);
+    }
+
+    public function test_revenue_since_reset_starts_from_now_the_first_time_its_asked_for(): void
+    {
+        $this->paidPayment(5.00, now()->subDays(2));
+
+        $metrics = app(AdminMetricsService::class)->compute();
+
+        // A payment from before the feature's first use isn't counted —
+        // the counter starts clean, not from all lifetime revenue.
+        $this->assertEqualsWithDelta(0.0, $metrics['revenue_since_reset'], 0.0001);
+    }
+
+    public function test_revenue_since_reset_excludes_payments_before_the_reset_point_and_includes_ones_after(): void
+    {
+        $this->paidPayment(5.00, now()->subDays(2));
+        AdminMetricReset::reset('revenue_today');
+        $this->paidPayment(7.50);
+
+        $metrics = app(AdminMetricsService::class)->compute();
+
+        $this->assertEqualsWithDelta(7.50, $metrics['revenue_since_reset'], 0.0001);
+    }
+
+    public function test_free_lookups_count_reflects_logged_attempts(): void
+    {
+        FreeLookupLog::create(['source' => FreeLookupLog::SOURCE_HOMEPAGE]);
+        FreeLookupLog::create(['source' => FreeLookupLog::SOURCE_START_CHECK]);
+
+        $metrics = app(AdminMetricsService::class)->compute();
+
+        $this->assertSame(2, $metrics['free_lookups_count']);
     }
 }

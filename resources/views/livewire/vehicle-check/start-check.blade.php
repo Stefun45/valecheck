@@ -24,6 +24,8 @@
                 <p class="text-xs text-gray-400 mt-2">We couldn't find a quick preview for that plate, but it's still checkable below.</p>
             @elseif ($previewStatus === 'unavailable')
                 <p class="text-xs text-gray-400 mt-2">The quick preview is temporarily unavailable, but you can still continue below.</p>
+            @elseif ($previewStatus === 'rate_limited')
+                <p class="text-xs text-gray-400 mt-2">You've made a lot of quick checks in a short space of time, but you can still continue below.</p>
             @endif
         </div>
 

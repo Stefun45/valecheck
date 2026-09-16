@@ -6,6 +6,10 @@
     <div class="py-10">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
+            @if (session('status'))
+                <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm">{{ session('status') }}</div>
+            @endif
+
             <div class="flex gap-4 text-sm font-semibold">
                 <a href="{{ route('admin.affiliates.index') }}" class="text-vale-red hover:text-red-600">Manage Affiliates &rarr;</a>
                 <a href="{{ route('admin.discount-codes.index') }}" class="text-vale-red hover:text-red-600">Manage Discount Codes &rarr;</a>
@@ -15,7 +19,8 @@
             </div>
 
             <div>
-                <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Revenue</h3>
+                <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Revenue (This Month)</h3>
+                <p class="text-xs text-gray-400 mb-3">Resets automatically on the 1st of each month.</p>
                 <div class="grid sm:grid-cols-4 gap-4">
                     @php
                         $tiles = [
@@ -31,6 +36,18 @@
                             <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">{{ $value }}</p>
                         </div>
                     @endforeach
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Revenue Since Last Reset</h3>
+                <p class="text-xs text-gray-400 mb-3">Not tied to the calendar — counts from whenever you last pressed reset.</p>
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex items-center justify-between gap-4 flex-wrap">
+                    <p class="font-display text-2xl font-extrabold text-vale-navy">£{{ number_format($metrics['revenue_since_reset'], 2) }}</p>
+                    <form method="POST" action="{{ route('admin.metrics.reset-revenue') }}" onsubmit="return confirm('Reset this counter to zero from now?');">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-full font-semibold text-xs text-gray-600 hover:bg-gray-50">Reset to zero</button>
+                    </form>
                 </div>
             </div>
 
@@ -86,6 +103,7 @@
                             'Plus completed' => $metrics['plus_completed'],
                             'Rebuild completed' => $metrics['rebuild_completed'],
                             'Active subscriptions' => $metrics['active_subscriptions'],
+                            'Free lookups' => $metrics['free_lookups_count'],
                             'Failed checks' => $metrics['checks_failed'],
                             'Failed AI calls' => $metrics['failed_ai_calls'],
                         ];

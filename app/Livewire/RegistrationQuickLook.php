@@ -2,8 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Models\FreeLookupLog;
+use App\Services\RegistrationLookup\FreeLookupGuard;
 use App\Services\RegistrationLookup\VehicleSpecPreviewProvider;
-use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Modelable;
 use Livewire\Component;
 use Throwable;
@@ -16,15 +17,14 @@ use Throwable;
  * spending another lookup until they click again.
  *
  * Free, unauthenticated, and one real billable API call per distinct
- * plate — a prime scripting target. Throttled per IP rather than a
- * CAPTCHA: no real visitor plausibly needs more than a handful of lookups
- * an hour, so this stays invisible to genuine use while capping the
- * worst-case cost of a script cycling through plates from one address.
+ * plate — a prime scripting target. Throttled per IP via FreeLookupGuard
+ * (shared with the start-check page's own preview) rather than a CAPTCHA:
+ * no real visitor plausibly needs more than a handful of lookups an hour,
+ * so this stays invisible to genuine use while capping the worst-case
+ * cost of a script cycling through plates from one address.
  */
 class RegistrationQuickLook extends Component
 {
-    private const MAX_ATTEMPTS_PER_HOUR = 10;
-
     #[Modelable]
     public string $registration = '';
 
@@ -32,7 +32,7 @@ class RegistrationQuickLook extends Component
 
     public string $status = 'idle';
 
-    public function check(): void
+    public function check(FreeLookupGuard $guard): void
     {
         $this->preview = null;
         $normalised = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $this->registration));
@@ -43,15 +43,13 @@ class RegistrationQuickLook extends Component
             return;
         }
 
-        $rateLimitKey = 'registration-quick-look:'.request()->ip();
-
-        if (RateLimiter::tooManyAttempts($rateLimitKey, self::MAX_ATTEMPTS_PER_HOUR)) {
+        if ($guard->tooManyAttempts()) {
             $this->status = 'rate_limited';
 
             return;
         }
 
-        RateLimiter::hit($rateLimitKey, 3600);
+        $guard->recordAttempt(FreeLookupLog::SOURCE_HOMEPAGE);
 
         $this->registration = $normalised;
         $this->status = 'loading';

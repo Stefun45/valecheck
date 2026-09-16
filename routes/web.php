@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminMetricResetController;
 use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\CreatorController;
 use App\Http\Controllers\Admin\DiscountCodeController;
@@ -90,6 +91,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::get('provider-costs', [ProviderEndpointCostController::class, 'edit'])->name('provider-costs.edit');
     Route::put('provider-costs', [ProviderEndpointCostController::class, 'update'])->name('provider-costs.update');
+
+    Route::post('metrics/reset-revenue', [AdminMetricResetController::class, 'resetRevenue'])->name('metrics.reset-revenue');
 });
 
 require __DIR__.'/auth.php';

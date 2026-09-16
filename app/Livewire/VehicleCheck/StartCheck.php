@@ -3,6 +3,7 @@
 namespace App\Livewire\VehicleCheck;
 
 use App\Jobs\ImportListing;
+use App\Models\FreeLookupLog;
 use App\Models\ListingImage;
 use App\Models\ListingImport;
 use App\Models\VehicleCheck;
@@ -10,6 +11,7 @@ use App\Services\Credits\CreditLedgerService;
 use App\Services\Discounts\DiscountCodeService;
 use App\Services\Ordering\VehicleCheckOrderService;
 use App\Services\Pricing\PricingService;
+use App\Services\RegistrationLookup\FreeLookupGuard;
 use App\Services\RegistrationLookup\VehicleSpecPreviewProvider;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -94,12 +96,22 @@ class StartCheck extends Component
      * after the registration is entered — never on every keystroke, and
      * never again once confirmed, since a real lookup costs real money.
      */
-    public function lookupVehicle(): void
+    public function lookupVehicle(FreeLookupGuard $guard): void
     {
         $this->validate(['registration' => ['required', 'string', 'min:2', 'max:10']]);
 
         $this->registration = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $this->registration));
         $this->vehiclePreview = null;
+
+        if ($guard->tooManyAttempts()) {
+            $this->previewStatus = 'rate_limited';
+            $this->vehicleConfirmed = true;
+
+            return;
+        }
+
+        $guard->recordAttempt(FreeLookupLog::SOURCE_START_CHECK);
+
         $this->previewStatus = 'loading';
 
         try {

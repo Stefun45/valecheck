@@ -2,9 +2,11 @@
 
 namespace App\Services\Admin;
 
+use App\Models\AdminMetricReset;
 use App\Models\AiUsage;
 use App\Models\Commission;
 use App\Models\Creator;
+use App\Models\FreeLookupLog;
 use App\Models\ListingImport;
 use App\Models\Payment;
 use App\Models\ProductPrice;
@@ -61,8 +63,11 @@ class AdminMetricsService
         $completedRebuild = VehicleCheck::where('status', VehicleCheck::STATUS_COMPLETED)->where('type', VehicleCheck::TYPE_REBUILD)->count();
         $failedChecks = VehicleCheck::where('status', VehicleCheck::STATUS_FAILED)->count();
 
+        // Lifetime figures — kept for the avg-cost-per-report metrics
+        // below, which are meant to be genuine long-run averages, not
+        // reset by the calendar. The dashboard's headline "Revenue" tiles
+        // use the calendar-month figures further down instead.
         $revenue = (float) Payment::where('status', Payment::STATUS_PAID)->sum('gross');
-        $revenueExVat = (float) Payment::where('status', Payment::STATUS_PAID)->sum('net');
         $paidPaymentsCount = Payment::where('status', Payment::STATUS_PAID)->count();
 
         // Each successful call's cost is whatever was actually configured
@@ -105,6 +110,37 @@ class AdminMetricsService
         $maxCostPerRebuild = $this->maxCostFor(VehicleCheck::TYPE_REBUILD);
         $sellingPrice = ProductPrice::pluck('gross', 'type');
 
+        // The headline "Revenue" tiles — scoped to the current calendar
+        // month so they reset automatically on the 1st, rather than
+        // showing an ever-growing lifetime total. Costs and margin are
+        // scoped to the same window so the margin math stays internally
+        // consistent (this month's revenue against this month's costs).
+        $monthStart = now()->startOfMonth();
+        $monthEnd = now()->endOfMonth();
+        $monthlyPayments = Payment::where('status', Payment::STATUS_PAID)->whereBetween('created_at', [$monthStart, $monthEnd]);
+        $monthlyRevenue = (float) (clone $monthlyPayments)->sum('gross');
+        $monthlyRevenueExVat = (float) (clone $monthlyPayments)->sum('net');
+        $monthlyPaidPaymentsCount = (clone $monthlyPayments)->count();
+
+        $monthlyApiSpend = (float) ProviderLookupLog::where('status', ProviderLookupLog::STATUS_SUCCESS)
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->sum('cost_net');
+        $monthlyAiSpend = (float) AiUsage::where('success', true)
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->get()
+            ->sum(fn (AiUsage $usage) => (float) ($usage->actual_cost ?? $usage->estimated_cost ?? 0));
+        $monthlyPaymentCost = ($monthlyRevenue * $paymentProcessing['percentage']) + ($monthlyPaidPaymentsCount * $paymentProcessing['fixed']);
+        $monthlyTotalCosts = $monthlyApiSpend + $monthlyAiSpend + $monthlyPaymentCost;
+        $monthlyContributionMargin = $monthlyRevenue - $monthlyTotalCosts;
+
+        // A separate, manually-resettable running total — not tied to the
+        // calendar at all, so the site owner can zero it whenever they
+        // choose (e.g. after checking figures) rather than waiting for
+        // midnight or month-end.
+        $revenueSinceReset = (float) Payment::where('status', Payment::STATUS_PAID)
+            ->where('created_at', '>=', AdminMetricReset::pointFor('revenue_today'))
+            ->sum('gross');
+
         return [
             'users_count' => User::count(),
             'checks_completed' => $completedCheck,
@@ -113,14 +149,16 @@ class AdminMetricsService
             'checks_failed' => $failedChecks,
             'active_subscriptions' => Subscription::where('stripe_status', 'active')->count(),
 
-            'revenue' => $revenue,
-            'revenue_ex_vat' => $revenueExVat,
+            'revenue' => $monthlyRevenue,
+            'revenue_ex_vat' => $monthlyRevenueExVat,
+            'revenue_since_reset' => $revenueSinceReset,
+            'free_lookups_count' => FreeLookupLog::count(),
             'api_spend' => $apiSpend,
             'ai_spend' => $aiSpend,
-            'payment_processing_cost' => $paymentCost,
-            'total_costs' => $totalCosts,
-            'contribution_margin' => $contributionMargin,
-            'contribution_margin_pct' => $revenue > 0 ? ($contributionMargin / $revenue) * 100 : 0,
+            'payment_processing_cost' => $monthlyPaymentCost,
+            'total_costs' => $monthlyTotalCosts,
+            'contribution_margin' => $monthlyContributionMargin,
+            'contribution_margin_pct' => $monthlyRevenue > 0 ? ($monthlyContributionMargin / $monthlyRevenue) * 100 : 0,
             'avg_cost_per_check' => $avgCostPerCheck,
             'avg_cost_per_plus' => $avgCostPerPlus,
             'avg_cost_per_rebuild' => $avgCostPerRebuild,
