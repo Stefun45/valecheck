@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'code', 'type', 'value', 'applicable_products', 'max_redemptions',
-    'times_redeemed', 'expires_at', 'is_active',
+    'max_uses_per_user', 'times_redeemed', 'expires_at', 'is_active',
 ])]
 class DiscountCode extends Model
 {

@@ -32,6 +32,7 @@ class DiscountCodeController extends Controller
             'applicable_products' => ['nullable', 'array'],
             'applicable_products.*' => ['in:check,plus,rebuild'],
             'max_redemptions' => ['nullable', 'integer', 'min:1'],
+            'max_uses_per_user' => ['nullable', 'integer', 'min:1'],
             'expires_at' => ['nullable', 'date'],
         ]);
 
@@ -41,6 +42,7 @@ class DiscountCodeController extends Controller
             'value' => $validated['value'],
             'applicable_products' => $validated['applicable_products'] ?? null,
             'max_redemptions' => $validated['max_redemptions'] ?? null,
+            'max_uses_per_user' => $validated['max_uses_per_user'] ?? null,
             'expires_at' => $validated['expires_at'] ?? null,
         ]);
 
@@ -60,6 +62,7 @@ class DiscountCodeController extends Controller
             'applicable_products' => ['nullable', 'array'],
             'applicable_products.*' => ['in:check,plus,rebuild'],
             'max_redemptions' => ['nullable', 'integer', 'min:1'],
+            'max_uses_per_user' => ['nullable', 'integer', 'min:1'],
             'expires_at' => ['nullable', 'date'],
         ]);
 
@@ -68,6 +71,7 @@ class DiscountCodeController extends Controller
             'value' => $validated['value'],
             'applicable_products' => $validated['applicable_products'] ?? null,
             'max_redemptions' => $validated['max_redemptions'] ?? null,
+            'max_uses_per_user' => $validated['max_uses_per_user'] ?? null,
             'expires_at' => $validated['expires_at'] ?? null,
         ]);
 

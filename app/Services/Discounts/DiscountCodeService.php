@@ -3,16 +3,24 @@
 namespace App\Services\Discounts;
 
 use App\Models\DiscountCode;
+use App\Models\User;
 
 class DiscountCodeService
 {
     /**
      * Looks up a code and returns it only if it's genuinely usable right
-     * now for this product — active, not expired, not exhausted, and
-     * applicable to what's being bought. Never throws; an invalid code is
-     * just "not found," so callers can fail gracefully.
+     * now for this product — active, not expired, not exhausted overall,
+     * not exhausted for this specific user, and applicable to what's being
+     * bought. Never throws; an invalid code is just "not found," so callers
+     * can fail gracefully.
+     *
+     * $user is nullable because this is also called from the pre-checkout
+     * preview, which can run before the customer has signed in — the
+     * per-user limit simply can't be checked yet at that point, so it's
+     * skipped there and re-checked for real once a user exists, at
+     * StripeCheckoutService, which never trusts the client-side preview.
      */
-    public function find(string $code, string $productType): ?DiscountCode
+    public function find(string $code, string $productType, ?User $user = null): ?DiscountCode
     {
         $code = strtoupper(trim($code));
 
@@ -36,6 +44,14 @@ class DiscountCodeService
 
         if ($discount->applicable_products && ! in_array($productType, $discount->applicable_products, true)) {
             return null;
+        }
+
+        if ($discount->max_uses_per_user !== null && $user) {
+            $usesByThisUser = $discount->redemptions()->where('user_id', $user->id)->count();
+
+            if ($usesByThisUser >= $discount->max_uses_per_user) {
+                return null;
+            }
         }
 
         return $discount;

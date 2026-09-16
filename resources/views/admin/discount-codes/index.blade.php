@@ -36,7 +36,12 @@
                                 <td class="p-4 font-mono text-vale-navy font-semibold">{{ $code->code }}</td>
                                 <td class="p-4 text-vale-navy">{{ $code->type === 'percentage' ? number_format($code->value, 0).'%' : '£'.number_format($code->value, 2) }}</td>
                                 <td class="p-4 text-vale-navy">{{ $code->applicable_products ? implode(', ', array_map('ucfirst', $code->applicable_products)) : 'All products' }}</td>
-                                <td class="p-4 text-vale-navy">{{ $code->times_redeemed }}{{ $code->max_redemptions ? ' / '.$code->max_redemptions : '' }}</td>
+                                <td class="p-4 text-vale-navy">
+                                    {{ $code->times_redeemed }}{{ $code->max_redemptions ? ' / '.$code->max_redemptions : '' }}
+                                    @if ($code->max_uses_per_user)
+                                        <span class="block text-xs text-gray-400">Max {{ $code->max_uses_per_user }} per account</span>
+                                    @endif
+                                </td>
                                 <td class="p-4 text-vale-navy">{{ $code->expires_at?->format('d M Y') ?? 'Never' }}</td>
                                 <td class="p-4">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full {{ $code->is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500' }}">

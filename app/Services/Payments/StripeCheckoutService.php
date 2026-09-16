@@ -26,7 +26,7 @@ class StripeCheckoutService
         // never trust that a code the customer typed earlier in the wizard
         // is still valid (it may have expired or been exhausted since).
         $discount = $check->discount_code
-            ? $this->discounts->find($check->discount_code, $check->type)
+            ? $this->discounts->find($check->discount_code, $check->type, $check->user)
             : null;
 
         $price = $discount

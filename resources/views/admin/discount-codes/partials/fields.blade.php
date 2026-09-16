@@ -33,9 +33,16 @@
 </div>
 
 <div>
-    <x-input-label for="max_redemptions" value="Maximum redemptions (optional)" />
+    <x-input-label for="max_redemptions" value="Maximum redemptions in total (optional)" />
     <x-text-input id="max_redemptions" name="max_redemptions" type="number" min="1" class="block mt-1 w-full" value="{{ old('max_redemptions', $discountCode?->max_redemptions) }}" />
     <x-input-error :messages="$errors->get('max_redemptions')" class="mt-2" />
+</div>
+
+<div>
+    <x-input-label for="max_uses_per_user" value="Maximum uses per account (optional)" />
+    <x-text-input id="max_uses_per_user" name="max_uses_per_user" type="number" min="1" class="block mt-1 w-full" value="{{ old('max_uses_per_user', $discountCode?->max_uses_per_user) }}" />
+    <p class="text-xs text-gray-400 mt-1">Leave blank to allow the same account to use this code as many times as the total limit above allows.</p>
+    <x-input-error :messages="$errors->get('max_uses_per_user')" class="mt-2" />
 </div>
 
 <div>

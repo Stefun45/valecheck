@@ -3,6 +3,8 @@
 namespace Tests\Unit;
 
 use App\Models\DiscountCode;
+use App\Models\DiscountCodeRedemption;
+use App\Models\User;
 use App\Services\Discounts\DiscountCodeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -53,6 +55,38 @@ class DiscountCodeServiceTest extends TestCase
 
         $this->assertNull(app(DiscountCodeService::class)->find('PLUSONLY', 'check'));
         $this->assertNotNull(app(DiscountCodeService::class)->find('PLUSONLY', 'plus'));
+    }
+
+    public function test_it_rejects_a_code_this_user_has_already_used_up_to_their_personal_limit(): void
+    {
+        $user = User::factory()->create();
+        $code = DiscountCode::create(['code' => 'ONEEACH', 'type' => 'percentage', 'value' => 10, 'max_uses_per_user' => 1]);
+
+        DiscountCodeRedemption::create(['discount_code_id' => $code->id, 'user_id' => $user->id, 'amount_discounted' => 1]);
+
+        $this->assertNull(app(DiscountCodeService::class)->find('ONEEACH', 'check', $user));
+    }
+
+    public function test_a_per_user_limit_does_not_block_a_different_user(): void
+    {
+        $usedUp = User::factory()->create();
+        $freshUser = User::factory()->create();
+        $code = DiscountCode::create(['code' => 'ONEEACH2', 'type' => 'percentage', 'value' => 10, 'max_uses_per_user' => 1]);
+
+        DiscountCodeRedemption::create(['discount_code_id' => $code->id, 'user_id' => $usedUp->id, 'amount_discounted' => 1]);
+
+        $this->assertNull(app(DiscountCodeService::class)->find('ONEEACH2', 'check', $usedUp));
+        $this->assertNotNull(app(DiscountCodeService::class)->find('ONEEACH2', 'check', $freshUser));
+    }
+
+    public function test_a_per_user_limit_is_not_checked_for_a_guest_with_no_user_yet(): void
+    {
+        // The pre-checkout preview can run before login — the per-user
+        // limit is re-checked for real once a user exists, at Stripe
+        // checkout time, which never trusts this client-side preview.
+        DiscountCode::create(['code' => 'ONEEACH3', 'type' => 'percentage', 'value' => 10, 'max_uses_per_user' => 1]);
+
+        $this->assertNotNull(app(DiscountCodeService::class)->find('ONEEACH3', 'check', null));
     }
 
     public function test_apply_computes_a_percentage_discount(): void

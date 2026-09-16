@@ -84,4 +84,17 @@ class AdminDiscountCodeCrudTest extends TestCase
         $this->assertSame(['check'], $code->applicable_products);
         $this->assertSame(100, $code->max_redemptions);
     }
+
+    public function test_an_admin_can_set_a_per_account_use_limit(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)->post(route('admin.discount-codes.store'), [
+            'type' => 'percentage',
+            'value' => 10,
+            'max_uses_per_user' => 1,
+        ]);
+
+        $this->assertSame(1, DiscountCode::first()->max_uses_per_user);
+    }
 }

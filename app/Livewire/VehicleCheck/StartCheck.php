@@ -315,7 +315,7 @@ class StartCheck extends Component
     {
         $this->validate(['discount_code' => ['required', 'string', 'max:50']]);
 
-        $discount = $discounts->find($this->discount_code, (string) $this->type);
+        $discount = $discounts->find($this->discount_code, (string) $this->type, auth()->user());
 
         if (! $discount) {
             $this->discountStatus = 'invalid';
