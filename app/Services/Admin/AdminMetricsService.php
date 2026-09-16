@@ -115,7 +115,14 @@ class AdminMetricsService
         // showing an ever-growing lifetime total. Costs and margin are
         // scoped to the same window so the margin math stays internally
         // consistent (this month's revenue against this month's costs).
-        $monthStart = now()->startOfMonth();
+        //
+        // Also floored at the same manual reset point as "Revenue since
+        // last reset" below — pressing that one button zeroes both, so
+        // e.g. pre-launch test activity earlier in the month can be
+        // cleared out and only "active" revenue from the reset onward
+        // counts, without waiting for the 1st of next month.
+        $resetPoint = AdminMetricReset::pointFor('revenue_today');
+        $monthStart = $resetPoint->greaterThan(now()->startOfMonth()) ? $resetPoint : now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
         $monthlyPayments = Payment::where('status', Payment::STATUS_PAID)->whereBetween('created_at', [$monthStart, $monthEnd]);
         $monthlyRevenue = (float) (clone $monthlyPayments)->sum('gross');
@@ -138,7 +145,7 @@ class AdminMetricsService
         // choose (e.g. after checking figures) rather than waiting for
         // midnight or month-end.
         $revenueSinceReset = (float) Payment::where('status', Payment::STATUS_PAID)
-            ->where('created_at', '>=', AdminMetricReset::pointFor('revenue_today'))
+            ->where('created_at', '>=', $resetPoint)
             ->sum('gross');
 
         return [

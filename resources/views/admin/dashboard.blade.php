@@ -20,7 +20,7 @@
 
             <div>
                 <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Revenue (This Month)</h3>
-                <p class="text-xs text-gray-400 mb-3">Resets automatically on the 1st of each month.</p>
+                <p class="text-xs text-gray-400 mb-3">Resets automatically on the 1st of each month — or immediately if you press "Reset to zero" below.</p>
                 <div class="grid sm:grid-cols-4 gap-4">
                     @php
                         $tiles = [
@@ -41,10 +41,10 @@
 
             <div>
                 <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Revenue Since Last Reset</h3>
-                <p class="text-xs text-gray-400 mb-3">Not tied to the calendar — counts from whenever you last pressed reset.</p>
+                <p class="text-xs text-gray-400 mb-3">Not tied to the calendar — counts from whenever you last pressed reset. Resetting also clears "Revenue (This Month)" above, so you can zero out earlier test activity and show only active revenue.</p>
                 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex items-center justify-between gap-4 flex-wrap">
                     <p class="font-display text-2xl font-extrabold text-vale-navy">£{{ number_format($metrics['revenue_since_reset'], 2) }}</p>
-                    <form method="POST" action="{{ route('admin.metrics.reset-revenue') }}" onsubmit="return confirm('Reset this counter to zero from now?');">
+                    <form method="POST" action="{{ route('admin.metrics.reset-revenue') }}" onsubmit="return confirm('Reset revenue tracking to zero from now? This also clears the Revenue (This Month) figures above.');">
                         @csrf
                         <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-full font-semibold text-xs text-gray-600 hover:bg-gray-50">Reset to zero</button>
                     </form>

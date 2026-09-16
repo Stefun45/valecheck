@@ -143,12 +143,34 @@ class AdminMetricsServiceTest extends TestCase
 
     public function test_revenue_only_counts_payments_from_the_current_calendar_month(): void
     {
+        // Pinned safely in the past so this test is purely about the
+        // calendar-month boundary, independent of the manual reset floor
+        // covered separately below.
+        AdminMetricReset::reset('revenue_today');
+        AdminMetricReset::where('key', 'revenue_today')->update(['reset_at' => now()->subYear()]);
+
         $this->paidPayment(10.00);
         $this->paidPayment(20.00, now()->subMonthNoOverflow()->startOfMonth());
 
         $metrics = app(AdminMetricsService::class)->compute();
 
         $this->assertEqualsWithDelta(10.00, $metrics['revenue'], 0.0001);
+    }
+
+    public function test_resetting_also_floors_this_months_revenue_not_just_revenue_since_reset(): void
+    {
+        // The site owner's actual use case: clear out earlier test
+        // activity from this same month and show only "active" revenue
+        // from the reset point onward, without waiting for next month.
+        // The first payment is pinned a few minutes in the past so it's
+        // unambiguously before the reset point set below, not a race.
+        $this->paidPayment(10.00, now()->subMinutes(5));
+        AdminMetricReset::reset('revenue_today');
+        $this->paidPayment(15.00);
+
+        $metrics = app(AdminMetricsService::class)->compute();
+
+        $this->assertEqualsWithDelta(15.00, $metrics['revenue'], 0.0001);
     }
 
     public function test_revenue_since_reset_starts_from_now_the_first_time_its_asked_for(): void
