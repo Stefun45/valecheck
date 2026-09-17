@@ -46,44 +46,49 @@
     $isAll = in_array('all', $zones, true);
     $hasNoData = empty($locations);
 
-    // Pin centre coordinates within the 200x100 viewBox — front on the
-    // right, matching the orientation of the existing vehicle-silhouette
-    // component used elsewhere in the report.
+    // Pin centre coordinates within the 100x200 viewBox — front at the
+    // top, as if sat in the driver's seat facing forward: nearside
+    // (kerb side, UK right-hand-drive) is on the LEFT, offside is on
+    // the RIGHT. This matches the standard convention used for UK
+    // vehicle damage/write-off diagrams, rather than a head-on/mirrored
+    // view of the car.
     $positions = [
-        'front-nearside' => [175, 25],
-        'front' => [185, 50],
-        'front-offside' => [175, 75],
-        'nearside' => [100, 18],
-        'roof' => [100, 50],
-        'offside' => [100, 82],
-        'rear-nearside' => [25, 25],
-        'rear' => [15, 50],
-        'rear-offside' => [25, 75],
+        'front-nearside' => [25, 25],
+        'front' => [50, 15],
+        'front-offside' => [75, 25],
+        'nearside' => [18, 100],
+        'roof' => [50, 100],
+        'offside' => [82, 100],
+        'rear-nearside' => [25, 175],
+        'rear' => [50, 185],
+        'rear-offside' => [75, 175],
     ];
 
     $pinZones = $isAll ? array_keys($positions) : array_intersect(array_keys($positions), $zones);
 @endphp
 
-<div style="max-width:220px;" class="mt-2">
-    <svg viewBox="0 0 200 100" width="200" height="100" xmlns="http://www.w3.org/2000/svg" style="opacity: {{ $hasNoData ? '0.5' : '1' }}">
+<div style="max-width:120px;" class="mt-2">
+    <svg viewBox="0 0 100 200" width="100" height="200" xmlns="http://www.w3.org/2000/svg" style="opacity: {{ $hasNoData ? '0.5' : '1' }}">
         {{-- Body — a tapered octagon (straight lines only): the front
-             (right, cut 22 units) narrows noticeably more than the rear
-             (left, cut 10 units), so the silhouette itself hints at
+             (top, cut 22 units) narrows noticeably more than the rear
+             (bottom, cut 10 units), so the silhouette itself hints at
              orientation before the caption needs reading. --}}
-        <polygon points="20,15 168,15 190,37 190,63 168,85 20,85 10,75 10,25" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" stroke-linejoin="round" />
+        <polygon points="15,180 15,32 37,10 63,10 85,32 85,180 75,190 25,190" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" stroke-linejoin="round" />
 
         {{-- Cabin/glass — same tapered-octagon idea at a smaller scale,
              reading as a windscreen/rear-screen taper rather than a
              flat panel with square corners. --}}
-        <polygon points="60,27 130,27 146,39 146,61 130,73 60,73 50,63 50,37" fill="#D1D5DB" />
+        <polygon points="27,140 27,70 39,54 61,54 73,70 73,140 63,150 37,150" fill="#D1D5DB" />
 
         {{-- Wheels: dark tyre + lighter hub, overlapping the body's
-             flat top/bottom edges so they look integrated, not detached. --}}
-        @foreach ([35, 133] as $wheelX)
-            <rect x="{{ $wheelX }}" y="5" width="32" height="18" rx="5" fill="#374151" />
-            <rect x="{{ $wheelX + 7 }}" y="9" width="18" height="10" rx="3" fill="#9CA3AF" />
-            <rect x="{{ $wheelX }}" y="77" width="32" height="18" rx="5" fill="#374151" />
-            <rect x="{{ $wheelX + 7 }}" y="81" width="18" height="10" rx="3" fill="#9CA3AF" />
+             flat left/right edges so they look integrated, not detached.
+             $axleY is the front (35) or rear (133) axle position. --}}
+        @foreach ([133 => 'front', 35 => 'rear'] as $wheelX => $axle)
+            @php $axleY = 200 - $wheelX - 32; @endphp
+            <rect x="5" y="{{ $axleY }}" width="18" height="32" rx="5" fill="#374151" />
+            <rect x="9" y="{{ $axleY + 7 }}" width="10" height="18" rx="3" fill="#9CA3AF" />
+            <rect x="77" y="{{ $axleY }}" width="18" height="32" rx="5" fill="#374151" />
+            <rect x="81" y="{{ $axleY + 7 }}" width="10" height="18" rx="3" fill="#9CA3AF" />
         @endforeach
 
         @if (! $hasNoData)
@@ -96,7 +101,7 @@
     @if ($hasNoData)
         <p class="text-xs text-gray-400 mt-1">No damage location data provided.</p>
     @endif
-    <p class="text-xs text-gray-400 uppercase tracking-wide mt-1">Front of vehicle on the right</p>
+    <p class="text-xs text-gray-400 uppercase tracking-wide mt-1">As if sat in the driver's seat - front at the top, nearside on the left</p>
     @if (! empty($unmapped))
         <p class="text-xs text-gray-500 mt-1">Also reported: {{ implode(', ', $unmapped) }}</p>
     @endif
