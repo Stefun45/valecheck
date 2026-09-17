@@ -100,21 +100,33 @@
                 ];
             @endphp
 
-            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6 max-w-2xl mx-auto">
-                <h3 class="font-display font-bold text-sm text-vale-navy uppercase tracking-wide mb-3">What's in your report</h3>
-                <ul class="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+            <div class="mb-6">
+                <h3 class="font-display font-bold text-sm text-vale-navy uppercase tracking-wide mb-3 text-center">Here's what your report will look like</h3>
+                <div class="grid sm:grid-cols-2 gap-4">
                     @foreach ($reportSections as $section)
-                        <li class="flex items-center justify-between gap-2 text-sm text-gray-600 py-1">
-                            <span class="flex items-center gap-2 min-w-0">
-                                <x-section-icon name="lock" size="14" class="text-gray-300 shrink-0" />
-                                <span class="truncate">{{ $section['label'] }}</span>
-                            </span>
-                            <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 {{ ! empty($section['plusOnly']) ? 'bg-vale-red/10 text-vale-red' : 'bg-gray-100 text-gray-500' }}">
-                                {{ ! empty($section['plusOnly']) ? 'Plus' : 'Check' }}
-                            </span>
-                        </li>
+                        <div class="relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm overflow-hidden" data-section="{{ $section['label'] }}" data-tier="{{ ! empty($section['plusOnly']) ? 'plus' : 'check' }}">
+                            <h4 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+                                <x-section-icon :name="$section['icon']" />{{ $section['label'] }}
+                            </h4>
+
+                            {{-- Fake placeholder rows, never real data - purely to
+                                 suggest "there's real content behind this" without
+                                 fabricating anything that looks like an actual value. --}}
+                            <div class="space-y-2" aria-hidden="true">
+                                <div class="h-2.5 bg-gray-100 rounded-full w-full"></div>
+                                <div class="h-2.5 bg-gray-100 rounded-full w-5/6"></div>
+                                <div class="h-2.5 bg-gray-100 rounded-full w-2/3"></div>
+                            </div>
+
+                            <div class="absolute inset-0 flex items-center justify-center backdrop-blur-[2px] bg-white/60">
+                                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-full text-white shadow-sm {{ ! empty($section['plusOnly']) ? 'bg-vale-red' : 'bg-vale-navy' }}">
+                                    <x-section-icon name="lock" size="11" class="text-white" />
+                                    Unlock with {{ ! empty($section['plusOnly']) ? 'Plus' : 'Check' }}
+                                </span>
+                            </div>
+                        </div>
                     @endforeach
-                </ul>
+                </div>
             </div>
 
             <div class="grid {{ config('valecheck.rebuild_enabled') ? 'sm:grid-cols-3' : 'sm:grid-cols-2 max-w-2xl mx-auto' }} gap-4">

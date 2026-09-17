@@ -157,11 +157,13 @@ class VehicleCheckFlowTest extends TestCase
             ->set('registration', 'AB12CDE')
             ->call('lookupVehicle')
             ->call('confirmVehicle', true)
-            ->assertSee('in your report')
-            // A Check-tier section: shown once, tagged Check.
-            ->assertSeeInOrder(['Write-Off History', 'Check'])
-            // A Plus-only section: shown once, tagged Plus rather than Check.
-            ->assertSeeInOrder(['Market Assessment', 'Plus'])
+            ->assertSee('what your report will look like')
+            // A Check-tier section card, tagged for the check tier.
+            ->assertSeeHtml('data-section="Write-Off History" data-tier="check"')
+            ->assertSeeInOrder(['Write-Off History', 'Unlock with Check'])
+            // A Plus-only section card, tagged plus rather than check.
+            ->assertSeeHtml('data-section="Market Assessment" data-tier="plus"')
+            ->assertSeeInOrder(['Market Assessment', 'Unlock with Plus'])
             ->assertDontSee('Important Warnings')
             ->assertDontSee('High Risk');
     }
