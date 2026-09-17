@@ -39,6 +39,25 @@ class CreditLedgerService
         ]);
     }
 
+    /**
+     * A manual, admin-granted credit — free lookups given at the site
+     * owner's discretion (goodwill, testing, a VIP account), never tied to
+     * a real payment. Deliberately a distinct type from
+     * grantPurchasedCredits so these never get counted as revenue or
+     * mistaken for a genuine Stripe purchase in any report that groups by
+     * transaction type.
+     */
+    public function grantFreeCredits(User $user, string $reportType, int $amount, ?string $note = null): CreditTransaction
+    {
+        return CreditTransaction::create([
+            'user_id' => $user->id,
+            'type' => CreditTransaction::TYPE_FREE_GRANT,
+            'report_type' => $reportType,
+            'amount' => $amount,
+            'note' => $note ?? "Manually granted {$amount} {$reportType} credit(s).",
+        ]);
+    }
+
     public function consumeCredit(User $user, string $reportType, VehicleCheck $vehicleCheck): CreditTransaction
     {
         if (! $this->hasCredit($user, $reportType)) {

@@ -103,6 +103,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('users', [UserController::class, 'index'])->name('users.index');
     Route::get('users/{user}/prices', [UserController::class, 'editPrices'])->name('users.edit-prices');
     Route::put('users/{user}/prices', [UserController::class, 'updatePrices'])->name('users.update-prices');
+    Route::post('users/{user}/credits', [UserController::class, 'grantCredits'])->name('users.grant-credits');
 });
 
 require __DIR__.'/auth.php';

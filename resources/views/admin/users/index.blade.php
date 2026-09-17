@@ -47,7 +47,7 @@
                                 </td>
                                 <td class="p-4 text-gray-500">{{ $user->created_at->format('d M Y') }}</td>
                                 <td class="p-4 text-right whitespace-nowrap">
-                                    <a href="{{ route('admin.users.edit-prices', $user) }}" class="text-vale-red hover:text-red-600 font-semibold">Set Prices</a>
+                                    <a href="{{ route('admin.users.edit-prices', $user) }}" class="text-vale-red hover:text-red-600 font-semibold">Manage</a>
                                 </td>
                             </tr>
                         @empty

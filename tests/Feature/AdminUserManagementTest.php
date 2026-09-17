@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\UserProductPrice;
 use App\Models\VehicleCheck;
+use App\Services\Credits\CreditLedgerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -107,5 +108,68 @@ class AdminUserManagementTest extends TestCase
             ->assertOk()
             ->assertSeeText('Custom Carl')
             ->assertSeeText('Plus');
+    }
+
+    public function test_a_non_admin_cannot_grant_credits(): void
+    {
+        $user = User::factory()->create(['is_admin' => false]);
+        $customer = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('admin.users.grant-credits', $customer), ['report_type' => 'plus', 'amount' => 1])
+            ->assertForbidden();
+    }
+
+    public function test_an_admin_can_grant_free_credits_to_an_account(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $customer = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.grant-credits', $customer), [
+                'report_type' => 'plus',
+                'amount' => 3,
+                'note' => 'Goodwill after a failed report',
+            ])
+            ->assertRedirect(route('admin.users.edit-prices', $customer));
+
+        $this->assertSame(3, app(CreditLedgerService::class)->balance($customer, 'plus'));
+    }
+
+    public function test_the_manage_account_page_shows_current_balances_and_recent_grants(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $customer = User::factory()->create();
+        app(CreditLedgerService::class)->grantFreeCredits($customer, 'plus', 2, 'Test grant');
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.edit-prices', $customer))
+            ->assertOk()
+            ->assertSeeText('Test grant')
+            ->assertSeeText('+2 Plus');
+    }
+
+    public function test_the_amount_must_be_within_a_sane_range(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $customer = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.grant-credits', $customer), ['report_type' => 'plus', 'amount' => 0])
+            ->assertSessionHasErrors('amount');
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.grant-credits', $customer), ['report_type' => 'plus', 'amount' => 500])
+            ->assertSessionHasErrors('amount');
+    }
+
+    public function test_the_credit_type_must_be_plus_or_rebuild(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $customer = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.grant-credits', $customer), ['report_type' => 'check', 'amount' => 1])
+            ->assertSessionHasErrors('report_type');
     }
 }
