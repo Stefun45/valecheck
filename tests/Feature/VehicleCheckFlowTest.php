@@ -168,6 +168,64 @@ class VehicleCheckFlowTest extends TestCase
             ->assertDontSee('High Risk');
     }
 
+    public function test_sections_already_covered_by_the_free_preview_show_the_real_data_unlocked(): void
+    {
+        // MOT history and basic identity are already fetched for the free
+        // preview (the same MOT/Tax and DVLA/DVSA calls the paid report
+        // itself uses), so those specific sections should show the real
+        // thing rather than a lock - unlike write-off/finance/valuation,
+        // which are genuinely separate paid calls not made yet.
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'AB12CDE')
+            ->call('lookupVehicle')
+            ->set('vehiclePreview', [
+                'make' => 'FORD',
+                'model' => 'FIESTA',
+                'colour' => 'BLUE',
+                'fuel_type' => 'PETROL',
+                'year' => 2019,
+                'mot_history' => [
+                    ['test_date' => '2023-06-01', 'result' => 'PASSED', 'mileage' => 20000, 'advisories' => []],
+                    ['test_date' => '2024-06-01', 'result' => 'PASSED', 'mileage' => 28000, 'advisories' => []],
+                ],
+            ])
+            ->call('confirmVehicle', true)
+            // Real MOT rows and mileage chart, not the blurred placeholder.
+            ->assertSeeHtml('data-section="Write-Off History" data-tier="check"')
+            ->assertSee('20,000 mi')
+            ->assertSee('28,000 mi')
+            ->assertDontSeeHtml('data-section="MOT &amp; Mileage"')
+            ->assertDontSeeHtml('data-section="Mileage Over Time"')
+            // Real identity fields, tagged "included free" rather than locked.
+            ->assertSeeHtml('data-section="Vehicle Summary" data-tier="included"')
+            ->assertSee('Included free')
+            ->assertSee('Fiesta')
+            // Sections needing a real paid call stay locked either way.
+            ->assertSeeInOrder(['Write-Off History', 'Unlock with Check'])
+            ->assertSeeInOrder(['Market Assessment', 'Unlock with Plus']);
+    }
+
+    public function test_sections_stay_locked_when_the_free_preview_has_no_usable_data(): void
+    {
+        // Covers not_found/unavailable/rate_limited previews, which also
+        // force vehicleConfirmed=true - there must be no real data to show
+        // in that case, so nothing should render as "included free".
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'AB12CDE')
+            ->set('previewStatus', 'not_found')
+            ->call('confirmVehicle', true)
+            ->assertDontSee('Included free')
+            ->assertSeeHtml('data-section="Vehicle Summary" data-tier="check"')
+            ->assertSeeHtml('data-section="MOT &amp; Mileage" data-tier="check"')
+            ->assertSeeHtml('data-section="Mileage Over Time" data-tier="check"');
+    }
+
     public function test_user_can_submit_a_plus_check_with_listing_details_and_no_photo_upload(): void
     {
         $user = $this->verifiedUser();

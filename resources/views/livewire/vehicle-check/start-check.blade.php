@@ -98,12 +98,53 @@
                     ['label' => 'Tax Cost', 'icon' => 'document', 'plusOnly' => true],
                     ['label' => 'Salvage Auction History', 'icon' => 'shield', 'plusOnly' => true],
                 ];
+
+                // MOT history and basic identity are already fetched for
+                // the free preview above (same MOT/Tax call and DVLA/DVSA
+                // lookup the paid report itself uses) - so these three
+                // sections show the real thing here rather than a lock,
+                // reusing the exact same partials/data the real report
+                // renders. Only shown "included free" when that data
+                // genuinely came back, never faked when the preview
+                // failed or was rate-limited.
+                $hasPreviewMotHistory = ! empty($vehiclePreview['mot_history']);
+                $hasPreviewIdentity = ! empty($vehiclePreview['make']) || ! empty($vehiclePreview['model']);
+                $previewHistory = $hasPreviewMotHistory
+                    ? new \App\Models\VehicleHistory(['mot_history' => $vehiclePreview['mot_history'], 'mileage_anomaly' => false])
+                    : null;
             @endphp
 
             <div class="mb-6">
                 <h3 class="font-display font-bold text-sm text-vale-navy uppercase tracking-wide mb-3 text-center">Here's what your report will look like</h3>
                 <div class="grid sm:grid-cols-2 gap-4">
                     @foreach ($reportSections as $section)
+                        @if ($section['label'] === 'MOT & Mileage' && $previewHistory)
+                            @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $previewHistory])
+                        @elseif ($section['label'] === 'Mileage Over Time' && $previewHistory)
+                            @include('livewire.vehicle-check.partials.mileage-chart', ['history' => $previewHistory])
+                        @elseif ($section['label'] === 'Vehicle Summary' && $hasPreviewIdentity)
+                            <div class="relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm" data-section="Vehicle Summary" data-tier="included">
+                                <span class="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-green-100 text-green-700">Included free</span>
+                                <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="identity" />Vehicle Summary</h3>
+                                <dl class="space-y-1 text-sm">
+                                    @if ($vehiclePreview['make'] ?? null)
+                                        <div class="flex justify-between"><dt class="text-gray-500">Make</dt><dd class="text-vale-navy">{{ ucwords(strtolower($vehiclePreview['make'])) }}</dd></div>
+                                    @endif
+                                    @if ($vehiclePreview['model'] ?? null)
+                                        <div class="flex justify-between"><dt class="text-gray-500">Model</dt><dd class="text-vale-navy">{{ ucwords(strtolower($vehiclePreview['model'])) }}</dd></div>
+                                    @endif
+                                    @if ($vehiclePreview['year'] ?? null)
+                                        <div class="flex justify-between"><dt class="text-gray-500">Year</dt><dd class="text-vale-navy">{{ $vehiclePreview['year'] }}</dd></div>
+                                    @endif
+                                    @if ($vehiclePreview['fuel_type'] ?? null)
+                                        <div class="flex justify-between"><dt class="text-gray-500">Fuel</dt><dd class="text-vale-navy">{{ ucwords(strtolower($vehiclePreview['fuel_type'])) }}</dd></div>
+                                    @endif
+                                    @if ($vehiclePreview['colour'] ?? null)
+                                        <div class="flex justify-between"><dt class="text-gray-500">Colour</dt><dd class="text-vale-navy">{{ ucwords(strtolower($vehiclePreview['colour'])) }}</dd></div>
+                                    @endif
+                                </dl>
+                            </div>
+                        @else
                         <div class="relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm overflow-hidden" data-section="{{ $section['label'] }}" data-tier="{{ ! empty($section['plusOnly']) ? 'plus' : 'check' }}">
                             <h4 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
                                 <x-section-icon :name="$section['icon']" />{{ $section['label'] }}
@@ -125,6 +166,7 @@
                                 </span>
                             </div>
                         </div>
+                        @endif
                     @endforeach
                 </div>
             </div>
