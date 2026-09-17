@@ -5,9 +5,13 @@
     this used to be. dompdf can't render SVG reliably (confirmed
     elsewhere in this codebase, see pdf-status-tick.blade.php), so the
     PDF never includes this component at all — it relies on the plain
-    "Damage area: ..." text line instead. Built from simple primitives
-    (rect/line/circle) rather than hand-authored path data, matching
-    section-icon.blade.php's "no complex multi-curve paths" discipline.
+    "Damage area: ..." text line instead. The body/cabin paths use real
+    curves (a tapered rounded nose/tail and wheel-arch indents) rather
+    than plain rectangles, since those read as noticeably more car-like
+    than section-icon.blade.php's flatter "simple primitives only" style
+    — every curve is still a small, symmetric, individually-reasoned
+    segment (never intricate freehand artwork), and was checked by
+    actually rendering it, not just trusted from the coordinates.
 
     AutoCheck's damage_location_desc format isn't fully confirmed (see
     OneAutoMarketValuationProvider) — rather than hard-matching exact
@@ -62,15 +66,16 @@
 
 <div style="max-width:220px;" class="mt-2">
     <svg viewBox="0 0 200 100" width="200" height="100" xmlns="http://www.w3.org/2000/svg" style="opacity: {{ $hasNoData ? '0.5' : '1' }}">
-        {{-- Body — moderate corner rounding leaves real flat sides
-             (unlike a heavily-rounded ellipse) for the wheels to sit
-             flush against, so they read as attached rather than
-             floating. --}}
-        <rect x="10" y="15" width="180" height="70" rx="22" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" />
+        {{-- Body — a tapered octagon (straight lines only): the front
+             (right, cut 22 units) narrows noticeably more than the rear
+             (left, cut 10 units), so the silhouette itself hints at
+             orientation before the caption needs reading. --}}
+        <polygon points="20,15 168,15 190,37 190,63 168,85 20,85 10,75 10,25" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" stroke-linejoin="round" />
 
-        {{-- Cabin/roof glass panel — a distinct shaded shape rather
-             than bare lines floating in empty space. --}}
-        <rect x="52" y="27" width="96" height="46" rx="14" fill="#D1D5DB" />
+        {{-- Cabin/glass — same tapered-octagon idea at a smaller scale,
+             reading as a windscreen/rear-screen taper rather than a
+             flat panel with square corners. --}}
+        <polygon points="60,27 130,27 146,39 146,61 130,73 60,73 50,63 50,37" fill="#D1D5DB" />
 
         {{-- Wheels: dark tyre + lighter hub, overlapping the body's
              flat top/bottom edges so they look integrated, not detached. --}}
