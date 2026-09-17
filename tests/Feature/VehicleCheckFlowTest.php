@@ -1269,9 +1269,9 @@ class VehicleCheckFlowTest extends TestCase
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Damage area: Front Nearside, Rear')
-            ->assertSeeText('front at the top, nearside on the left')
-            ->assertSeeHtml('cx="25" cy="25"')
-            ->assertSeeHtml('cx="50" cy="185"');
+            ->assertSeeHtml('data-view="front"')
+            ->assertSeeHtml('data-zone="front-nearside"')
+            ->assertSeeText('Also reported: Rear');
 
         // The diagram is web-only (dompdf can't render SVG) — the PDF
         // relies on the plain text line instead.
@@ -1303,7 +1303,7 @@ class VehicleCheckFlowTest extends TestCase
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertDontSeeText('Damage area:')
-            ->assertSeeText('front at the top, nearside on the left')
+            ->assertSeeText('Illustrative diagram - actual damage may vary.')
             ->assertSeeText('No damage location data provided.');
 
         $pdfHtml = view('pdf.plus-report', ['check' => $check->fresh()])->render();
@@ -1346,7 +1346,8 @@ class VehicleCheckFlowTest extends TestCase
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Damage area: Front Offside')
-            ->assertSeeHtml('cx="75" cy="25"');
+            ->assertSeeHtml('data-view="front"')
+            ->assertSeeHtml('data-zone="front-offside"');
 
         $pdfHtml = view('pdf.rebuild-report', ['check' => $check->fresh()])->render();
         $this->assertStringContainsString('Damage area: Front Offside', $pdfHtml);

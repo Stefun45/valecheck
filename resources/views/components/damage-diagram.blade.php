@@ -1,23 +1,46 @@
 @props(['locations' => []])
 
 {{--
-    Web-only — a real top-down car outline (SVG), not the CSS-only boxes
-    this used to be. dompdf can't render SVG reliably (confirmed
+    Web-only - real licensed line-art photography-style diagrams (SVG),
+    not hand-drawn shapes. dompdf can't render SVG reliably (confirmed
     elsewhere in this codebase, see pdf-status-tick.blade.php), so the
-    PDF never includes this component at all — it relies on the plain
-    "Damage area: ..." text line instead. The body/cabin paths use real
-    curves (a tapered rounded nose/tail and wheel-arch indents) rather
-    than plain rectangles, since those read as noticeably more car-like
-    than section-icon.blade.php's flatter "simple primitives only" style
-    — every curve is still a small, symmetric, individually-reasoned
-    segment (never intricate freehand artwork), and was checked by
-    actually rendering it, not just trusted from the coordinates.
+    PDF never includes this component at all - it relies on the plain
+    "Damage area: ..." text line instead.
+
+    Assets: resources sourced from a Shutterstock vector (licence held
+    by ValeCheck), cropped into five independent angle files under
+    public/images/damage-diagram/ - front, rear, side, front-three-
+    quarter, rear-three-quarter. Only one angle is ever shown at once;
+    there's no single view that can show every possible zone at once,
+    so we pick whichever angle actually covers the reported zone(s) and
+    fall back to a generic three-quarter shot (no pins) for anything
+    that doesn't cleanly fit one angle. Nothing is ever hidden from the
+    customer by this - the full "Damage area: ..." text line elsewhere
+    on the report always lists every reported location regardless of
+    what this illustration can show.
+
+    Nearside/offside placement on the front and rear images is derived
+    from camera-facing geometry, not guessed: nearside is the kerb side
+    (the driver's own left, sat facing forward). A front-on photo faces
+    the car - like two people facing each other, left/right swap - so
+    nearside (the car's own left) falls on the RIGHT of a front photo.
+    A rear photo looks the same way the car faces - like standing
+    behind someone - so nearside falls on the LEFT of a rear photo.
+
+    The side-view asset is a plain, near-symmetric profile silhouette;
+    there's no reliable visual cue (in outline art with no visible fuel
+    flap/exhaust asymmetry) to know for certain which physical side it
+    depicts. Rather than guess, we treat it as generic and define our
+    own consistent rule: shown as downloaded = nearside, horizontally
+    mirrored = offside. The on-screen text label is what actually
+    states which side it is - the image is illustrative only, exactly
+    like the always-present "Damage area: ..." text line next to it.
 
     AutoCheck's damage_location_desc format isn't fully confirmed (see
-    OneAutoMarketValuationProvider) — rather than hard-matching exact
+    OneAutoMarketValuationProvider) - rather than hard-matching exact
     strings, each raw value is loosely matched by keyword (front/rear/
     near/off/roof/all) onto one of 9 zones. Anything that doesn't match
-    any keyword is never silently dropped — it's listed as plain text
+    any keyword is never silently dropped - it's listed as plain text
     underneath instead.
 --}}
 @php
@@ -41,68 +64,80 @@
         };
     };
 
+    $zoneLabel = fn (string $zone) => ucwords(str_replace('-', ' ', $zone));
+
     $zones = collect($locations)->map($zoneOf)->filter()->unique()->values()->all();
     $unmapped = collect($locations)->reject(fn ($l) => $zoneOf($l) !== null)->values()->all();
     $isAll = in_array('all', $zones, true);
     $hasNoData = empty($locations);
 
-    // Pin centre coordinates within the 100x200 viewBox — front at the
-    // top, as if sat in the driver's seat facing forward: nearside
-    // (kerb side, UK right-hand-drive) is on the LEFT, offside is on
-    // the RIGHT. This matches the standard convention used for UK
-    // vehicle damage/write-off diagrams, rather than a head-on/mirrored
-    // view of the car.
-    $positions = [
-        'front-nearside' => [25, 25],
-        'front' => [50, 15],
-        'front-offside' => [75, 25],
-        'nearside' => [18, 100],
-        'roof' => [50, 100],
-        'offside' => [82, 100],
-        'rear-nearside' => [25, 175],
-        'rear' => [50, 185],
-        'rear-offside' => [75, 175],
-    ];
+    // Pin position as [left%, top%] within each image's own box.
+    $frontPins = ['front-offside' => [12, 62], 'front' => [50, 40], 'front-nearside' => [88, 62]];
+    $rearPins = ['rear-nearside' => [12, 68], 'rear' => [50, 40], 'rear-offside' => [88, 68]];
+    // Nearside/offside sit a little apart (not identical) so that the
+    // rare case of both being reported together still shows two
+    // distinct pins instead of one hiding the other.
+    $sidePins = ['nearside' => [42, 60], 'offside' => [56, 60], 'roof' => [45, 15]];
 
-    $pinZones = $isAll ? array_keys($positions) : array_intersect(array_keys($positions), $zones);
+    $frontZones = array_intersect($zones, array_keys($frontPins));
+    $rearZones = array_intersect($zones, array_keys($rearPins));
+    $sideZones = array_intersect($zones, array_keys($sidePins));
+
+    if (! $isAll && ! empty($frontZones)) {
+        $view = 'front';
+        $image = 'front.svg';
+        $shownZones = $frontZones;
+        $pins = array_intersect_key($frontPins, array_flip($shownZones));
+        $mirror = false;
+    } elseif (! $isAll && ! empty($rearZones)) {
+        $view = 'rear';
+        $image = 'rear.svg';
+        $shownZones = $rearZones;
+        $pins = array_intersect_key($rearPins, array_flip($shownZones));
+        $mirror = false;
+    } elseif (! $isAll && ! empty($sideZones)) {
+        $view = 'side';
+        $image = 'side.svg';
+        $shownZones = $sideZones;
+        $pins = array_intersect_key($sidePins, array_flip($shownZones));
+        // Nearside and offside can't both be shown correctly on one
+        // profile image - if both are reported, default to the
+        // unmirrored (nearside) image and leave offside to the text
+        // note below rather than mirror incorrectly for either.
+        $mirror = in_array('offside', $sideZones, true) && ! in_array('nearside', $sideZones, true);
+    } else {
+        $view = 'generic';
+        $image = 'front-three-quarter.svg';
+        $pins = [];
+        $shownZones = [];
+        $mirror = false;
+    }
+
+    $otherZones = array_diff($zones, $shownZones, ['all']);
+    $alsoReported = implode(', ', array_merge(array_map($zoneLabel, $otherZones), $unmapped));
 @endphp
 
-<div style="max-width:120px;" class="mt-2">
-    <svg viewBox="0 0 100 200" width="100" height="200" xmlns="http://www.w3.org/2000/svg" style="opacity: {{ $hasNoData ? '0.5' : '1' }}">
-        {{-- Body — a tapered octagon (straight lines only): the front
-             (top, cut 22 units) narrows noticeably more than the rear
-             (bottom, cut 10 units), so the silhouette itself hints at
-             orientation before the caption needs reading. --}}
-        <polygon points="15,180 15,32 37,10 63,10 85,32 85,180 75,190 25,190" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" stroke-linejoin="round" />
-
-        {{-- Cabin/glass — same tapered-octagon idea at a smaller scale,
-             reading as a windscreen/rear-screen taper rather than a
-             flat panel with square corners. --}}
-        <polygon points="27,140 27,70 39,54 61,54 73,70 73,140 63,150 37,150" fill="#D1D5DB" />
-
-        {{-- Wheels: dark tyre + lighter hub, overlapping the body's
-             flat left/right edges so they look integrated, not detached.
-             $axleY is the front (35) or rear (133) axle position. --}}
-        @foreach ([133 => 'front', 35 => 'rear'] as $wheelX => $axle)
-            @php $axleY = 200 - $wheelX - 32; @endphp
-            <rect x="5" y="{{ $axleY }}" width="18" height="32" rx="5" fill="#374151" />
-            <rect x="9" y="{{ $axleY + 7 }}" width="10" height="18" rx="3" fill="#9CA3AF" />
-            <rect x="77" y="{{ $axleY }}" width="18" height="32" rx="5" fill="#374151" />
-            <rect x="81" y="{{ $axleY + 7 }}" width="10" height="18" rx="3" fill="#9CA3AF" />
-        @endforeach
+<div class="mt-2" style="max-width:260px;">
+    <div class="relative" style="{{ $mirror ? 'transform:scaleX(-1);' : '' }} opacity:{{ $hasNoData ? '0.4' : '1' }};" data-view="{{ $view }}">
+        <img src="{{ asset('images/damage-diagram/'.$image) }}" alt="Diagram of the vehicle's {{ $view }}" class="block w-full h-auto select-none" draggable="false">
 
         @if (! $hasNoData)
-            @foreach ($pinZones as $zone)
-                <circle cx="{{ $positions[$zone][0] }}" cy="{{ $positions[$zone][1] }}" r="7" fill="#DC2626" stroke="#ffffff" stroke-width="2" />
+            @foreach ($pins as $zone => [$left, $top])
+                <span
+                    data-zone="{{ $zone }}"
+                    title="{{ $zoneLabel($zone) }}"
+                    class="absolute rounded-full bg-vale-red border-2 border-white shadow"
+                    style="left:{{ $left }}%; top:{{ $top }}%; width:14px; height:14px; margin-left:-7px; margin-top:-7px;"
+                ></span>
             @endforeach
         @endif
-    </svg>
+    </div>
 
     @if ($hasNoData)
         <p class="text-xs text-gray-400 mt-1">No damage location data provided.</p>
     @endif
-    <p class="text-xs text-gray-400 uppercase tracking-wide mt-1">As if sat in the driver's seat - front at the top, nearside on the left</p>
-    @if (! empty($unmapped))
-        <p class="text-xs text-gray-500 mt-1">Also reported: {{ implode(', ', $unmapped) }}</p>
+    <p class="text-xs text-gray-400 mt-1">Illustrative diagram - actual damage may vary.</p>
+    @if ($alsoReported !== '')
+        <p class="text-xs text-gray-500 mt-1">Also reported: {{ $alsoReported }}</p>
     @endif
 </div>
