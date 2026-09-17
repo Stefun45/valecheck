@@ -8,6 +8,7 @@
     $history = $check->history;
     $valuation = $check->valuation;
     $report = $check->report;
+    $salvageCheck = $check->salvageAuctionCheck;
 
     $askingPrice = $check->asking_price ? (float) $check->asking_price : null;
     $cleanValue = $valuation?->clean_value ? (float) $valuation->clean_value : null;
@@ -76,6 +77,8 @@
     </div>
 
     @include('pdf.partials.vehicle-timeline', ['history' => $history])
+
+    @include('pdf.partials.all-checks-grid', ['history' => $history, 'salvageCheck' => $salvageCheck])
 
     <div class="section">
         <div class="section-title">Vehicle Summary</div>

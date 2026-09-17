@@ -21,6 +21,10 @@
         @include('livewire.vehicle-check.partials.vehicle-timeline', ['history' => $history])
     </div>
 
+    <div class="mt-6">
+        @include('livewire.vehicle-check.partials.all-checks-grid', ['history' => $history])
+    </div>
+
     <div class="grid sm:grid-cols-2 gap-4 mt-6">
         <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="identity" />Vehicle Summary</h3>
@@ -32,6 +36,9 @@
                 <div class="flex justify-between"><dt class="text-gray-500">Transmission</dt><dd class="text-vale-navy">{{ $vehicle->transmission ?? '—' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Colour</dt><dd class="text-vale-navy">{{ $vehicle->colour ?? '—' }}</dd></div>
             </dl>
+            @if ($vehicle->vin)
+                @include('livewire.vehicle-check.partials.vin-verification')
+            @endif
         </div>
 
         @include('livewire.vehicle-check.partials.provenance-facts', ['history' => $history, 'check' => $check])

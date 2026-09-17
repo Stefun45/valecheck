@@ -11,6 +11,10 @@ class ShowCheck extends Component
 {
     public VehicleCheck $vehicleCheck;
 
+    public string $vinToVerify = '';
+
+    public ?bool $vinMatchResult = null;
+
     public function mount(VehicleCheck $vehicleCheck): void
     {
         $this->authorize('view', $vehicleCheck);
@@ -24,6 +28,19 @@ class ShowCheck extends Component
             VehicleCheck::STATUS_PENDING,
             VehicleCheck::STATUS_PROCESSING,
         ], true);
+    }
+
+    /**
+     * Lets a customer confirm the V5C/dashboard VIN in front of them
+     * matches what the report holds, without ever sending the real VIN
+     * to the browser — only this boolean result leaves the server.
+     */
+    public function verifyVin(): void
+    {
+        $submitted = strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', $this->vinToVerify));
+        $realVin = $this->vehicleCheck->vehicle->vin;
+
+        $this->vinMatchResult = $submitted !== '' && $realVin !== null && strtoupper($realVin) === $submitted;
     }
 
     public function render()

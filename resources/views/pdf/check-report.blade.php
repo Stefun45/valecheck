@@ -24,6 +24,8 @@
 
     @include('pdf.partials.vehicle-timeline', ['history' => $history])
 
+    @include('pdf.partials.all-checks-grid', ['history' => $history])
+
     <div class="section">
         <div class="section-title">Vehicle Summary</div>
         <table class="data">

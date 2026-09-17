@@ -446,6 +446,47 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringContainsString('Vehicle Timeline', $plusPdfHtml);
     }
 
+    public function test_the_all_checks_grid_appears_on_both_report_types_and_only_plus_shows_salvage_history(): void
+    {
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+
+        $checkType = $this->completeViaPurchase($user, VehicleCheck::TYPE_CHECK, 'AB12CDE');
+        $plusType = $this->completeViaPurchase($user, VehicleCheck::TYPE_PLUS, 'CD34EFG');
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $checkType])
+            ->assertSeeText('All Checks')
+            ->assertSeeText('Outstanding Finance')
+            ->assertDontSeeText('Salvage Auction History');
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $plusType])
+            ->assertSeeText('All Checks')
+            ->assertSeeText('Salvage Auction History');
+
+        $checkPdfHtml = view('pdf.check-report', ['check' => $checkType->fresh()])->render();
+        $this->assertStringContainsString('All Checks', $checkPdfHtml);
+    }
+
+    public function test_a_customer_can_verify_the_vin_against_the_report_without_it_ever_leaking(): void
+    {
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+        $check = $this->completeViaPurchase($user, VehicleCheck::TYPE_CHECK, 'AB12CDE');
+        $realVin = $check->vehicle->vin;
+        $this->assertNotEmpty($realVin);
+
+        $component = Livewire::test(ShowCheck::class, ['vehicleCheck' => $check]);
+        $component->assertDontSee($realVin);
+
+        $component->set('vinToVerify', $realVin)->call('verifyVin')->assertSet('vinMatchResult', true);
+
+        $component->set('vinToVerify', 'WRONGVINNOTREAL123')->call('verifyVin')->assertSet('vinMatchResult', false);
+
+        // The real VIN is still never present in the rendered output, even
+        // after a correct match is confirmed.
+        $component->set('vinToVerify', $realVin)->call('verifyVin')->assertDontSee($realVin);
+    }
+
     public function test_a_completed_check_report_has_history_but_no_valuation_or_damage_analysis(): void
     {
         $user = $this->verifiedUser();

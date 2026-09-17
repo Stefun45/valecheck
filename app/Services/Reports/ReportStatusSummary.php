@@ -2,6 +2,7 @@
 
 namespace App\Services\Reports;
 
+use App\Models\SalvageAuctionCheck;
 use App\Models\VehicleHistory;
 
 /**
@@ -50,6 +51,54 @@ class ReportStatusSummary
         return $allOk
             ? ['label' => 'Clean History', 'tone' => 'good']
             : ['label' => 'Issues Found', 'tone' => 'warning'];
+    }
+
+    /**
+     * A longer, explicit pass/fail checklist alongside the four headline
+     * boxes above — every row here maps to a field genuinely captured by
+     * the provider, nothing is inferred or guessed. $salvageCheck is
+     * omitted entirely (not shown as "unavailable") for a Check-type
+     * report, since that product never attempts a salvage auction lookup
+     * at all — that's a difference in what was bought, not missing data.
+     *
+     * @return array<int, array{label: string, status: 'pass'|'fail'|'unavailable'}>
+     */
+    public static function allChecks(?VehicleHistory $history, ?SalvageAuctionCheck $salvageCheck = null): array
+    {
+        if ($history === null) {
+            return [];
+        }
+
+        $checks = [
+            ['label' => 'Stolen', 'status' => self::badStatus($history->stolen_marker)],
+            ['label' => 'Outstanding Finance', 'status' => self::badStatus($history->finance_marker)],
+            ['label' => 'Written-Off', 'status' => self::badStatus($history->isWrittenOff())],
+            ['label' => 'Scrapped', 'status' => self::badStatus($history->scrapped_marker)],
+            ['label' => 'Imported', 'status' => self::badStatus($history->imported)],
+            ['label' => 'Exported', 'status' => self::badStatus($history->exported)],
+            ['label' => 'Mileage Issues', 'status' => self::badStatus(self::mileageWentBackwards($history) || ($history->mileage_anomaly === true))],
+        ];
+
+        if ($salvageCheck !== null) {
+            $checks[] = ['label' => 'Salvage Auction History', 'status' => self::badStatus($salvageCheck->record_found)];
+        }
+
+        return $checks;
+    }
+
+    /**
+     * $isBad === null means the provider didn't return this section at all
+     * — kept as its own distinct "unavailable" state rather than being
+     * read as a pass, for the same reason a missing history record is
+     * never shown as a clean report.
+     */
+    private static function badStatus(?bool $isBad): string
+    {
+        if ($isBad === null) {
+            return 'unavailable';
+        }
+
+        return $isBad ? 'fail' : 'pass';
     }
 
     private static function mileageWentBackwards(VehicleHistory $history): bool

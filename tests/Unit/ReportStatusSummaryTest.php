@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\SalvageAuctionCheck;
 use App\Models\VehicleCheck;
 use App\Models\VehicleHistory;
 use App\Services\Reports\ReportStatusSummary;
@@ -150,5 +151,79 @@ class ReportStatusSummaryTest extends TestCase
 
         $this->assertSame('Unable to Verify', $verdict['label']);
         $this->assertSame('unavailable', $verdict['tone']);
+    }
+
+    private function allChecksFor(VehicleHistory $history, ?SalvageAuctionCheck $salvageCheck = null): array
+    {
+        return collect(ReportStatusSummary::allChecks($history, $salvageCheck))
+            ->pluck('status', 'label')
+            ->all();
+    }
+
+    public function test_all_checks_returns_an_empty_array_for_no_history(): void
+    {
+        $this->assertSame([], ReportStatusSummary::allChecks(null));
+    }
+
+    public function test_all_checks_maps_each_real_marker_to_pass_or_fail(): void
+    {
+        $history = $this->historyFor([
+            'stolen_marker' => true,
+            'finance_marker' => false,
+            'write_off_category' => 'N',
+            'scrapped_marker' => false,
+            'imported' => true,
+            'exported' => false,
+        ]);
+
+        $checks = $this->allChecksFor($history);
+
+        $this->assertSame('fail', $checks['Stolen']);
+        $this->assertSame('pass', $checks['Outstanding Finance']);
+        $this->assertSame('fail', $checks['Written-Off']);
+        $this->assertSame('pass', $checks['Scrapped']);
+        $this->assertSame('fail', $checks['Imported']);
+        $this->assertSame('pass', $checks['Exported']);
+    }
+
+    public function test_a_null_marker_is_unavailable_not_a_silent_pass(): void
+    {
+        $history = $this->historyFor(['stolen_marker' => null]);
+
+        $this->assertSame('unavailable', $this->allChecksFor($history)['Stolen']);
+    }
+
+    public function test_mileage_issues_reuses_the_same_backwards_and_anomaly_logic_as_the_summary_boxes(): void
+    {
+        $wentBackwards = $this->historyFor([
+            'mot_history' => [
+                ['test_date' => '2022-01-01', 'mileage' => 30000],
+                ['test_date' => '2023-01-01', 'mileage' => 25000],
+            ],
+        ]);
+        $clean = $this->historyFor([
+            'mot_history' => [
+                ['test_date' => '2022-01-01', 'mileage' => 15000],
+                ['test_date' => '2023-01-01', 'mileage' => 24000],
+            ],
+        ]);
+
+        $this->assertSame('fail', $this->allChecksFor($wentBackwards)['Mileage Issues']);
+        $this->assertSame('pass', $this->allChecksFor($clean)['Mileage Issues']);
+    }
+
+    public function test_salvage_history_row_is_omitted_entirely_when_no_salvage_check_is_given(): void
+    {
+        $history = $this->historyFor([]);
+
+        $this->assertArrayNotHasKey('Salvage Auction History', $this->allChecksFor($history));
+    }
+
+    public function test_salvage_history_row_reflects_the_real_record_found_flag_when_given(): void
+    {
+        $history = $this->historyFor([]);
+        $salvageCheck = SalvageAuctionCheck::create(['vehicle_check_id' => $history->vehicle_check_id, 'record_found' => true]);
+
+        $this->assertSame('fail', $this->allChecksFor($history, $salvageCheck)['Salvage Auction History']);
     }
 }
