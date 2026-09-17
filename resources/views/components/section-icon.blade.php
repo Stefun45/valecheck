@@ -46,5 +46,9 @@
             <path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
             <polyline points="14,3 14,8 19,8" />
             @break
+        @case('lock')
+            <rect x="5" y="11" width="14" height="10" rx="2" />
+            <path d="M8 11V7a4 4 0 018 0v4" />
+            @break
     @endswitch
 </svg>

@@ -148,6 +148,24 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertNotNull($check->vehicle);
     }
 
+    public function test_the_choose_step_lists_every_report_section_tagged_by_which_tier_unlocks_it(): void
+    {
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'AB12CDE')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->assertSee('in your report')
+            // A Check-tier section: shown once, tagged Check.
+            ->assertSeeInOrder(['Write-Off History', 'Check'])
+            // A Plus-only section: shown once, tagged Plus rather than Check.
+            ->assertSeeInOrder(['Market Assessment', 'Plus'])
+            ->assertDontSee('Important Warnings')
+            ->assertDontSee('High Risk');
+    }
+
     public function test_user_can_submit_a_plus_check_with_listing_details_and_no_photo_upload(): void
     {
         $user = $this->verifiedUser();

@@ -77,6 +77,46 @@
         @endif
 
         @if ($vehicleConfirmed)
+            @php
+                // Marketing copy only, not report logic - deliberately
+                // excludes conditional/dynamic sections that aren't
+                // guaranteed to appear (e.g. "Important Warnings",
+                // trade-only "High Risk"), so this list never promises
+                // something a given report might not actually show.
+                $reportSections = [
+                    ['label' => 'Overall History Assessment', 'icon' => 'document'],
+                    ['label' => 'Vehicle Timeline', 'icon' => 'calendar'],
+                    ['label' => 'All Checks', 'icon' => 'shield'],
+                    ['label' => 'Vehicle Summary', 'icon' => 'identity'],
+                    ['label' => 'Write-Off History', 'icon' => 'warning'],
+                    ['label' => 'Finance', 'icon' => 'finance'],
+                    ['label' => 'Stolen / Scrapped', 'icon' => 'shield'],
+                    ['label' => 'Mileage Over Time', 'icon' => 'trending-up'],
+                    ['label' => 'MOT & Mileage', 'icon' => 'calendar'],
+                    ['label' => 'Keeper / Registration History', 'icon' => 'user'],
+                    ['label' => 'Market Assessment', 'icon' => 'chart-bar', 'plusOnly' => true],
+                    ['label' => 'Tax Cost', 'icon' => 'document', 'plusOnly' => true],
+                    ['label' => 'Salvage Auction History', 'icon' => 'shield', 'plusOnly' => true],
+                ];
+            @endphp
+
+            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6 max-w-2xl mx-auto">
+                <h3 class="font-display font-bold text-sm text-vale-navy uppercase tracking-wide mb-3">What's in your report</h3>
+                <ul class="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+                    @foreach ($reportSections as $section)
+                        <li class="flex items-center justify-between gap-2 text-sm text-gray-600 py-1">
+                            <span class="flex items-center gap-2 min-w-0">
+                                <x-section-icon name="lock" size="14" class="text-gray-300 shrink-0" />
+                                <span class="truncate">{{ $section['label'] }}</span>
+                            </span>
+                            <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 {{ ! empty($section['plusOnly']) ? 'bg-vale-red/10 text-vale-red' : 'bg-gray-100 text-gray-500' }}">
+                                {{ ! empty($section['plusOnly']) ? 'Plus' : 'Check' }}
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
             <div class="grid {{ config('valecheck.rebuild_enabled') ? 'sm:grid-cols-3' : 'sm:grid-cols-2 max-w-2xl mx-auto' }} gap-4">
                 <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col">
                     <h2 class="font-display font-bold text-lg text-vale-navy">ValeCheck</h2>
