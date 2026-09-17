@@ -14,6 +14,6 @@
             </a>
         </div>
 
-        @include('livewire.vehicle-check.partials.plus-report', ['check' => $vehicleCheck])
+        @include('livewire.vehicle-check.partials.plus-report', ['check' => $vehicleCheck, 'interactive' => false])
     </div>
 </x-app-layout>
