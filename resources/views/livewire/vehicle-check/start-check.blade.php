@@ -208,27 +208,27 @@
                         <button
                             type="button"
                             wire:click="choose('{{ ! empty($section['plusOnly']) ? 'plus' : 'check' }}')"
-                            class="relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm overflow-hidden text-left w-full hover:shadow-md hover:border-gray-300 transition cursor-pointer"
+                            class="relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm text-left w-full hover:shadow-md hover:border-gray-300 transition cursor-pointer"
                             data-section="{{ $section['label'] }}" data-tier="{{ ! empty($section['plusOnly']) ? 'plus' : 'check' }}"
                         >
-                            <h4 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+                            <span class="absolute top-4 right-4 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full text-white {{ ! empty($section['plusOnly']) ? 'bg-vale-red' : 'bg-vale-navy' }}">
+                                <x-section-icon name="lock" size="9" class="text-white" />
+                                {{ ! empty($section['plusOnly']) ? 'Plus' : 'Check' }}
+                            </span>
+
+                            <h4 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 pr-16">
                                 <x-section-icon :name="$section['icon']" />{{ $section['label'] }}
                             </h4>
 
                             {{-- A real line drawn from the public sample report
-                                 record, still blurred and locked - see the
-                                 $previewLines comment above for how this is
-                                 derived. --}}
-                            <p class="text-sm text-vale-navy leading-relaxed" aria-hidden="true">
+                                 record, shown clearly rather than blurred -
+                                 it's already sample data, not anything
+                                 private, so hiding it defeated the point of
+                                 showing it at all. See the $previewLines
+                                 comment above for how this is derived. --}}
+                            <p class="text-sm text-gray-600 leading-relaxed">
                                 {{ $previewLines[$section['label']] ?? '' }}
                             </p>
-
-                            <div class="absolute inset-0 flex items-center justify-center backdrop-blur-[2px] bg-white/60">
-                                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-full text-white shadow-sm {{ ! empty($section['plusOnly']) ? 'bg-vale-red' : 'bg-vale-navy' }}">
-                                    <x-section-icon name="lock" size="11" class="text-white" />
-                                    Unlock with {{ ! empty($section['plusOnly']) ? 'Plus' : 'Check' }}
-                                </span>
-                            </div>
                         </button>
                         @endif
                     @endforeach

@@ -250,10 +250,8 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSee('what your report will look like')
             // A Check-tier section card, tagged for the check tier.
             ->assertSeeHtml('data-section="Write-Off History" data-tier="check"')
-            ->assertSeeInOrder(['Write-Off History', 'Unlock with Check'])
             // A Plus-only section card, tagged plus rather than check.
             ->assertSeeHtml('data-section="Market Assessment" data-tier="plus"')
-            ->assertSeeInOrder(['Market Assessment', 'Unlock with Plus'])
             ->assertDontSee('Important Warnings')
             ->assertDontSee('High Risk');
     }
@@ -294,8 +292,8 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSee('Included free')
             ->assertSee('Fiesta')
             // Sections needing a real paid call stay locked either way.
-            ->assertSeeInOrder(['Write-Off History', 'Unlock with Check'])
-            ->assertSeeInOrder(['Market Assessment', 'Unlock with Plus']);
+            ->assertSeeHtml('data-section="Write-Off History" data-tier="check"')
+            ->assertSeeHtml('data-section="Market Assessment" data-tier="plus"');
     }
 
     public function test_sections_stay_locked_when_the_free_preview_has_no_usable_data(): void
