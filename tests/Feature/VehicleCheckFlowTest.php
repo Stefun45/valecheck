@@ -252,6 +252,9 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSeeHtml('data-section="Write-Off History" data-tier="check"')
             // A Plus-only section card, tagged plus rather than check.
             ->assertSeeHtml('data-section="Market Assessment" data-tier="plus"')
+            ->assertSee('Sample data')
+            ->assertSee('Included in Check')
+            ->assertSee('Included in Plus')
             ->assertDontSee('Important Warnings')
             ->assertDontSee('High Risk');
     }

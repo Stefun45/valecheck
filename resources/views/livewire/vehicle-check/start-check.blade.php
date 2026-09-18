@@ -208,27 +208,33 @@
                         <button
                             type="button"
                             wire:click="choose('{{ ! empty($section['plusOnly']) ? 'plus' : 'check' }}')"
-                            class="relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm text-left w-full hover:shadow-md hover:border-gray-300 transition cursor-pointer"
+                            class="relative bg-white border border-gray-200 rounded-xl shadow-sm text-left w-full hover:shadow-md hover:border-gray-300 transition cursor-pointer overflow-hidden"
                             data-section="{{ $section['label'] }}" data-tier="{{ ! empty($section['plusOnly']) ? 'plus' : 'check' }}"
                         >
-                            <span class="absolute top-4 right-4 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full text-white {{ ! empty($section['plusOnly']) ? 'bg-vale-red' : 'bg-vale-navy' }}">
-                                <x-section-icon name="lock" size="9" class="text-white" />
-                                {{ ! empty($section['plusOnly']) ? 'Plus' : 'Check' }}
-                            </span>
+                            <div class="bg-amber-50 border-b border-amber-200 px-5 py-1.5">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-amber-700">Sample data</span>
+                            </div>
 
-                            <h4 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 pr-16">
-                                <x-section-icon :name="$section['icon']" />{{ $section['label'] }}
-                            </h4>
+                            <div class="p-5">
+                                <h4 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+                                    <x-section-icon :name="$section['icon']" />{{ $section['label'] }}
+                                </h4>
 
-                            {{-- A real line drawn from the public sample report
-                                 record, shown clearly rather than blurred -
-                                 it's already sample data, not anything
-                                 private, so hiding it defeated the point of
-                                 showing it at all. See the $previewLines
-                                 comment above for how this is derived. --}}
-                            <p class="text-sm text-gray-600 leading-relaxed">
-                                {{ $previewLines[$section['label']] ?? '' }}
-                            </p>
+                                {{-- A real line drawn from the public sample report
+                                     record, shown clearly rather than blurred -
+                                     it's already sample data, not anything
+                                     private, so hiding it defeated the point of
+                                     showing it at all. See the $previewLines
+                                     comment above for how this is derived. --}}
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    {{ $previewLines[$section['label']] ?? '' }}
+                                </p>
+
+                                <p class="flex items-center gap-1 text-xs font-bold uppercase tracking-wide mt-3 {{ ! empty($section['plusOnly']) ? 'text-vale-red' : 'text-vale-navy' }}">
+                                    <x-section-icon name="lock" size="10" />
+                                    Included in {{ ! empty($section['plusOnly']) ? 'Plus' : 'Check' }}
+                                </p>
+                            </div>
                         </button>
                         @endif
                     @endforeach
