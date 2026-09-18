@@ -270,5 +270,6 @@
         </section>
 
         @include('partials.footer')
+        @include('partials.cookie-consent-banner')
     </body>
 </html>

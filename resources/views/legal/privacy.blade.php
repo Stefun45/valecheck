@@ -66,7 +66,10 @@
         <h2 class="font-display font-bold text-lg text-vale-navy mb-2">6. Cookies</h2>
         <p class="text-sm text-gray-600 leading-relaxed">
             We use essential cookies to keep you logged in and to protect the site against cross-site request
-            forgery. We don't use advertising or tracking cookies.
+            forgery - these don't require consent and can't be turned off. We also use Google Ads advertising
+            cookies to measure how well our ads perform, but only once you've given consent via the cookie banner
+            shown on your first visit. You can decline these, and can change your mind at any time by clearing your
+            browser's site data for valecheck.com.
         </p>
     </section>
 

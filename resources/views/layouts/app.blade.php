@@ -43,5 +43,6 @@
 
             @include('partials.footer')
         </div>
+        @include('partials.cookie-consent-banner')
     </body>
 </html>
