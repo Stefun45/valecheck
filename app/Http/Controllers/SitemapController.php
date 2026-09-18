@@ -20,6 +20,10 @@ class SitemapController extends Controller
         ['route' => 'vehicle-checks.start', 'changefreq' => 'weekly', 'priority' => '0.9'],
         ['route' => 'sample-report', 'changefreq' => 'monthly', 'priority' => '0.7'],
         ['route' => 'faq', 'changefreq' => 'monthly', 'priority' => '0.6'],
+        ['route' => 'guides.index', 'changefreq' => 'monthly', 'priority' => '0.6'],
+        ['route' => 'guides.write-off-check', 'changefreq' => 'monthly', 'priority' => '0.6'],
+        ['route' => 'guides.write-off-categories', 'changefreq' => 'monthly', 'priority' => '0.6'],
+        ['route' => 'guides.finance-check', 'changefreq' => 'monthly', 'priority' => '0.6'],
         ['route' => 'legal.terms', 'changefreq' => 'monthly', 'priority' => '0.3'],
         ['route' => 'legal.privacy', 'changefreq' => 'monthly', 'priority' => '0.3'],
     ];

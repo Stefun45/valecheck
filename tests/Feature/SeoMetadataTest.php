@@ -84,6 +84,8 @@ class SeoMetadataTest extends TestCase
         $response->assertSee('<loc>'.route('vehicle-checks.start').'</loc>', false);
         $response->assertSee('<loc>'.route('sample-report').'</loc>', false);
         $response->assertSee('<loc>'.route('faq').'</loc>', false);
+        $response->assertSee('<loc>'.route('guides.index').'</loc>', false);
+        $response->assertSee('<loc>'.route('guides.write-off-check').'</loc>', false);
         $response->assertSee('<loc>'.route('legal.terms').'</loc>', false);
         $response->assertSee('<loc>'.route('legal.privacy').'</loc>', false);
         $response->assertDontSee('dashboard', false);
@@ -99,6 +101,36 @@ class SeoMetadataTest extends TestCase
         $response->assertSeeText('What do the different write-off categories mean?');
         $response->assertSeeText('Category A: scrap only');
         $response->assertDontSee('name="robots" content="noindex', false);
+    }
+
+    public function test_each_guide_page_is_indexable_with_its_own_title_and_links_to_the_free_check(): void
+    {
+        $writeOffCheck = $this->get(route('guides.write-off-check'))->assertOk();
+        $categories = $this->get(route('guides.write-off-categories'))->assertOk();
+        $financeCheck = $this->get(route('guides.finance-check'))->assertOk();
+
+        $writeOffCheck->assertSee('<title>How to Check If a Car Is Written Off (UK)', false);
+        $categories->assertSee('<title>Car Write-Off Categories Explained', false);
+        $financeCheck->assertSee('<title>How to Check a Car for Outstanding Finance (UK)', false);
+
+        foreach ([$writeOffCheck, $categories, $financeCheck] as $response) {
+            $response->assertDontSee('name="robots" content="noindex', false);
+            $response->assertSee(route('vehicle-checks.start'), false);
+        }
+
+        // Cross-linked to each other, not just standalone pages.
+        $writeOffCheck->assertSee(route('guides.write-off-categories'), false);
+        $categories->assertSee(route('guides.write-off-check'), false);
+    }
+
+    public function test_the_guides_index_lists_every_guide(): void
+    {
+        $response = $this->get(route('guides.index'))->assertOk();
+
+        $response->assertDontSee('name="robots" content="noindex', false);
+        $response->assertSee(route('guides.write-off-check'), false);
+        $response->assertSee(route('guides.write-off-categories'), false);
+        $response->assertSee(route('guides.finance-check'), false);
     }
 
     public function test_robots_txt_points_to_the_sitemap(): void

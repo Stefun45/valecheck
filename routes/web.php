@@ -44,6 +44,14 @@ Route::view('faq', 'faq')->name('faq');
 Route::get('sample-report', [SampleReportController::class, 'show'])->name('sample-report');
 Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
+// Long-tail SEO content: each answers one specific, realistically-searched
+// question rather than competing on broad head terms a brand-new domain
+// can't rank for yet (see the "guides" section of SitemapController).
+Route::view('guides', 'guides.index')->name('guides.index');
+Route::view('guides/how-to-check-if-a-car-is-written-off', 'guides.write-off-check')->name('guides.write-off-check');
+Route::view('guides/car-write-off-categories-explained', 'guides.write-off-categories')->name('guides.write-off-categories');
+Route::view('guides/checking-a-car-for-outstanding-finance', 'guides.finance-check')->name('guides.finance-check');
+
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');

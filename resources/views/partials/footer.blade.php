@@ -15,6 +15,7 @@
     </p>
     <p class="mt-3 flex items-center justify-center gap-4">
         <a href="{{ route('faq') }}" wire:navigate class="hover:text-vale-navy">FAQs</a>
+        <a href="{{ route('guides.index') }}" wire:navigate class="hover:text-vale-navy">Guides</a>
         <a href="{{ route('legal.terms') }}" wire:navigate class="hover:text-vale-navy">Terms &amp; Conditions</a>
         <a href="{{ route('legal.privacy') }}" wire:navigate class="hover:text-vale-navy">Privacy Policy</a>
     </p>
