@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        @include('partials.google-ads-tag')
         <title>{{ $title }} — {{ config('app.name', 'ValeCheck') }}</title>
         @include('partials.seo-meta', [
             'title' => $title.' — '.config('app.name', 'ValeCheck'),

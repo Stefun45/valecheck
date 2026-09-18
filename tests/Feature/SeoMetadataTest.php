@@ -133,6 +133,22 @@ class SeoMetadataTest extends TestCase
         $response->assertSee(route('guides.finance-check'), false);
     }
 
+    public function test_the_google_ads_tag_is_absent_by_default_so_dev_traffic_never_reaches_the_real_account(): void
+    {
+        config(['valecheck.google_ads_id' => null]);
+
+        $this->get('/')->assertOk()->assertDontSee('googletagmanager.com/gtag/js', false);
+    }
+
+    public function test_the_google_ads_tag_renders_on_public_pages_once_configured(): void
+    {
+        config(['valecheck.google_ads_id' => 'AW-625010447']);
+
+        $this->get('/')->assertOk()->assertSee('googletagmanager.com/gtag/js?id=AW-625010447', false);
+        $this->get(route('vehicle-checks.start'))->assertOk()->assertSee('googletagmanager.com/gtag/js?id=AW-625010447', false);
+        $this->get(route('faq'))->assertOk()->assertSee('googletagmanager.com/gtag/js?id=AW-625010447', false);
+    }
+
     public function test_robots_txt_points_to_the_sitemap(): void
     {
         $contents = file_get_contents(public_path('robots.txt'));

@@ -4,21 +4,21 @@ return [
 
     'currency' => 'GBP',
 
-    // Temporary launch flag — ValeCheck Rebuild (£14.99) is hidden from the
+    // Temporary launch flag - ValeCheck Rebuild (£14.99) is hidden from the
     // storefront while the AI damage-analysis product is finished. Flip to
     // true to bring it back with no code changes. Credit packs and
     // subscriptions are ValeCheck Plus features and are unaffected by this
-    // flag — see subscriptions_enabled below.
+    // flag - see subscriptions_enabled below.
     'rebuild_enabled' => env('REBUILD_ENABLED', true),
 
-    // Temporary launch flag — subscriptions (Trader/Pro/Dealer) are hidden
+    // Temporary launch flag - subscriptions (Trader/Pro/Dealer) are hidden
     // until their Stripe recurring prices are set up (STRIPE_PRICE_TRADER/
     // PRO/DEALER) and there's time to test them properly. Defaults to
     // hidden so a missing env var never accidentally exposes an untested
     // feature. Credit packs are unaffected by this flag.
     'subscriptions_enabled' => env('SUBSCRIPTIONS_ENABLED', false),
 
-    // Temporary pre-launch gate — a logged-out visitor sees a "coming
+    // Temporary pre-launch gate - a logged-out visitor sees a "coming
     // soon" page instead of the real site, so it can't be stumbled onto
     // and used for free before payments are fully tested. Registration is
     // closed while this is on; the only way in is an existing account
@@ -26,6 +26,14 @@ return [
     // reviewer). Set to false to go fully live with no code changes. See
     // App\Http\Middleware\RedirectGuestsToComingSoon.
     'coming_soon_enabled' => env('COMING_SOON_ENABLED', true),
+
+    // Google Ads base site tag (gtag.js) - null by default so local/test
+    // environments never load it and pollute the real ad account's data
+    // with dev traffic. Only the account-wide ID lives here (safe to be
+    // public, it's just a tracking identifier); the specific per-action
+    // conversion label for a completed purchase is set separately once
+    // that conversion action exists in Google Ads.
+    'google_ads_id' => env('GOOGLE_ADS_CONVERSION_ID'),
 
     'vat' => [
         'rate' => 0.20,
@@ -36,13 +44,13 @@ return [
     | Pricing (VAT inclusive, in GBP)
     |--------------------------------------------------------------------------
     |
-    | Three products, three different customer needs — not a basic/better/best
+    | Three products, three different customer needs - not a basic/better/best
     | ladder:
-    |   - check   (£8.99)  — history & provenance, for any used-car buyer.
-    |   - plus    (£11.99) — history & provenance + market valuation, the
+    |   - check   (£8.99)  - history & provenance, for any used-car buyer.
+    |   - plus    (£11.99) - history & provenance + market valuation, the
     |                        mass-market "is this worth the money?" product.
-    |   - rebuild (£14.99) — everything in Plus + AI damage analysis, repair
-    |                        cost, repaired value and maximum bid — the
+    |   - rebuild (£14.99) - everything in Plus + AI damage analysis, repair
+    |                        cost, repaired value and maximum bid - the
     |                        specialist tool for damaged/salvage vehicles.
     */
     'pricing' => [
@@ -62,7 +70,7 @@ return [
             'gross' => 14.99,
         ],
         // A one-off top-up for an existing completed ValeCheck report,
-        // reusing the same VehicleCheck row rather than starting a new one —
+        // reusing the same VehicleCheck row rather than starting a new one -
         // only the Plus-exclusive jobs run (valuation, salvage, tax cost),
         // never a second AutoCheck call, since that's already paid for.
         // See VehicleCheckPipeline::dispatchUpgrade().
@@ -90,12 +98,12 @@ return [
     ],
 
     // Where a submitted Enterprise contact-form enquiry (see ContactController)
-    // is emailed to — no Stripe plan exists for Enterprise, it's sales-led.
+    // is emailed to - no Stripe plan exists for Enterprise, it's sales-led.
     'enterprise_contact_email' => env('ENTERPRISE_CONTACT_EMAIL', 'stefan@silverbackcustomsuk.com'),
 
     /*
     |--------------------------------------------------------------------------
-    | Salvage valuation assumptions (not guarantees — see report disclaimer)
+    | Salvage valuation assumptions (not guarantees - see report disclaimer)
     |--------------------------------------------------------------------------
     */
     'salvage' => [
@@ -176,21 +184,21 @@ return [
         'fixed' => 0.20,
     ],
 
-    // One Auto API (https://docs.oneautoapi.com/) — the paid "Full Vehicle
+    // One Auto API (https://docs.oneautoapi.com/) - the paid "Full Vehicle
     // Check" equivalent (Experian AutoCheck for identity+provenance, One
     // Auto's own MOT History & Tax Status), plus a valuation call,
     // SalvageGuide Salvage Check and Vehicle Tax from VRM used for
     // ValeCheck Plus. The valuation call is one of two genuinely different
-    // products depending on write-off status — UK Vehicle Data for clean
+    // products depending on write-off status - UK Vehicle Data for clean
     // vehicles, SalvageGuide's Bid Prediction for written-off ones (this
     // replaced Brego, which had no way to price in write-off history at
-    // all) — see OneAutoMarketValuationProvider. Only ever called once a
+    // all) - see OneAutoMarketValuationProvider. Only ever called once a
     // report is funded (free credit, subscription allowance, or payment)
-    // — never on demand. cost_per_lookup_net is per API call, not per
-    // report — a Check report makes 2 calls (AutoCheck + MOT/Tax), Plus
+    // - never on demand. cost_per_lookup_net is per API call, not per
+    // report - a Check report makes 2 calls (AutoCheck + MOT/Tax), Plus
     // makes 5 (+ valuation + Salvage Check + Vehicle Tax from VRM); see
     // ProviderLookupLog for the real count. Depends on which One Auto plan
-    // tier (PrePay/Business/Enterprise/Bespoke) is active — set once
+    // tier (PrePay/Business/Enterprise/Bespoke) is active - set once
     // known, not guessed here.
     'vehicle_data' => [
         'provider' => env('VEHICLE_DATA_PROVIDER', 'mock'),
@@ -199,7 +207,7 @@ return [
             'base_url' => env('ONEAUTO_BASE_URL', 'https://api.oneautoapi.com'),
             'cost_per_lookup_net' => (float) env('ONEAUTO_COST_PER_LOOKUP_NET', 0),
             // How long a MOT History & Tax Status lookup is cached per
-            // registration — shared between the free preview and the paid
+            // registration - shared between the free preview and the paid
             // report, so previewing then buying within this window doesn't
             // trigger a second paid call for the same data.
             'preview_cache_minutes' => (int) env('ONEAUTO_PREVIEW_CACHE_MINUTES', 30),
@@ -209,7 +217,7 @@ return [
     // The free "is this your vehicle?" preview (make/model/colour/fuel/
     // year/MOT/tax) shown when the user clicks "Check Vehicle", before any
     // payment or credit is spent. DVLA is free but has no model field.
-    // 'oneauto' reuses vehicle_data.oneauto above — no separate config,
+    // 'oneauto' reuses vehicle_data.oneauto above - no separate config,
     // since it shares the same MOT/Tax call and cache as the paid report.
     'registration_lookup' => [
         'provider' => env('REGISTRATION_LOOKUP_PROVIDER', 'mock'),
@@ -226,14 +234,14 @@ return [
     |
     | Attempts to pre-fill Rebuild listing details from a public listing URL
     | the customer pastes in, using only publicly-accessible structured
-    | metadata (JSON-LD/OpenGraph) — never bypassing login, paywalls,
+    | metadata (JSON-LD/OpenGraph) - never bypassing login, paywalls,
     | CAPTCHAs, bot detection or rate limits. If a marketplace blocks
     | automated retrieval, the import fails gracefully and manual entry
     | remains available. See app/Services/ListingImport for the provider
     | architecture and the SSRF-safe fetcher.
     */
     'listing_import' => [
-        // Hidden for now — flip to true (or set LISTING_IMPORT_ENABLED)
+        // Hidden for now - flip to true (or set LISTING_IMPORT_ENABLED)
         // to bring it back with no other code changes.
         'enabled' => env('LISTING_IMPORT_ENABLED', false),
         'cache_hours' => 6,
@@ -251,15 +259,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Reports — PDF storage and retention
+    | Reports - PDF storage and retention
     |--------------------------------------------------------------------------
     |
     | Generated report PDFs are stored on a disk configured here (S3 in
-    | production — local storage isn't guaranteed to persist across
+    | production - local storage isn't guaranteed to persist across
     | deploys/instances). retention_days drives both the "available until"
     | date shown to customers and the reports:purge-expired command, which
     | permanently deletes report content (photos, analysis, the PDF) after
-    | this many days — see app/Console/Commands/PurgeExpiredReports.php.
+    | this many days - see app/Console/Commands/PurgeExpiredReports.php.
     */
     'reports' => [
         'pdf_disk' => env('REPORT_PDF_DISK', 's3'),
