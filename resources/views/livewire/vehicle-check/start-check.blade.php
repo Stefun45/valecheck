@@ -112,6 +112,66 @@
                 $previewHistory = $hasPreviewMotHistory
                     ? new \App\Models\VehicleHistory(['mot_history' => $vehiclePreview['mot_history'], 'mileage_anomaly' => false])
                     : null;
+
+                // Genuinely locked sections (everything except the three
+                // above) show one real line drawn from the actual public
+                // sample report record (see demo:seed-sample-report and
+                // /sample-report) rather than empty skeleton bars - still
+                // blurred and locked, but it reads as "here's real content
+                // behind this" rather than "this is empty". Every line is
+                // derived from a real field on that record, never invented
+                // - a null field just means that section falls back to a
+                // generic (still accurate) line instead of a fabricated one.
+                $sample = \App\Models\VehicleCheck::where('is_sample', true)
+                    ->with(['history', 'valuation', 'report', 'salvageAuctionCheck', 'taxCost'])
+                    ->first();
+                $sh = $sample?->history;
+                $sv = $sample?->valuation;
+
+                $previewLines = [
+                    'Overall History Assessment' => $sample?->report?->headline_summary
+                        ? \Illuminate\Support\Str::limit($sample->report->headline_summary, 70)
+                        : 'A plain-English summary of the vehicle\'s overall history.',
+                    'Vehicle Timeline' => $sh?->first_registration_date
+                        ? 'First registered '.$sh->first_registration_date->format('Y').' · '.count($sh->mot_history ?? []).' MOT tests · '.count($sh->keeper_history ?? []).' keeper changes'
+                        : 'Every dated event in one place - registration, MOTs, keeper and plate changes.',
+                    'All Checks' => $sh
+                        ? collect(\App\Services\Reports\ReportStatusSummary::allChecks($sh, $sample->salvageAuctionCheck))->countBy('status')->map(fn ($count, $status) => "{$count} {$status}")->implode(', ')
+                        : 'Stolen, finance, write-off, scrapped, imported and exported at a glance.',
+                    'Write-Off History' => $sh
+                        ? ($sh->isWrittenOff() ? "Category {$sh->write_off_category} recorded" : 'No write-off category recorded')
+                        : 'Write-off category and the date it was recorded, if any.',
+                    'Finance' => $sh
+                        ? ($sh->finance_marker ? 'Outstanding finance marker found' : 'No finance marker found')
+                        : 'Outstanding finance check, sourced from Experian.',
+                    'Stolen / Scrapped' => $sh
+                        ? 'Stolen: '.($sh->stolen_marker ? 'flagged' : 'clear').' · Scrapped: '.($sh->scrapped_marker ? 'flagged' : 'clear')
+                        : 'Stolen and scrapped marker checks, sourced from Experian.',
+                    'Keeper / Registration History' => $sh
+                        ? ($sh->previous_keepers !== null ? "{$sh->previous_keepers} previous keeper(s) · {$sh->plate_changes} plate change(s)" : 'Keeper and plate change history.')
+                        : 'Previous keepers, plate changes and V5C reissues.',
+                    'Market Assessment' => $sv?->private_value
+                        ? 'Estimated private value: £'.number_format((float) $sv->private_value)
+                        : 'Trade, private and part-exchange value estimates.',
+                    'Tax Cost' => $sample?->taxCost?->available
+                        ? 'Annual rate: £'.number_format((float) $sample->taxCost->annual_rate, 2)
+                        : 'What it actually costs to tax this vehicle.',
+                    'Salvage Auction History' => $sample?->salvageAuctionCheck
+                        ? ($sample->salvageAuctionCheck->record_found ? 'Salvage auction record found' : 'No salvage auction record found')
+                        : 'Whether this vehicle has passed through salvage auction.',
+                    // Fallback copy only - MOT & Mileage and Mileage Over
+                    // Time normally show the user's own real free-preview
+                    // data instead (see $previewHistory above) and never
+                    // reach this array at all. These two only get used if
+                    // that preview call didn't return MOT history, so this
+                    // locked card isn't left blank.
+                    'MOT & Mileage' => ! empty($sh?->mot_history)
+                        ? count($sh->mot_history).' MOT test(s) on record'
+                        : 'Full MOT pass/fail history with advisories, from the DVSA.',
+                    'Mileage Over Time' => ! empty($sh?->mot_history)
+                        ? 'Mileage trend across '.count($sh->mot_history).' MOT test(s)'
+                        : 'A chart of recorded mileage at every MOT test.',
+                ];
             @endphp
 
             <div class="mb-6">
@@ -145,19 +205,23 @@
                                 </dl>
                             </div>
                         @else
-                        <div class="relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm overflow-hidden" data-section="{{ $section['label'] }}" data-tier="{{ ! empty($section['plusOnly']) ? 'plus' : 'check' }}">
+                        <button
+                            type="button"
+                            wire:click="choose('{{ ! empty($section['plusOnly']) ? 'plus' : 'check' }}')"
+                            class="relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm overflow-hidden text-left w-full hover:shadow-md hover:border-gray-300 transition cursor-pointer"
+                            data-section="{{ $section['label'] }}" data-tier="{{ ! empty($section['plusOnly']) ? 'plus' : 'check' }}"
+                        >
                             <h4 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
                                 <x-section-icon :name="$section['icon']" />{{ $section['label'] }}
                             </h4>
 
-                            {{-- Fake placeholder rows, never real data - purely to
-                                 suggest "there's real content behind this" without
-                                 fabricating anything that looks like an actual value. --}}
-                            <div class="space-y-2" aria-hidden="true">
-                                <div class="h-2.5 bg-gray-100 rounded-full w-full"></div>
-                                <div class="h-2.5 bg-gray-100 rounded-full w-5/6"></div>
-                                <div class="h-2.5 bg-gray-100 rounded-full w-2/3"></div>
-                            </div>
+                            {{-- A real line drawn from the public sample report
+                                 record, still blurred and locked - see the
+                                 $previewLines comment above for how this is
+                                 derived. --}}
+                            <p class="text-sm text-vale-navy leading-relaxed" aria-hidden="true">
+                                {{ $previewLines[$section['label']] ?? '' }}
+                            </p>
 
                             <div class="absolute inset-0 flex items-center justify-center backdrop-blur-[2px] bg-white/60">
                                 <span class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-full text-white shadow-sm {{ ! empty($section['plusOnly']) ? 'bg-vale-red' : 'bg-vale-navy' }}">
@@ -165,7 +229,7 @@
                                     Unlock with {{ ! empty($section['plusOnly']) ? 'Plus' : 'Check' }}
                                 </span>
                             </div>
-                        </div>
+                        </button>
                         @endif
                     @endforeach
                 </div>

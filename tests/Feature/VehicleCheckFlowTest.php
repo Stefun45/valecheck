@@ -148,6 +148,96 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertNotNull($check->vehicle);
     }
 
+    public function test_locked_sections_show_a_real_line_from_the_sample_report_and_are_clickable(): void
+    {
+        // Blurred grey placeholder bars weren't appealing and gave no
+        // sense of what was actually behind the lock - this shows one
+        // real line per section, drawn from the public sample record
+        // (see demo:seed-sample-report), and makes the whole card a
+        // button that starts the purchase flow for that tier directly.
+        $owner = User::factory()->create();
+        $vehicle = Vehicle::factory()->create(['registration' => 'SAMP02B', 'make' => 'FORD', 'model' => 'FIESTA']);
+        $sampleCheck = VehicleCheck::factory()->create([
+            'user_id' => $owner->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+            'registration' => 'SAMP02B',
+            'payment_id' => Payment::create([
+                'user_id' => $owner->id, 'type' => 'plus', 'description' => 'ValeCheck Plus',
+                'gross' => 11.99, 'net' => 9.99, 'vat' => 2.00, 'vat_rate' => 0.20,
+                'currency' => 'GBP', 'status' => Payment::STATUS_PAID,
+            ])->id,
+        ]);
+        VehicleHistory::create([
+            'vehicle_check_id' => $sampleCheck->id,
+            'finance_marker' => false,
+            'write_off_category' => 'S',
+        ]);
+        VehicleValuation::create(['vehicle_check_id' => $sampleCheck->id, 'source' => 'ukvehicledata', 'confidence' => 'high', 'private_value' => 9450]);
+        $this->artisan('demo:seed-sample-report', ['registration' => 'SAMP02B']);
+
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+
+        $component = Livewire::test(StartCheck::class)
+            ->set('registration', 'AB12CDE')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->assertSee('Category S recorded')
+            ->assertSee('Estimated private value: £9,450')
+            ->assertSeeHtml("wire:click=\"choose('check')\"")
+            ->assertSeeHtml("wire:click=\"choose('plus')\"");
+
+        $component->call('choose', 'plus')->assertSet('type', 'plus');
+    }
+
+    public function test_mot_and_mileage_cards_fall_back_to_sample_data_when_the_free_preview_has_no_mot_history(): void
+    {
+        // Found while building the above: MOT & Mileage / Mileage Over
+        // Time normally show the user's own real free-preview data, but
+        // when that preview genuinely has no MOT history (as here, via
+        // the mock DVLA provider), those two locked cards were rendering
+        // completely blank instead of falling back like every other
+        // locked section does.
+        $owner = User::factory()->create();
+        $vehicle = Vehicle::factory()->create(['registration' => 'SAMP03C']);
+        $sampleCheck = VehicleCheck::factory()->create([
+            'user_id' => $owner->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+            'registration' => 'SAMP03C',
+            'payment_id' => Payment::create([
+                'user_id' => $owner->id, 'type' => 'plus', 'description' => 'ValeCheck Plus',
+                'gross' => 11.99, 'net' => 9.99, 'vat' => 2.00, 'vat_rate' => 0.20,
+                'currency' => 'GBP', 'status' => Payment::STATUS_PAID,
+            ])->id,
+        ]);
+        VehicleHistory::create([
+            'vehicle_check_id' => $sampleCheck->id,
+            'finance_marker' => false,
+            'mot_history' => [
+                ['test_date' => '2023-06-01', 'result' => 'PASSED', 'mileage' => 20000],
+                ['test_date' => '2024-06-01', 'result' => 'PASSED', 'mileage' => 28000],
+            ],
+        ]);
+        $this->artisan('demo:seed-sample-report', ['registration' => 'SAMP03C']);
+
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+
+        // AB12CDE's mock preview has no MOT history at all (confirmed by
+        // the existing test_the_confirmation_step_has_no_mot_section...
+        // test above), so both cards must fall back rather than blank out.
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'AB12CDE')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->assertSee('2 MOT test(s) on record')
+            ->assertSee('Mileage trend across 2 MOT test(s)');
+    }
+
     public function test_the_choose_step_lists_every_report_section_tagged_by_which_tier_unlocks_it(): void
     {
         $user = $this->verifiedUser();
