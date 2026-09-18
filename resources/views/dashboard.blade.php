@@ -10,6 +10,7 @@
 
             @if (request('paid'))
                 <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm">Payment received — thank you.</div>
+                @include('partials.google-ads-conversion')
             @endif
             @if (request('subscribed'))
                 <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm">Subscription activated — thank you.</div>

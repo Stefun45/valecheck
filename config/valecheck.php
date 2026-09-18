@@ -35,6 +35,12 @@ return [
     // that conversion action exists in Google Ads.
     'google_ads_id' => env('GOOGLE_ADS_CONVERSION_ID'),
 
+    // The conversion label for the specific "Purchase" conversion action
+    // (from Google Ads > Goals > Conversions > Purchase > event snippet),
+    // combined with google_ads_id above to form the send_to target. Also
+    // null by default for the same reason.
+    'google_ads_purchase_label' => env('GOOGLE_ADS_PURCHASE_CONVERSION_LABEL'),
+
     'vat' => [
         'rate' => 0.20,
     ],

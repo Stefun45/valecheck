@@ -15,4 +15,5 @@
     @endif
 
     @include($contentView, ['check' => $vehicleCheck])
+    @include('partials.google-ads-conversion')
 </div>

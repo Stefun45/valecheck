@@ -52,7 +52,7 @@ class StripeCheckoutService
             $label,
             1,
             [
-                'success_url' => route('vehicle-checks.show', $check).'?paid=1',
+                'success_url' => route('vehicle-checks.show', $check)."?paid=1&payment={$payment->id}",
                 'cancel_url' => route('vehicle-checks.start'),
                 'metadata' => array_filter([
                     'kind' => 'vehicle_check',
@@ -86,7 +86,7 @@ class StripeCheckoutService
             $label,
             1,
             [
-                'success_url' => route('vehicle-checks.show', $check).'?paid=1',
+                'success_url' => route('vehicle-checks.show', $check)."?paid=1&payment={$payment->id}",
                 'cancel_url' => route('vehicle-checks.show', $check),
                 'metadata' => [
                     'kind' => 'vehicle_check_upgrade',
@@ -120,7 +120,7 @@ class StripeCheckoutService
             $pack['label'],
             1,
             [
-                'success_url' => route('dashboard').'?paid=1',
+                'success_url' => route('dashboard')."?paid=1&payment={$payment->id}",
                 'cancel_url' => route('dashboard'),
                 'metadata' => [
                     'kind' => 'credit_pack',
