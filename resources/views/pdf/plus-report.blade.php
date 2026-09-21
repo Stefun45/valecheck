@@ -148,7 +148,12 @@
         @endif
     </div>
 
-    @include('pdf.partials.tax-cost', ['taxCost' => $check->taxCost])
+    @include('pdf.partials.tax-cost', [
+        'taxCost' => $check->taxCost,
+        'co2Gkm' => $check->history?->co2_gkm,
+        'co2Band' => $check->history?->co2Band(),
+        'co2BandColours' => \App\Models\VehicleHistory::co2BandColours(),
+    ])
 
     @include('pdf.partials.salvage-auction-history', ['salvageAuctionCheck' => $check->salvageAuctionCheck, 'reportUrl' => $reportUrl])
 

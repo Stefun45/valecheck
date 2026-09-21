@@ -167,7 +167,12 @@
             @endif
         </div>
 
-        @include('livewire.vehicle-check.partials.tax-cost', ['taxCost' => $check->taxCost])
+        @include('livewire.vehicle-check.partials.tax-cost', [
+            'taxCost' => $check->taxCost,
+            'co2Gkm' => $history?->co2_gkm,
+            'co2Band' => $history?->co2Band(),
+            'co2BandColours' => \App\Models\VehicleHistory::co2BandColours(),
+        ])
 
         @include('livewire.vehicle-check.partials.salvage-auction-history', ['salvageAuctionCheck' => $check->salvageAuctionCheck])
 

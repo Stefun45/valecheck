@@ -116,6 +116,7 @@ class OneAutoVehicleDataProvider implements VehicleDataProvider
             ], $autoCheck['cherished_data_items'] ?? []),
             damageLocations: $this->damageLocations($autoCheck),
             firstRegistrationDate: $firstRegistrationDate,
+            co2Gkm: $autoCheck['co2_gkm'] ?? null,
         );
     }
 

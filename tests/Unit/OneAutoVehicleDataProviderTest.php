@@ -304,6 +304,33 @@ class OneAutoVehicleDataProviderTest extends TestCase
         $this->assertNull($result->firstRegistrationDate);
     }
 
+    public function test_co2_gkm_is_mapped_from_the_autocheck_response(): void
+    {
+        // A top-level AutoCheck field - fetched and stored in raw_provider_data
+        // since day one, previously discarded before reaching the report.
+        // Purely informational: One Auto's own dedicated tax endpoint
+        // already computes the real VED figure from CO2 itself (see
+        // OneAutoVehicleTaxCostProvider) - this is never used to derive
+        // a tax figure of our own.
+        $this->fakeBoth(
+            $this->completeAutoCheck(['co2_gkm' => 139]),
+            $this->motAndTax(),
+        );
+
+        $result = $this->provider()->getVehicle('AB21ABC');
+
+        $this->assertSame(139, $result->co2Gkm);
+    }
+
+    public function test_co2_gkm_is_null_when_the_response_does_not_include_it(): void
+    {
+        $this->fakeBoth($this->completeAutoCheck(), $this->motAndTax());
+
+        $result = $this->provider()->getVehicle('AB21ABC');
+
+        $this->assertNull($result->co2Gkm);
+    }
+
     public function test_plate_change_history_maps_every_real_transfer_not_just_the_count(): void
     {
         // Values taken directly from a real sandbox response (DY17BXW) —

@@ -11,7 +11,7 @@ namespace App\DataTransferObjects;
  * mileageAnomaly) are nullable, not plain booleans: null means the
  * provider didn't return that section at all, distinct from false
  * ("checked, nothing found"). Defaulting an absent section to false is
- * exactly the bug that took VehicleMatic out of production — a report must
+ * exactly the bug that took VehicleMatic out of production - a report must
  * never show "clean" for something that was never actually checked.
  */
 final readonly class VehicleData
@@ -49,7 +49,7 @@ final readonly class VehicleData
         public array $raw = [],
         // Everything below is additive trust/identity signal, shown to
         // every customer (unlike highRiskMarker, none of this is
-        // trade-sector-restricted) — nullable because not every provider
+        // trade-sector-restricted) - nullable because not every provider
         // (Mock, a future non-AutoCheck source) necessarily returns it.
         public ?int $colourChanges = null,
         public ?bool $wasExported = null,
@@ -67,7 +67,7 @@ final readonly class VehicleData
         public array $plateChangeHistory = [],
         /**
          * Damage location descriptions from the write-off record (e.g.
-         * ['Front', 'FrontNearside']) — only ever populated when
+         * ['Front', 'FrontNearside']) - only ever populated when
          * writeOffCategory is set. Feeds SalvageGuide's primary_damage_desc
          * input and, later, a historical damage-location diagram.
          *
@@ -75,6 +75,7 @@ final readonly class VehicleData
          */
         public array $damageLocations = [],
         public ?string $firstRegistrationDate = null,
+        public ?int $co2Gkm = null,
     ) {}
 
     public function isWrittenOff(): bool

@@ -1,5 +1,18 @@
 <div class="section">
-    <div class="section-title">Tax Cost</div>
+    <div class="section-title">Running Costs</div>
+
+    @if ($co2Band)
+        <p style="font-size:10px; margin-bottom:4px;">CO2 emissions: {{ $co2Gkm }} g/km &middot; Band {{ $co2Band['letter'] }}</p>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+            <tr>
+                @foreach ($co2BandColours as $index => $colour)
+                    <td style="background-color: {{ $colour }}; height:8px; padding:0; {{ $index === $co2Band['index'] ? 'border:1.5px solid #0f172a;' : '' }}"></td>
+                @endforeach
+            </tr>
+        </table>
+    @endif
+
+    <div class="section-title" style="font-size:11px;">Tax Cost</div>
     @if (! $taxCost?->available)
         <p>Tax cost unavailable for this vehicle.</p>
     @else
