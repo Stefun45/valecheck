@@ -25,6 +25,7 @@
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-vale-light-grey">
+            @include('partials.site-promotion-banner')
             <livewire:layout.navigation />
 
             <!-- Page Heading -->

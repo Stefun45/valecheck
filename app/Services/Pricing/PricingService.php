@@ -4,6 +4,7 @@ namespace App\Services\Pricing;
 
 use App\DataTransferObjects\PriceBreakdown;
 use App\Models\ProductPrice;
+use App\Models\SitePromotion;
 use App\Models\User;
 use App\Models\UserProductPrice;
 use InvalidArgumentException;
@@ -23,6 +24,11 @@ use InvalidArgumentException;
  * admin-set UserProductPrice row for that user+type takes priority over
  * the standard price everyone else pays. Passing no user (or a user with
  * no override) falls through to standard pricing exactly as before.
+ *
+ * A separate, single-row SitePromotion can also discount the standard
+ * price for everyone (a launch-period offer needing no code) - it never
+ * applies on top of a bespoke UserProductPrice. See standardPrice() for
+ * the pre-promotion price used to show a "was £X" comparison.
  */
 class PricingService
 {
@@ -61,15 +67,44 @@ class PricingService
         return $this->forProduct('rebuild', $user);
     }
 
+    /**
+     * A bespoke per-account price (UserProductPrice) is a deliberate,
+     * individual decision an admin made for that one person - it's
+     * returned as-is, never further reduced by the general site-wide
+     * promotion below. Everyone else gets the standard price, discounted
+     * by that promotion when one is live.
+     */
     public function forProduct(string $type, ?User $user = null): PriceBreakdown
     {
-        $gross = $user
+        $userOverride = $user
             ? UserProductPrice::where('user_id', $user->id)->where('type', $type)->value('gross')
             : null;
 
-        $gross ??= ProductPrice::where('type', $type)->value('gross');
+        if ($userOverride !== null) {
+            return $this->breakdown((float) $userOverride);
+        }
 
-        return $this->breakdown((float) ($gross ?? config("valecheck.pricing.{$type}.gross")));
+        $gross = SitePromotion::current()->discount($this->standardGross($type));
+
+        return $this->breakdown($gross);
+    }
+
+    /**
+     * The standard price with no user override and no site-wide promotion
+     * applied - used to show a struck-through "was £X" comparison next to
+     * the current (possibly discounted) price, the same way a discount
+     * code's preview already works.
+     */
+    public function standardPrice(string $type): PriceBreakdown
+    {
+        return $this->breakdown($this->standardGross($type));
+    }
+
+    private function standardGross(string $type): float
+    {
+        $gross = ProductPrice::where('type', $type)->value('gross');
+
+        return (float) ($gross ?? config("valecheck.pricing.{$type}.gross"));
     }
 
     public function forCreditPack(string $key): PriceBreakdown

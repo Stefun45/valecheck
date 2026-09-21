@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\DiscountCode;
 use App\Models\DiscountCodeRedemption;
+use App\Models\SitePromotion;
 use App\Models\User;
 use App\Models\UserProductPrice;
 use App\Services\Discounts\DiscountCodeService;
@@ -97,6 +98,27 @@ class DiscountCodeServiceTest extends TestCase
         DiscountCode::create(['code' => 'STACK', 'type' => 'percentage', 'value' => 10]);
 
         $this->assertNull(app(DiscountCodeService::class)->find('STACK', 'check', $user));
+    }
+
+    public function test_a_code_is_rejected_outright_while_a_site_wide_promotion_is_live(): void
+    {
+        // Everyone already gets the automatic discount - a typed code
+        // stacking on top of it would compound two mechanisms never
+        // meant to combine, the same reason a custom price blocks one.
+        DiscountCode::create(['code' => 'STACK2', 'type' => 'percentage', 'value' => 10]);
+        SitePromotion::current()->update(['is_active' => true, 'percentage' => 20]);
+
+        $this->assertNull(app(DiscountCodeService::class)->find('STACK2', 'check'));
+    }
+
+    public function test_a_code_works_again_once_the_promotion_is_switched_off(): void
+    {
+        DiscountCode::create(['code' => 'BACKON', 'type' => 'percentage', 'value' => 10]);
+        SitePromotion::current()->update(['is_active' => true, 'percentage' => 20]);
+        $this->assertNull(app(DiscountCodeService::class)->find('BACKON', 'check'));
+
+        SitePromotion::current()->update(['is_active' => false]);
+        $this->assertNotNull(app(DiscountCodeService::class)->find('BACKON', 'check'));
     }
 
     public function test_a_custom_price_for_a_different_product_does_not_block_a_code_for_this_one(): void

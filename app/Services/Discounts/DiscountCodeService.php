@@ -3,6 +3,7 @@
 namespace App\Services\Discounts;
 
 use App\Models\DiscountCode;
+use App\Models\SitePromotion;
 use App\Models\User;
 use App\Models\UserProductPrice;
 
@@ -10,19 +11,21 @@ class DiscountCodeService
 {
     /**
      * Looks up a code and returns it only if it's genuinely usable right
-     * now for this product — active, not expired, not exhausted overall,
+     * now for this product - active, not expired, not exhausted overall,
      * not exhausted for this specific user, applicable to what's being
      * bought, and not for an account that already has an admin-set custom
      * price for this product. Never throws; an invalid code is just "not
      * found," so callers can fail gracefully.
      *
      * The custom-price exclusion exists so the two discount mechanisms can
-     * never compound — an account already paying a bespoke reduced price
+     * never compound - an account already paying a bespoke reduced price
      * must not also have a code's percentage/fixed reduction taken off
-     * that already-reduced figure.
+     * that already-reduced figure. A live site-wide promotion (see
+     * SitePromotion) is refused for the same reason - everyone already
+     * gets that discount automatically, with no code needed.
      *
      * $user is nullable because this is also called from the pre-checkout
-     * preview, which can run before the customer has signed in — the
+     * preview, which can run before the customer has signed in - the
      * per-user limit and custom-price checks simply can't be done yet at
      * that point, so they're skipped there and re-checked for real once a
      * user exists, at StripeCheckoutService, which never trusts the
@@ -33,6 +36,10 @@ class DiscountCodeService
         $code = strtoupper(trim($code));
 
         if ($code === '') {
+            return null;
+        }
+
+        if (SitePromotion::current()->isLive()) {
             return null;
         }
 

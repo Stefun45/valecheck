@@ -4,6 +4,7 @@ namespace App\Services\Payments;
 
 use App\Models\Payment;
 use App\Models\User;
+use App\Models\UserProductPrice;
 use App\Models\VehicleCheck;
 use App\Services\Discounts\DiscountCodeService;
 use App\Services\Pricing\PricingService;
@@ -19,7 +20,13 @@ class StripeCheckoutService
 
     public function checkoutForVehicleCheck(VehicleCheck $check): Checkout
     {
-        $originalPrice = $this->pricing->forProduct($check->type, $check->user);
+        // The true, undiscounted standard price - used only to record what
+        // this would have cost without any user override, site-wide
+        // promotion or discount code, whichever of those (if any) ends up
+        // applying. Not the same as $priceBeforeCode below, which already
+        // reflects a user override or a live promotion.
+        $standardPrice = $this->pricing->standardPrice($check->type);
+        $priceBeforeCode = $this->pricing->forProduct($check->type, $check->user);
         $label = config("valecheck.pricing.{$check->type}.label");
 
         // Re-validated here, at the point money actually changes hands —
@@ -30,8 +37,8 @@ class StripeCheckoutService
             : null;
 
         $price = $discount
-            ? $this->pricing->breakdown($this->discounts->apply($discount, $originalPrice->gross))
-            : $originalPrice;
+            ? $this->pricing->breakdown($this->discounts->apply($discount, $priceBeforeCode->gross))
+            : $priceBeforeCode;
 
         $payment = Payment::create([
             'user_id' => $check->user_id,
@@ -39,7 +46,9 @@ class StripeCheckoutService
             'type' => $check->type,
             'description' => "{$label} — {$check->registration}",
             'gross' => $price->gross,
-            'original_gross' => $discount ? $originalPrice->gross : null,
+            'original_gross' => $this->hasUserOverride($check->user, $check->type)
+                ? null
+                : $this->originalGrossIfDiscounted($price->gross, $standardPrice->gross),
             'net' => $price->net,
             'vat' => $price->vat,
             'vat_rate' => $price->vatRate,
@@ -66,6 +75,7 @@ class StripeCheckoutService
 
     public function checkoutForVehicleCheckUpgrade(VehicleCheck $check): Checkout
     {
+        $standardPrice = $this->pricing->standardPrice('plus_upgrade');
         $price = $this->pricing->forProduct('plus_upgrade', $check->user);
         $label = config('valecheck.pricing.plus_upgrade.label');
 
@@ -74,6 +84,9 @@ class StripeCheckoutService
             'type' => Payment::TYPE_PLUS_UPGRADE,
             'description' => "{$label} — {$check->registration}",
             'gross' => $price->gross,
+            'original_gross' => $this->hasUserOverride($check->user, 'plus_upgrade')
+                ? null
+                : $this->originalGrossIfDiscounted($price->gross, $standardPrice->gross),
             'net' => $price->net,
             'vat' => $price->vat,
             'vat_rate' => $price->vatRate,
@@ -155,5 +168,32 @@ class StripeCheckoutService
     private function toMinorUnits(float $gross): int
     {
         return (int) round($gross * 100);
+    }
+
+    /**
+     * Null when nothing actually reduced the price - keeps original_gross
+     * meaning exactly what it says regardless of which mechanism (a live
+     * site promotion, a discount code, or both) is responsible for the
+     * reduction.
+     */
+    private function originalGrossIfDiscounted(float $chargedGross, float $standardGross): ?float
+    {
+        return abs($chargedGross - $standardGross) > 0.001 ? $standardGross : null;
+    }
+
+    /**
+     * A bespoke UserProductPrice is a standing, deliberate price for that
+     * one account - not something this specific payment "discounted", so
+     * original_gross must stay null for it regardless of how it compares
+     * to the general standard price (this mirrors DiscountCodeService,
+     * which already refuses a code outright for these accounts, so a
+     * bespoke price is the only way this account's charged price can
+     * ever differ from standard in the first place).
+     */
+    private function hasUserOverride(?User $user, string $type): bool
+    {
+        return $user
+            ? UserProductPrice::where('user_id', $user->id)->where('type', $type)->exists()
+            : false;
     }
 }

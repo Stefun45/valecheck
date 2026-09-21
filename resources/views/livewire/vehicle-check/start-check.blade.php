@@ -245,7 +245,12 @@
                 <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col">
                     <h2 class="font-display font-bold text-lg text-vale-navy">ValeCheck</h2>
                     <p class="text-xs uppercase tracking-widest text-gray-400 mt-1">Check the history.</p>
-                    <p class="font-display text-3xl font-extrabold text-vale-navy mt-3">£{{ number_format($checkPrice->gross, 2) }}</p>
+                    <p class="font-display text-3xl font-extrabold text-vale-navy mt-3">
+                        @if ($standardCheckPrice->gross > $checkPrice->gross)
+                            <span class="line-through text-gray-300 text-xl mr-2">£{{ number_format($standardCheckPrice->gross, 2) }}</span>
+                        @endif
+                        £{{ number_format($checkPrice->gross, 2) }}
+                    </p>
                     <p class="text-sm text-gray-500 mt-2 flex-1">Vehicle history and provenance — write-off status, finance, mileage, MOT and keeper history.</p>
                     <button type="button" wire:click="choose('check')" class="mt-4 w-full inline-flex justify-center items-center px-4 py-2.5 bg-white hover:bg-gray-50 border-2 border-vale-navy rounded-full font-semibold text-sm text-vale-navy transition">
                         Check The History
@@ -255,7 +260,12 @@
                 <div class="bg-vale-light-blue border border-blue-100 rounded-xl p-6 shadow-sm flex flex-col">
                     <h2 class="font-display font-bold text-lg text-vale-navy">ValeCheck Plus</h2>
                     <p class="text-xs uppercase tracking-widest text-vale-navy/60 mt-1">Know the history. Know the value.</p>
-                    <p class="font-display text-3xl font-extrabold text-vale-navy mt-3">£{{ number_format($plusPrice->gross, 2) }}</p>
+                    <p class="font-display text-3xl font-extrabold text-vale-navy mt-3">
+                        @if ($standardPlusPrice->gross > $plusPrice->gross)
+                            <span class="line-through text-vale-navy/30 text-xl mr-2">£{{ number_format($standardPlusPrice->gross, 2) }}</span>
+                        @endif
+                        £{{ number_format($plusPrice->gross, 2) }}
+                    </p>
                     @if ($plusBalance > 0)
                         <p class="text-sm text-vale-red font-semibold mt-1">You have {{ $plusBalance }} credit(s) — this report is included.</p>
                     @endif
@@ -269,7 +279,12 @@
                     <div class="bg-vale-navy rounded-xl p-6 relative text-white shadow-sm flex flex-col">
                         <h2 class="font-display font-bold text-lg">ValeCheck <span class="text-vale-red">Rebuild</span></h2>
                         <p class="text-xs uppercase tracking-widest text-gray-400 mt-1">Know the damage. Know the numbers.</p>
-                        <p class="font-display text-3xl font-extrabold mt-3">£{{ number_format($rebuildPrice->gross, 2) }}</p>
+                        <p class="font-display text-3xl font-extrabold mt-3">
+                            @if ($standardRebuildPrice->gross > $rebuildPrice->gross)
+                                <span class="line-through text-gray-400 text-xl mr-2">£{{ number_format($standardRebuildPrice->gross, 2) }}</span>
+                            @endif
+                            £{{ number_format($rebuildPrice->gross, 2) }}
+                        </p>
                         @if ($rebuildBalance > 0)
                             <p class="text-sm text-vale-red font-semibold mt-1">You have {{ $rebuildBalance }} credit(s) — this report is included.</p>
                         @endif
@@ -452,7 +467,12 @@
                     £{{ number_format($discountPreview['discounted_price'], 2) }}
                 </p>
             @else
-                <p class="font-display text-3xl font-extrabold text-vale-navy mt-4">£{{ number_format($checkPrice->gross, 2) }}</p>
+                <p class="font-display text-3xl font-extrabold text-vale-navy mt-4">
+                    @if ($standardCheckPrice->gross > $checkPrice->gross)
+                        <span class="line-through text-gray-300 text-xl mr-2">£{{ number_format($standardCheckPrice->gross, 2) }}</span>
+                    @endif
+                    £{{ number_format($checkPrice->gross, 2) }}
+                </p>
             @endif
             <p class="text-xs text-gray-400 mt-1">Includes VAT ({{ number_format($checkPrice->vat, 2) }} VAT at {{ $checkPrice->vatRate * 100 }}%)</p>
 

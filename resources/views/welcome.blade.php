@@ -50,6 +50,8 @@
     </head>
     <body class="font-sans antialiased bg-white text-vale-navy">
 
+        @include('partials.site-promotion-banner')
+
         <header class="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
             <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
                 <x-application-logo text-class="text-base sm:text-lg" />
@@ -214,7 +216,12 @@
                     <div class="bg-white border border-gray-200 rounded-xl p-8 vale-card flex flex-col">
                         <h3 class="text-xl font-bold font-display text-vale-navy">ValeCheck</h3>
                         <p class="text-xs uppercase tracking-widest text-gray-400 mt-1">Check the history.</p>
-                        <p class="font-display text-4xl font-extrabold mt-4 text-vale-navy">£{{ number_format($checkPrice->gross, 2) }}</p>
+                        <p class="font-display text-4xl font-extrabold mt-4 text-vale-navy">
+                            @if ($standardCheckPrice->gross > $checkPrice->gross)
+                                <span class="line-through text-gray-300 text-2xl mr-2">£{{ number_format($standardCheckPrice->gross, 2) }}</span>
+                            @endif
+                            £{{ number_format($checkPrice->gross, 2) }}
+                        </p>
                         <p class="text-gray-500 mt-3 text-sm">For buyers who want to understand a vehicle's background.</p>
                         <ul class="mt-5 space-y-1.5 text-sm text-gray-600 flex-1">
                             @foreach (['Vehicle history', 'Provenance', 'Write-off history', 'Finance', 'Stolen/scrapped markers', 'MOT & mileage', 'Keeper/registration history'] as $feature)
@@ -229,7 +236,12 @@
                     <div class="bg-vale-light-blue border border-blue-100 rounded-xl p-8 vale-card flex flex-col">
                         <h3 class="text-xl font-bold font-display text-vale-navy">ValeCheck Plus</h3>
                         <p class="text-xs uppercase tracking-widest text-vale-navy/60 mt-1">Know the history. Know the value.</p>
-                        <p class="font-display text-4xl font-extrabold mt-4 text-vale-navy">£{{ number_format($plusPrice->gross, 2) }}</p>
+                        <p class="font-display text-4xl font-extrabold mt-4 text-vale-navy">
+                            @if ($standardPlusPrice->gross > $plusPrice->gross)
+                                <span class="line-through text-vale-navy/30 text-2xl mr-2">£{{ number_format($standardPlusPrice->gross, 2) }}</span>
+                            @endif
+                            £{{ number_format($plusPrice->gross, 2) }}
+                        </p>
                         <p class="text-vale-navy/80 mt-3 text-sm">For buyers who want to know whether the car is worth the asking price.</p>
                         <p class="text-xs text-vale-navy/60 mt-3 font-semibold">Everything in ValeCheck, plus:</p>
                         <ul class="mt-2 space-y-1.5 text-sm text-vale-navy flex-1">
@@ -247,7 +259,12 @@
                             <span class="absolute -top-3 right-6 bg-vale-red text-white text-xs font-bold uppercase px-3 py-1 rounded-full">Specialist</span>
                             <h3 class="text-xl font-bold font-display">ValeCheck <span class="text-vale-red">Rebuild</span></h3>
                             <p class="text-xs uppercase tracking-widest text-gray-400 mt-1">Know the damage. Know the numbers.</p>
-                            <p class="font-display text-4xl font-extrabold mt-4">£{{ number_format($rebuildPrice->gross, 2) }}</p>
+                            <p class="font-display text-4xl font-extrabold mt-4">
+                                @if ($standardRebuildPrice->gross > $rebuildPrice->gross)
+                                    <span class="line-through text-gray-400 text-2xl mr-2">£{{ number_format($standardRebuildPrice->gross, 2) }}</span>
+                                @endif
+                                £{{ number_format($rebuildPrice->gross, 2) }}
+                            </p>
                             <p class="text-gray-300 mt-3 text-sm">For buyers considering damaged, salvage or repairable vehicles.</p>
                             <p class="text-xs text-gray-400 mt-3 font-semibold">Everything in ValeCheck Plus, plus:</p>
                             <ul class="mt-2 space-y-1.5 text-sm flex-1">

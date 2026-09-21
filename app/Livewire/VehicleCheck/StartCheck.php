@@ -453,6 +453,12 @@ class StartCheck extends Component
             'checkPrice' => $pricing->forCheck(auth()->user()),
             'plusPrice' => $pricing->forPlus(auth()->user()),
             'rebuildPrice' => $pricing->forRebuild(auth()->user()),
+            // The undiscounted price, shown struck through next to the
+            // current one only when a site-wide promotion or a user
+            // override has actually changed it - see PricingService.
+            'standardCheckPrice' => $pricing->standardPrice('check'),
+            'standardPlusPrice' => $pricing->standardPrice('plus'),
+            'standardRebuildPrice' => $pricing->standardPrice('rebuild'),
             'plusBalance' => auth()->check() ? app(CreditLedgerService::class)->balance(auth()->user(), VehicleCheck::TYPE_PLUS) : 0,
             'rebuildBalance' => auth()->check() ? app(CreditLedgerService::class)->balance(auth()->user(), VehicleCheck::TYPE_REBUILD) : 0,
         ]);

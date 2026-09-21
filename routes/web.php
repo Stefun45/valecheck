@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DiscountCodeController;
 use App\Http\Controllers\Admin\ProductPriceController;
 use App\Http\Controllers\Admin\ProviderEndpointCostController;
 use App\Http\Controllers\Admin\ProviderLookupLogController;
+use App\Http\Controllers\Admin\SitePromotionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactController;
@@ -33,6 +34,9 @@ Route::get('/', function (PricingService $pricing) {
         'checkPrice' => $pricing->forCheck(),
         'plusPrice' => $pricing->forPlus(),
         'rebuildPrice' => $pricing->forRebuild(),
+        'standardCheckPrice' => $pricing->standardPrice('check'),
+        'standardPlusPrice' => $pricing->standardPrice('plus'),
+        'standardRebuildPrice' => $pricing->standardPrice('rebuild'),
     ]);
 })->name('welcome');
 
@@ -100,6 +104,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::get('pricing', [ProductPriceController::class, 'edit'])->name('pricing.edit');
     Route::put('pricing', [ProductPriceController::class, 'update'])->name('pricing.update');
+
+    Route::get('promotion', [SitePromotionController::class, 'edit'])->name('promotion.edit');
+    Route::put('promotion', [SitePromotionController::class, 'update'])->name('promotion.update');
 
     Route::get('provider-lookups', [ProviderLookupLogController::class, 'index'])->name('provider-lookups.index');
 
