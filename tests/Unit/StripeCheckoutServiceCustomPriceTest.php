@@ -101,7 +101,7 @@ class StripeCheckoutServiceCustomPriceTest extends TestCase
 
     public function test_a_live_site_promotion_is_actually_charged_and_the_true_standard_price_is_recorded(): void
     {
-        SitePromotion::current()->update(['is_active' => true, 'percentage' => 20]);
+        SitePromotion::current('check')->update(['is_active' => true, 'discounted_gross' => 7.19]);
         $user = User::factory()->create();
         $vehicle = Vehicle::factory()->create();
         $check = VehicleCheck::factory()->create([
@@ -130,7 +130,7 @@ class StripeCheckoutServiceCustomPriceTest extends TestCase
         // The custom price itself is what's charged and recorded as-is -
         // it was never discounted further, so there's nothing to compare
         // it against.
-        SitePromotion::current()->update(['is_active' => true, 'percentage' => 20]);
+        SitePromotion::current('check')->update(['is_active' => true, 'discounted_gross' => 7.19]);
         $user = User::factory()->create();
         UserProductPrice::create(['user_id' => $user->id, 'type' => VehicleCheck::TYPE_CHECK, 'gross' => 3.50]);
         $vehicle = Vehicle::factory()->create();

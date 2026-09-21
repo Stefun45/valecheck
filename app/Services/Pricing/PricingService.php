@@ -25,9 +25,10 @@ use InvalidArgumentException;
  * the standard price everyone else pays. Passing no user (or a user with
  * no override) falls through to standard pricing exactly as before.
  *
- * A separate, single-row SitePromotion can also discount the standard
- * price for everyone (a launch-period offer needing no code) - it never
- * applies on top of a bespoke UserProductPrice. See standardPrice() for
+ * A separate per-type SitePromotion row can also set an explicit
+ * discounted price for everyone on that product (a launch-period offer
+ * needing no code) - it never applies on top of a bespoke
+ * UserProductPrice. See standardPrice() for
  * the pre-promotion price used to show a "was £X" comparison.
  */
 class PricingService
@@ -84,7 +85,7 @@ class PricingService
             return $this->breakdown((float) $userOverride);
         }
 
-        $gross = SitePromotion::current()->discount($this->standardGross($type));
+        $gross = SitePromotion::current($type)->discount($this->standardGross($type));
 
         return $this->breakdown($gross);
     }

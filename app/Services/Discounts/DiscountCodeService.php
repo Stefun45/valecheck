@@ -39,7 +39,7 @@ class DiscountCodeService
             return null;
         }
 
-        if (SitePromotion::current()->isLive()) {
+        if (SitePromotion::current($productType)->isLive()) {
             return null;
         }
 

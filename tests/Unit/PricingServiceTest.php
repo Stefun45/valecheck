@@ -135,20 +135,21 @@ class PricingServiceTest extends TestCase
         $this->assertSame(8.99, (new PricingService)->forProduct('check')->gross);
     }
 
-    public function test_a_live_site_promotion_discounts_the_standard_price(): void
+    public function test_a_live_site_promotion_sets_the_explicit_discounted_price(): void
     {
-        SitePromotion::current()->update(['is_active' => true, 'percentage' => 20]);
+        SitePromotion::current('check')->update(['is_active' => true, 'discounted_gross' => 7.19]);
+        SitePromotion::current('plus')->update(['is_active' => true, 'discounted_gross' => 9.59]);
 
         $this->assertSame(7.19, (new PricingService)->forCheck()->gross);
         $this->assertSame(9.59, (new PricingService)->forPlus()->gross);
     }
 
-    public function test_an_inactive_or_zero_percent_promotion_changes_nothing(): void
+    public function test_an_inactive_or_unset_promotion_changes_nothing(): void
     {
-        SitePromotion::current()->update(['is_active' => false, 'percentage' => 20]);
+        SitePromotion::current('check')->update(['is_active' => false, 'discounted_gross' => 7.19]);
         $this->assertSame(8.99, (new PricingService)->forCheck()->gross);
 
-        SitePromotion::current()->update(['is_active' => true, 'percentage' => 0]);
+        SitePromotion::current('check')->update(['is_active' => true, 'discounted_gross' => null]);
         $this->assertSame(8.99, (new PricingService)->forCheck()->gross);
     }
 
@@ -156,7 +157,7 @@ class PricingServiceTest extends TestCase
     {
         $user = User::factory()->create();
         UserProductPrice::create(['user_id' => $user->id, 'type' => 'check', 'gross' => 5.00]);
-        SitePromotion::current()->update(['is_active' => true, 'percentage' => 50]);
+        SitePromotion::current('check')->update(['is_active' => true, 'discounted_gross' => 4.00]);
 
         $this->assertSame(5.00, (new PricingService)->forCheck($user)->gross);
     }
@@ -164,14 +165,14 @@ class PricingServiceTest extends TestCase
     public function test_a_live_promotion_still_discounts_a_user_with_no_bespoke_price(): void
     {
         $user = User::factory()->create();
-        SitePromotion::current()->update(['is_active' => true, 'percentage' => 50]);
+        SitePromotion::current('check')->update(['is_active' => true, 'discounted_gross' => 4.50]);
 
         $this->assertSame(4.50, (new PricingService)->forCheck($user)->gross);
     }
 
     public function test_standard_price_ignores_a_live_promotion_for_a_before_after_comparison(): void
     {
-        SitePromotion::current()->update(['is_active' => true, 'percentage' => 20]);
+        SitePromotion::current('check')->update(['is_active' => true, 'discounted_gross' => 7.19]);
 
         $pricing = new PricingService;
         $this->assertSame(8.99, $pricing->standardPrice('check')->gross);
@@ -180,7 +181,7 @@ class PricingServiceTest extends TestCase
 
     public function test_a_live_promotion_flows_through_to_credit_packs_via_the_plus_price(): void
     {
-        SitePromotion::current()->update(['is_active' => true, 'percentage' => 20]);
+        SitePromotion::current('plus')->update(['is_active' => true, 'discounted_gross' => 9.59]);
 
         $this->assertSame(9.59, (new PricingService)->forCreditPack('plus_1')->gross);
     }
