@@ -1239,6 +1239,45 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertStringContainsString(route('vehicle-checks.show', $check), $pdfHtml);
     }
 
+    public function test_a_plus_report_states_no_photos_were_provided_when_a_found_record_has_none(): void
+    {
+        // Reproduces a real production case: a genuine salvage record
+        // (AA15ROZ) came back from OneAuto with real lot details but a
+        // completely empty imageUrls array. Leaving the photo area blank
+        // looked identical to "we never checked" rather than "the
+        // source didn't provide any" - the one thing this whole report
+        // exists to avoid.
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+        SalvageAuctionCheck::create([
+            'vehicle_check_id' => $check->id,
+            'record_found' => true,
+            'records' => [[
+                'lotDescription' => 'U - Unrecorded',
+                'lotDate' => '2026-09-08',
+                'mileage' => 89919,
+                'primaryDamageDescription' => 'Front End',
+                'secondaryDamageDescription' => 'Mechanical',
+                'location' => 'Peterlee',
+                'imageUrls' => [],
+            ]],
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Peterlee')
+            ->assertSeeText('No photos were provided for this listing.')
+            ->assertDontSeeHtml('View photo 1');
+    }
+
     public function test_a_plus_report_shows_no_salvage_record_found_when_there_is_none(): void
     {
         $user = $this->verifiedUser();

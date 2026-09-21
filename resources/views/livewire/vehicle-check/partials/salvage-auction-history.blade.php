@@ -24,6 +24,13 @@
                                 <a href="{{ $imageUrl }}" target="_blank" rel="noopener" class="text-xs text-vale-red hover:text-red-600 underline">View photo {{ $index + 1 }} &#8599;</a>
                             @endforeach
                         </div>
+                    @else
+                        {{-- Confirmed via a real production case (a genuine
+                             salvage record with no imageUrls at all in
+                             OneAuto's response) that leaving this blank
+                             looked identical to "we never checked" rather
+                             than "the source didn't provide any". --}}
+                        <p class="text-xs text-gray-400 mt-3">No photos were provided for this listing.</p>
                     @endif
                 </div>
             @endforeach
