@@ -49,6 +49,18 @@ class OneAutoVehicleImageProvider implements VehicleImageProvider
                 'image_id' => $imageId,
                 'generic_colour_desc' => $chosenColour,
                 'image_background' => 'Transparent',
+                // colour_desc_list above is the manufacturer's full paint
+                // range for this model, not confirmed to have real image
+                // assets for every entry - without this, One Auto rejects
+                // the request outright ("Requested color not found for
+                // this car") whenever the picked colour has none, which
+                // silently lost the image on real vehicles. This tells it
+                // to fall back to its own default image instead of failing.
+                // Must be the literal string "true" - a native PHP bool
+                // serialises to "1" in the query string, which One Auto
+                // rejects with "Invalid boolean supplied for parameter:
+                // ignore_issues" (confirmed directly against the live API).
+                'ignore_issues' => 'true',
             ], $vehicleCheckId);
         } catch (OneAutoApiException) {
             return new VehicleImageData(available: false);

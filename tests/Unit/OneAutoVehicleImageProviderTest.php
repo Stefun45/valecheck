@@ -190,6 +190,35 @@ class OneAutoVehicleImageProviderTest extends TestCase
         $this->assertFalse($result->available);
     }
 
+    public function test_ignore_issues_is_always_sent_so_an_unavailable_colour_still_returns_an_image(): void
+    {
+        // Real production behaviour (registration AA15ROZ): the requested
+        // colour is genuinely absent from One Auto's image set for this
+        // specific car, and without ignore_issues=true they reject the
+        // whole request rather than substituting their own default.
+        Http::fake([
+            'api.oneautoapi.com/vehicleimagery/imagesearchfromvrm*' => Http::response([
+                'success' => true,
+                'result' => [
+                    'images' => [
+                        ['image_ids' => ['right' => 'image-id-123'], 'colour_desc_list' => ['AA Yellow']],
+                    ],
+                ],
+            ], 200),
+            'api.oneautoapi.com/vehicleimagery/imagefromid*' => Http::response([
+                'success' => true,
+                'result' => ['image_url' => 'https://cdn.example.com/vehicle.png'],
+            ], 200),
+            'cdn.example.com/*' => Http::response($this->fakeBinaryPng(), 200, ['Content-Type' => 'image/png']),
+        ]);
+
+        $result = $this->provider()->fetch('AA15ROZ', 'Grey');
+
+        $this->assertTrue($result->available);
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'imagefromid')
+            && $request['ignore_issues'] === 'true');
+    }
+
     public function test_a_resolve_failure_degrades_to_unavailable(): void
     {
         Http::fake([
