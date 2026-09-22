@@ -76,8 +76,6 @@
         <p>{{ $report?->headline_summary }}</p>
     </div>
 
-    @include('pdf.partials.vehicle-timeline', ['history' => $history])
-
     @include('pdf.partials.all-checks-grid', ['history' => $history, 'salvageCheck' => $salvageCheck])
 
     <div class="section">
@@ -180,4 +178,6 @@
             </ul>
         </div>
     @endif
+
+    @include('pdf.partials.vehicle-timeline', ['history' => $history])
 @endsection

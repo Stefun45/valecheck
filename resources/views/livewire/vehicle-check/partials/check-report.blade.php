@@ -18,10 +18,6 @@
     </div>
 
     <div class="mt-6">
-        @include('livewire.vehicle-check.partials.vehicle-timeline', ['history' => $history])
-    </div>
-
-    <div class="mt-6">
         @include('livewire.vehicle-check.partials.all-checks-grid', ['history' => $history])
     </div>
 
@@ -59,6 +55,10 @@
                 </ul>
             </div>
         @endif
+    </div>
+
+    <div class="mt-6">
+        @include('livewire.vehicle-check.partials.vehicle-timeline', ['history' => $history])
     </div>
 
     @if ($check->isUpgradeable())
