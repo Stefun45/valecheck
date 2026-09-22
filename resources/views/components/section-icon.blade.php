@@ -50,5 +50,9 @@
             <rect x="5" y="11" width="14" height="10" rx="2" />
             <path d="M8 11V7a4 4 0 018 0v4" />
             @break
+        @case('camera')
+            <path d="M4 8h3l2-2h6l2 2h3a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z" />
+            <circle cx="12" cy="14" r="3.5" />
+            @break
     @endswitch
 </svg>

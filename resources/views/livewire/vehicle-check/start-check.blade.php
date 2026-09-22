@@ -20,6 +20,26 @@
             </div>
             <x-input-error :messages="$errors->get('registration')" class="mt-2" />
 
+            {{-- Only rendered inside the native app - window.Capacitor is
+                 injected by Capacitor itself and is never present in a
+                 normal browser tab, so this is invisible on the website. --}}
+            <div x-data="{}" x-show="window.Capacitor?.isNativePlatform?.()" x-cloak class="mt-3">
+                <button
+                    type="button"
+                    @click="
+                        const result = await window.Capacitor.Plugins.PlateScanner.scan();
+                        if (! result.cancelled && result.plate) {
+                            $wire.registration = result.plate;
+                            $wire.lookupVehicle();
+                        }
+                    "
+                    class="inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-vale-navy hover:bg-gray-50"
+                >
+                    <x-section-icon name="camera" />
+                    Scan Number Plate
+                </button>
+            </div>
+
             @if ($previewStatus === 'not_found')
                 <p class="text-xs text-gray-400 mt-2">We couldn't find a quick preview for that plate, but it's still checkable below.</p>
             @elseif ($previewStatus === 'unavailable')

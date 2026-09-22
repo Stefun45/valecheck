@@ -45,3 +45,7 @@
 .vale-pulse {
     animation: vale-pulse-glow 3.5s ease-in-out infinite;
 }
+
+[x-cloak] {
+    display: none !important;
+}

@@ -1,0 +1,12 @@
+{
+  "appId": "com.valecheck.app",
+  "appName": "ValeCheck",
+  "webDir": "www",
+  "server": {
+    "url": "https://valecheck.com",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
