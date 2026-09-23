@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\VehicleCheck\ShowCheck;
 use App\Models\Report;
 use App\Models\SubscriptionUsage;
+use App\Models\TraderVerification;
 use App\Models\User;
 use App\Models\VehicleCheck;
 use App\Models\VehicleHistory;
@@ -16,45 +17,72 @@ class HighRiskDataVisibilityTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function dealerSubscriber(): User
+    private function subscribeToPlan(User $user, string $plan): void
     {
-        $user = User::factory()->create();
-
         SubscriptionUsage::create([
             'user_id' => $user->id,
-            'plan' => 'dealer',
+            'plan' => $plan,
             'report_type' => 'plus',
             'period_start' => now()->startOfMonth(),
             'period_end' => now()->endOfMonth(),
             'allowance' => 30,
             'used' => 0,
         ]);
+    }
+
+    private function verify(User $user, string $status = TraderVerification::STATUS_APPROVED): void
+    {
+        TraderVerification::create([
+            'user_id' => $user->id,
+            'company_name' => 'Test Motors Ltd',
+            'company_number' => '12345678',
+            'status' => $status,
+            'submitted_at' => now(),
+        ]);
+    }
+
+    private function verifiedDealer(): User
+    {
+        $user = User::factory()->create();
+        $this->subscribeToPlan($user, 'dealer');
+        $this->verify($user);
 
         return $user;
     }
 
-    public function test_user_is_dealer_subscriber_only_for_an_active_dealer_plan(): void
+    public function test_a_user_has_verified_trade_access_only_with_both_an_active_plan_and_approval(): void
     {
-        $dealer = $this->dealerSubscriber();
-        $this->assertTrue($dealer->isDealerSubscriber());
+        $verifiedDealer = $this->verifiedDealer();
+        $this->assertTrue($verifiedDealer->hasVerifiedTradeAccess());
 
-        $trader = User::factory()->create();
-        SubscriptionUsage::create([
-            'user_id' => $trader->id,
-            'plan' => 'trader',
-            'report_type' => 'plus',
-            'period_start' => now()->startOfMonth(),
-            'period_end' => now()->endOfMonth(),
-            'allowance' => 5,
-            'used' => 0,
-        ]);
-        $this->assertFalse($trader->isDealerSubscriber());
+        $verifiedTrader = User::factory()->create();
+        $this->subscribeToPlan($verifiedTrader, 'trader');
+        $this->verify($verifiedTrader);
+        $this->assertTrue($verifiedTrader->hasVerifiedTradeAccess());
 
-        $noSubscription = User::factory()->create();
-        $this->assertFalse($noSubscription->isDealerSubscriber());
+        $unverifiedDealer = User::factory()->create();
+        $this->subscribeToPlan($unverifiedDealer, 'dealer');
+        $this->assertFalse($unverifiedDealer->hasVerifiedTradeAccess());
+
+        $rejectedDealer = User::factory()->create();
+        $this->subscribeToPlan($rejectedDealer, 'dealer');
+        $this->verify($rejectedDealer, TraderVerification::STATUS_REJECTED);
+        $this->assertFalse($rejectedDealer->hasVerifiedTradeAccess());
+
+        $verifiedButUnsubscribed = User::factory()->create();
+        $this->verify($verifiedButUnsubscribed);
+        $this->assertFalse($verifiedButUnsubscribed->hasVerifiedTradeAccess());
+
+        $verifiedPro = User::factory()->create();
+        $this->subscribeToPlan($verifiedPro, 'pro');
+        $this->verify($verifiedPro);
+        $this->assertFalse($verifiedPro->hasVerifiedTradeAccess());
+
+        $nothing = User::factory()->create();
+        $this->assertFalse($nothing->hasVerifiedTradeAccess());
     }
 
-    public function test_an_expired_dealer_subscription_does_not_grant_access(): void
+    public function test_an_expired_dealer_subscription_does_not_grant_access_even_when_verified(): void
     {
         $user = User::factory()->create();
         SubscriptionUsage::create([
@@ -66,8 +94,9 @@ class HighRiskDataVisibilityTest extends TestCase
             'allowance' => 30,
             'used' => 0,
         ]);
+        $this->verify($user);
 
-        $this->assertFalse($user->fresh()->isDealerSubscriber());
+        $this->assertFalse($user->fresh()->hasVerifiedTradeAccess());
     }
 
     public function test_high_risk_data_is_hidden_from_an_ordinary_consumer_on_a_check_report(): void
@@ -92,9 +121,27 @@ class HighRiskDataVisibilityTest extends TestCase
         $this->assertStringNotContainsString('High risk marker found', $pdfHtml);
     }
 
-    public function test_high_risk_data_is_shown_to_an_active_dealer_subscriber_on_a_check_report(): void
+    public function test_high_risk_data_is_hidden_from_a_dealer_subscriber_who_is_not_yet_verified(): void
     {
-        $dealer = $this->dealerSubscriber();
+        $user = User::factory()->create();
+        $this->subscribeToPlan($user, 'dealer');
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_CHECK,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false, 'high_risk_marker' => true]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_CHECK, 'headline_summary' => 'Test.']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertDontSeeText('High Risk');
+    }
+
+    public function test_high_risk_data_is_shown_to_a_verified_dealer_subscriber_on_a_check_report(): void
+    {
+        $dealer = $this->verifiedDealer();
         $check = VehicleCheck::factory()->create([
             'user_id' => $dealer->id,
             'type' => VehicleCheck::TYPE_CHECK,
@@ -114,9 +161,9 @@ class HighRiskDataVisibilityTest extends TestCase
         $this->assertStringContainsString('High risk marker found', $pdfHtml);
     }
 
-    public function test_a_dealer_subscriber_sees_no_high_risk_marker_found_when_genuinely_clean(): void
+    public function test_a_verified_dealer_subscriber_sees_no_high_risk_marker_found_when_genuinely_clean(): void
     {
-        $dealer = $this->dealerSubscriber();
+        $dealer = $this->verifiedDealer();
         $check = VehicleCheck::factory()->create([
             'user_id' => $dealer->id,
             'type' => VehicleCheck::TYPE_PLUS,

@@ -50,9 +50,10 @@
     @endif
 </div>
 
-@if ($check->user->isDealerSubscriber())
+@if ($check->user->hasVerifiedTradeAccess())
     {{-- Trade-sector-restricted data — never shown to an ordinary
-         consumer, only an active Dealer-tier subscriber. --}}
+         consumer, only a verified Trader/Dealer subscriber (see
+         User::hasVerifiedTradeAccess()). --}}
     <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
         <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3"><x-section-icon name="warning" />High Risk</h3>
         @if (is_null($history?->high_risk_marker))

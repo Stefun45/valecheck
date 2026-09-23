@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ProductPriceController;
 use App\Http\Controllers\Admin\ProviderEndpointCostController;
 use App\Http\Controllers\Admin\ProviderLookupLogController;
 use App\Http\Controllers\Admin\SitePromotionController;
+use App\Http\Controllers\Admin\TraderVerificationController as AdminTraderVerificationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\ReportPdfController;
 use App\Http\Controllers\SampleReportController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\TraderVerificationController;
 use App\Http\Controllers\VehicleCheckCheckoutController;
 use App\Http\Controllers\VehicleCheckUpgradeController;
 use App\Livewire\VehicleCheck\ReportHistory;
@@ -84,6 +86,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('billing/credit-pack', [BillingController::class, 'creditPack'])->name('billing.credit-pack');
     Route::post('billing/subscribe', [BillingController::class, 'subscription'])->name('billing.subscribe');
     Route::get('billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
+    Route::post('billing/trader-verification', [TraderVerificationController::class, 'store'])->name('billing.trader-verification.store');
 
     Route::get('contact/enterprise', [ContactController::class, 'showEnterprise'])->name('contact.enterprise');
     Route::post('contact/enterprise', [ContactController::class, 'submitEnterprise'])
@@ -120,6 +123,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('users/{user}/prices', [UserController::class, 'editPrices'])->name('users.edit-prices');
     Route::put('users/{user}/prices', [UserController::class, 'updatePrices'])->name('users.update-prices');
     Route::post('users/{user}/credits', [UserController::class, 'grantCredits'])->name('users.grant-credits');
+
+    Route::get('trader-verifications', [AdminTraderVerificationController::class, 'index'])->name('trader-verifications.index');
+    Route::post('trader-verifications/{traderVerification}/approve', [AdminTraderVerificationController::class, 'approve'])->name('trader-verifications.approve');
+    Route::post('trader-verifications/{traderVerification}/reject', [AdminTraderVerificationController::class, 'reject'])->name('trader-verifications.reject');
 });
 
 require __DIR__.'/auth.php';

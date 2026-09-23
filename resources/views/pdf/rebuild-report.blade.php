@@ -81,7 +81,7 @@
                         </ul>
                     @endif
                     <p>Colour changes: {{ $history?->colour_changes ?? 0 }}</p>
-                    @if ($check->user->isDealerSubscriber())
+                    @if ($check->user->hasVerifiedTradeAccess())
                         <p class="{{ $history?->high_risk_marker ? 'warn' : 'ok' }}">
                             {{ $history?->high_risk_marker ? 'High risk marker found' : 'No high risk marker found' }}
                         </p>

@@ -18,6 +18,7 @@
                 <a href="{{ route('admin.promotion.edit') }}" class="text-vale-red hover:text-red-600">Site Promotion &rarr;</a>
                 <a href="{{ route('admin.provider-lookups.index') }}" class="text-vale-red hover:text-red-600">Provider Lookups &rarr;</a>
                 <a href="{{ route('admin.provider-costs.edit') }}" class="text-vale-red hover:text-red-600">Edit Provider Costs &rarr;</a>
+                <a href="{{ route('admin.trader-verifications.index') }}" class="text-vale-red hover:text-red-600">Trader Verifications &rarr;</a>
             </div>
 
             <div>

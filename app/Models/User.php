@@ -69,16 +69,32 @@ class User extends Authenticatable
     /**
      * Gates trade-sector-restricted report content (e.g. high-risk
      * markers) — must never be inferred from anything else (report type,
-     * funding source, credit balance), only an active Dealer-tier
-     * subscription for today's billing period.
+     * funding source, credit balance), only an active Trader or Dealer
+     * subscription for today's billing period AND an approved
+     * TraderVerification. Payment alone was never proof of being a
+     * genuine trader - see TraderVerification.
      */
-    public function isDealerSubscriber(): bool
+    public function hasVerifiedTradeAccess(): bool
     {
+        if (! $this->isVerifiedTrader()) {
+            return false;
+        }
+
         return $this->subscriptionUsages()
-            ->where('plan', 'dealer')
+            ->whereIn('plan', ['trader', 'dealer'])
             ->whereDate('period_start', '<=', now())
             ->whereDate('period_end', '>=', now())
             ->exists();
+    }
+
+    public function isVerifiedTrader(): bool
+    {
+        return $this->traderVerification?->isApproved() ?? false;
+    }
+
+    public function traderVerification(): HasOne
+    {
+        return $this->hasOne(TraderVerification::class);
     }
 
     public function creator(): HasOne

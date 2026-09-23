@@ -28,6 +28,13 @@ class DashboardController extends Controller
             ->map(fn ($plan, $key) => array_merge($plan, ['price' => $pricing->forSubscription($key)]))
             ->all();
 
+        // Trader/Dealer are the only plans trade verification applies to -
+        // Pro is just a bigger report bundle, never worth prompting for
+        // business details it has no use for.
+        $needsTraderVerification = $activeSubscriptionUsage
+            && in_array($activeSubscriptionUsage->plan, ['trader', 'dealer'], true)
+            && ! $user->traderVerification?->isApproved();
+
         return view('dashboard', [
             'plusBalance' => $ledger->balance($user, VehicleCheck::TYPE_PLUS),
             'activeSubscriptionUsage' => $activeSubscriptionUsage,
@@ -35,6 +42,8 @@ class DashboardController extends Controller
             'creditPacks' => $creditPacks,
             'subscriptionPlans' => $subscriptionPlans,
             'isSubscribed' => $user->subscribed('default'),
+            'traderVerification' => $user->traderVerification,
+            'needsTraderVerification' => $needsTraderVerification,
         ]);
     }
 }

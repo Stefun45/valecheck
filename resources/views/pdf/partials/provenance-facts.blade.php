@@ -51,7 +51,7 @@
         @endif
     </div>
 </td>
-@if ($check->user->isDealerSubscriber())
+@if ($check->user->hasVerifiedTradeAccess())
     <td>
         <div class="section">
             <div class="section-title">High Risk</div>

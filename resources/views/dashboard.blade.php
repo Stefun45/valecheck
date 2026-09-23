@@ -52,6 +52,50 @@
                 @endif
             </div>
 
+            @if ($needsTraderVerification)
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    @if ($traderVerification?->status === \App\Models\TraderVerification::STATUS_PENDING)
+                        <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">Trade verification pending</h3>
+                        <p class="text-sm text-gray-500">
+                            We're reviewing the business details you submitted for {{ $traderVerification->company_name }}.
+                            Trade-restricted report content (e.g. high-risk markers) will unlock once approved.
+                        </p>
+                    @else
+                        <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">Verify your trade account</h3>
+                        @if ($traderVerification?->status === \App\Models\TraderVerification::STATUS_REJECTED)
+                            <p class="text-sm text-vale-red mb-3">
+                                Your previous submission wasn't approved{{ $traderVerification->notes ? ": {$traderVerification->notes}" : '.' }} Please check your details and resubmit.
+                            </p>
+                        @else
+                            <p class="text-sm text-gray-500 mb-3">
+                                Trader and Dealer plans unlock trade-restricted report content once we've verified you're a genuine motor trader. Submit your business details below.
+                            </p>
+                        @endif
+                        <form method="POST" action="{{ route('billing.trader-verification.store') }}" class="grid sm:grid-cols-3 gap-3">
+                            @csrf
+                            <div>
+                                <x-input-label for="company_name" value="Company name" />
+                                <x-text-input name="company_name" id="company_name" class="block mt-1 w-full" value="{{ old('company_name', $traderVerification?->company_name) }}" required />
+                                <x-input-error :messages="$errors->get('company_name')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label for="company_number" value="Company number" />
+                                <x-text-input name="company_number" id="company_number" class="block mt-1 w-full" value="{{ old('company_number', $traderVerification?->company_number) }}" required />
+                                <x-input-error :messages="$errors->get('company_number')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label for="vat_number" value="VAT number (optional)" />
+                                <x-text-input name="vat_number" id="vat_number" class="block mt-1 w-full" value="{{ old('vat_number', $traderVerification?->vat_number) }}" />
+                                <x-input-error :messages="$errors->get('vat_number')" class="mt-1" />
+                            </div>
+                            <div class="sm:col-span-3">
+                                <x-primary-button type="submit">Submit for review</x-primary-button>
+                            </div>
+                        </form>
+                    @endif
+                </div>
+            @endif
+
             <div>
                 <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Buy ValeCheck Plus credits</h3>
                 <div class="grid sm:grid-cols-3 gap-4">

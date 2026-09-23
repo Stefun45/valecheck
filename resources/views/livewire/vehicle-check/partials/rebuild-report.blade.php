@@ -89,7 +89,7 @@
                 </ul>
             @endif
             <p class="text-vale-navy mt-1">Colour changes: {{ $history?->colour_changes ?? 0 }}</p>
-            @if ($check->user->isDealerSubscriber())
+            @if ($check->user->hasVerifiedTradeAccess())
                 <p class="{{ $history?->high_risk_marker ? 'text-vale-red font-semibold' : 'text-vale-navy' }} mt-1">
                     {{ $history?->high_risk_marker ? 'High risk marker found' : 'No high risk marker found' }}
                 </p>
