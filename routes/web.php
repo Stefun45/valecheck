@@ -83,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('billing/credit-pack', [BillingController::class, 'creditPack'])->name('billing.credit-pack');
     Route::post('billing/subscribe', [BillingController::class, 'subscription'])->name('billing.subscribe');
+    Route::get('billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
     Route::get('contact/enterprise', [ContactController::class, 'showEnterprise'])->name('contact.enterprise');
     Route::post('contact/enterprise', [ContactController::class, 'submitEnterprise'])

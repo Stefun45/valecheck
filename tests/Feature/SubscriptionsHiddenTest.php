@@ -38,6 +38,14 @@ class SubscriptionsHiddenTest extends TestCase
         $this->post(route('billing.subscribe'), ['plan' => 'trader'])->assertNotFound();
     }
 
+    public function test_the_billing_portal_endpoint_is_unreachable(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->get(route('billing.portal'))->assertNotFound();
+    }
+
     public function test_the_credit_pack_endpoint_remains_reachable(): void
     {
         // Credit packs are unaffected by this flag — must not 404. It still

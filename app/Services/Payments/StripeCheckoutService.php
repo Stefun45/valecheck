@@ -147,6 +147,36 @@ class StripeCheckoutService
 
     public function checkoutForSubscription(User $user, string $plan): Checkout
     {
+        return $user->newSubscription('default', $this->resolveSubscriptionPriceId($plan))->checkout([
+            'success_url' => route('dashboard').'?subscribed=1',
+            'cancel_url' => route('dashboard'),
+            'metadata' => [
+                'kind' => 'subscription',
+                'plan' => $plan,
+            ],
+        ]);
+    }
+
+    /**
+     * Changes an already-active subscription to a different plan via
+     * Stripe's own proration - no Checkout redirect needed, the payment
+     * method is already on file. Only ever called once BillingController
+     * has confirmed the user is genuinely subscribed; calling this on a
+     * user with no subscription throws (Cashier has nothing to swap).
+     */
+    public function swapSubscription(User $user, string $plan): void
+    {
+        // Resolved before touching the subscription object - PHP attempts
+        // the ->swap() call before evaluating its argument, so a bad plan
+        // would otherwise surface as a confusing "call to swap() on null"
+        // rather than this method's own clear error.
+        $priceId = $this->resolveSubscriptionPriceId($plan);
+
+        $user->subscription('default')->swap($priceId);
+    }
+
+    private function resolveSubscriptionPriceId(string $plan): string
+    {
         $priceId = config("valecheck.pricing.subscriptions.{$plan}.stripe_price");
 
         if (empty($priceId)) {
@@ -155,14 +185,7 @@ class StripeCheckoutService
             );
         }
 
-        return $user->newSubscription('default', $priceId)->checkout([
-            'success_url' => route('dashboard').'?subscribed=1',
-            'cancel_url' => route('dashboard'),
-            'metadata' => [
-                'kind' => 'subscription',
-                'plan' => $plan,
-            ],
-        ]);
+        return $priceId;
     }
 
     private function toMinorUnits(float $gross): int

@@ -71,19 +71,34 @@ class StripeWebhookController extends CashierWebhookController
         // schema (report_type column, config keyed by product) supports more
         // than one product per plan without a future migration.
         $reportType = 'plus';
+        $periodStart = Carbon::createFromTimestamp($periodStartTimestamp)->toDateString();
+        $periodEnd = Carbon::createFromTimestamp($periodEndTimestamp)->toDateString();
 
-        SubscriptionUsage::firstOrCreate(
-            [
-                'user_id' => $user->id,
-                'report_type' => $reportType,
-                'period_start' => Carbon::createFromTimestamp($periodStartTimestamp)->toDateString(),
-                'period_end' => Carbon::createFromTimestamp($periodEndTimestamp)->toDateString(),
-            ],
-            [
-                'plan' => $plan,
-                'allowance' => config("valecheck.pricing.subscriptions.{$plan}.allowances.{$reportType}"),
-                'used' => 0,
-            ]
-        );
+        // Not firstOrCreate() — the period_start/period_end columns are
+        // cast as 'date' but persist with a time component, so a plain
+        // string-equality lookup against a bare "Y-m-d" value never
+        // matches an already-stored row. That silently defeated this
+        // idempotency check on every webhook retry (Stripe does retry),
+        // duplicating the usage window each time. whereDate() compares
+        // only the date part regardless of what's actually stored.
+        $exists = SubscriptionUsage::where('user_id', $user->id)
+            ->where('report_type', $reportType)
+            ->whereDate('period_start', $periodStart)
+            ->whereDate('period_end', $periodEnd)
+            ->exists();
+
+        if ($exists) {
+            return;
+        }
+
+        SubscriptionUsage::create([
+            'user_id' => $user->id,
+            'report_type' => $reportType,
+            'period_start' => $periodStart,
+            'period_end' => $periodEnd,
+            'plan' => $plan,
+            'allowance' => config("valecheck.pricing.subscriptions.{$plan}.allowances.{$reportType}"),
+            'used' => 0,
+        ]);
     }
 }

@@ -15,6 +15,9 @@
             @if (request('subscribed'))
                 <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm">Subscription activated — thank you.</div>
             @endif
+            @if (session('status'))
+                <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm">{{ session('status') }}</div>
+            @endif
 
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
@@ -42,6 +45,9 @@
                         @else
                             <p class="font-display text-lg font-bold text-gray-400 mt-1">None</p>
                         @endif
+                        @if ($isSubscribed)
+                            <a href="{{ route('billing.portal') }}" class="inline-block mt-2 text-xs font-semibold text-vale-red hover:text-red-600">Manage subscription &rarr;</a>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -66,30 +72,41 @@
                 </div>
             </div>
 
-            @if (config('valecheck.subscriptions_enabled') && ! $isSubscribed)
+            @if (config('valecheck.subscriptions_enabled'))
                 <div>
-                    <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Subscribe for regular checks</h3>
+                    <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">
+                        {{ $isSubscribed ? 'Change plan' : 'Subscribe for regular checks' }}
+                    </h3>
                     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         @foreach ($subscriptionPlans as $key => $plan)
-                            <form method="POST" action="{{ route('billing.subscribe') }}" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col">
-                                @csrf
-                                <input type="hidden" name="plan" value="{{ $key }}">
+                            @php $isCurrentPlan = $isSubscribed && $activeSubscriptionUsage?->plan === $key; @endphp
+                            <div class="bg-white border {{ $isCurrentPlan ? 'border-vale-red' : 'border-gray-200' }} rounded-xl p-5 shadow-sm flex flex-col">
                                 <p class="text-vale-navy font-semibold">{{ $plan['label'] }}</p>
                                 <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($plan['price']->gross, 2) }}<span class="text-sm text-gray-400">/mo</span></p>
                                 <p class="text-xs text-gray-500 mt-1 flex-1">{{ $plan['allowances']['plus'] }} Plus reports/month</p>
-                                <button type="submit" class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-vale-red hover:bg-red-600 rounded-full font-semibold text-sm text-white">
-                                    Subscribe
-                                </button>
-                            </form>
+                                @if ($isCurrentPlan)
+                                    <p class="mt-3 text-center text-xs font-semibold uppercase tracking-widest text-vale-red">Current plan</p>
+                                @else
+                                    <form method="POST" action="{{ route('billing.subscribe') }}">
+                                        @csrf
+                                        <input type="hidden" name="plan" value="{{ $key }}">
+                                        <button type="submit" class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-vale-red hover:bg-red-600 rounded-full font-semibold text-sm text-white">
+                                            {{ $isSubscribed ? 'Switch to this plan' : 'Subscribe' }}
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
                         @endforeach
-                        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col">
-                            <p class="text-vale-navy font-semibold">Enterprise</p>
-                            <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">Contact us</p>
-                            <p class="text-xs text-gray-500 mt-1 flex-1">Custom volume and pricing for high-usage accounts.</p>
-                            <a href="{{ route('contact.enterprise') }}" wire:navigate class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-vale-navy hover:bg-vale-navy/90 rounded-full font-semibold text-sm text-white">
-                                Contact Us
-                            </a>
-                        </div>
+                        @unless ($isSubscribed)
+                            <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col">
+                                <p class="text-vale-navy font-semibold">Enterprise</p>
+                                <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">Contact us</p>
+                                <p class="text-xs text-gray-500 mt-1 flex-1">Custom volume and pricing for high-usage accounts.</p>
+                                <a href="{{ route('contact.enterprise') }}" wire:navigate class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-vale-navy hover:bg-vale-navy/90 rounded-full font-semibold text-sm text-white">
+                                    Contact Us
+                                </a>
+                            </div>
+                        @endunless
                     </div>
                 </div>
             @endif

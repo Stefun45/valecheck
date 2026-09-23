@@ -29,7 +29,27 @@ class BillingController extends Controller
             'plan' => ['required', 'string', 'in:'.implode(',', array_keys(config('valecheck.pricing.subscriptions')))],
         ]);
 
-        return $checkoutService->checkoutForSubscription($request->user(), $validated['plan'])->redirect();
+        $user = $request->user();
+
+        // Already subscribed - changing plan is an in-place Stripe swap,
+        // never a second Checkout Session (Cashier's newSubscription()
+        // would otherwise happily create a duplicate subscription).
+        if ($user->subscribed('default')) {
+            $checkoutService->swapSubscription($user, $validated['plan']);
+
+            return redirect()->route('dashboard')->with('status', 'Your plan has been changed.');
+        }
+
+        return $checkoutService->checkoutForSubscription($user, $validated['plan'])->redirect();
+    }
+
+    public function portal(Request $request)
+    {
+        abort_unless(config('valecheck.subscriptions_enabled'), 404);
+
+        $this->ensureStripeConfigured();
+
+        return $request->user()->redirectToBillingPortal(route('dashboard'));
     }
 
     private function ensureStripeConfigured(): void
