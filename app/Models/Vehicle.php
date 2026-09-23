@@ -36,4 +36,18 @@ class Vehicle extends Model
 
         return '••••••••••••'.substr($this->vin, -5);
     }
+
+    /**
+     * One Auto's AutoCheck response masks every VIN it returns as 12 X's
+     * followed by the real last 5 characters (e.g. "XXXXXXXXXXXX17837") -
+     * confirmed across 100% of stored VINs, not something this app does
+     * (see maskedVin() above for our own separate, intentional display
+     * masking). Verifying a customer's VIN against one of these is
+     * guaranteed to report a false mismatch, so the feature is hidden
+     * entirely rather than showing a broken comparison.
+     */
+    public function hasVerifiableVin(): bool
+    {
+        return $this->vin !== null && ! preg_match('/X{6,}/', $this->vin);
+    }
 }

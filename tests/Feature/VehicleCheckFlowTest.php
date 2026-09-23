@@ -656,6 +656,20 @@ class VehicleCheckFlowTest extends TestCase
         $component->set('vinToVerify', $realVin)->call('verifyVin')->assertDontSee($realVin);
     }
 
+    public function test_vin_verification_is_hidden_when_the_provider_returns_a_masked_vin(): void
+    {
+        // Confirmed live: One Auto's AutoCheck response masks every VIN as
+        // 12 X's + the real last 5 characters, which would otherwise make
+        // this feature report a false mismatch on every single report.
+        $user = $this->verifiedUser();
+        $this->actingAs($user);
+        $check = $this->completeViaPurchase($user, VehicleCheck::TYPE_CHECK, 'AB12CDE');
+        $check->vehicle->update(['vin' => 'XXXXXXXXXXXX17837']);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertDontSeeText('Confirm the VIN on the V5C or dashboard matches');
+    }
+
     public function test_a_completed_check_report_has_history_but_no_valuation_or_damage_analysis(): void
     {
         $user = $this->verifiedUser();

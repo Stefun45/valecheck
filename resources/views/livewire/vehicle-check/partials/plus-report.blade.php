@@ -85,7 +85,7 @@
                 <div class="flex justify-between"><dt class="text-gray-500">Transmission</dt><dd class="text-vale-navy">{{ $vehicle->transmission ?? '—' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Colour</dt><dd class="text-vale-navy">{{ $vehicle->colour ?? '—' }}</dd></div>
             </dl>
-            @if ($vehicle->vin)
+            @if ($vehicle->hasVerifiableVin())
                 @include('livewire.vehicle-check.partials.vin-verification')
             @endif
         </div>
