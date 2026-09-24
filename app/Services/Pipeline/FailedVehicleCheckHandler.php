@@ -3,7 +3,6 @@
 namespace App\Services\Pipeline;
 
 use App\Models\Payment;
-use App\Models\SubscriptionUsage;
 use App\Models\VehicleCheck;
 use App\Services\Credits\CreditLedgerService;
 use Illuminate\Support\Facades\Log;
@@ -34,24 +33,20 @@ class FailedVehicleCheckHandler
             'completed_at' => now(),
         ]);
 
-        match ($check->funding_source) {
-            'free', 'credit' => $this->ledger->refundCredit($check->user, $check->type, $check),
-            'subscription' => $this->releaseSubscriptionAllowance($check),
-            'purchase' => $this->refundPayment($check),
-            default => null,
-        };
+        if ($check->funding_source === 'credit' && $check->type === VehicleCheck::TYPE_PLUS) {
+            // Nothing to refund - a Plus credit is only ever deducted once
+            // GenerateReport confirms the report actually generated (see
+            // VehicleCheckOrderService::submit()), so a failure before
+            // that point never deducted anything in the first place.
+        } else {
+            match ($check->funding_source) {
+                'free', 'credit' => $this->ledger->refundCredit($check->user, $check->type, $check),
+                'purchase' => $this->refundPayment($check),
+                default => null,
+            };
+        }
 
         Log::warning("Vehicle check #{$vehicleCheckId} failed and was refunded.", ['reason' => $reason]);
-    }
-
-    private function releaseSubscriptionAllowance(VehicleCheck $check): void
-    {
-        SubscriptionUsage::where('user_id', $check->user_id)
-            ->where('report_type', $check->type)
-            ->whereDate('period_start', '<=', now())
-            ->whereDate('period_end', '>=', now())
-            ->first()
-            ?->decrement('used');
     }
 
     private function refundPayment(VehicleCheck $check): void

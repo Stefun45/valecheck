@@ -2,15 +2,18 @@
 
 namespace Tests\Feature;
 
-use App\Models\SubscriptionUsage;
+use App\Models\SubscriptionPlan;
 use App\Models\TraderVerification;
 use App\Models\User;
+use App\Services\Credits\CreditLedgerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class TraderVerificationTest extends TestCase
 {
     use RefreshDatabase;
+
+    private static int $planCounter = 0;
 
     protected function setUp(): void
     {
@@ -19,17 +22,22 @@ class TraderVerificationTest extends TestCase
         config(['valecheck.subscriptions_enabled' => true]);
     }
 
-    private function subscribeToPlan(User $user, string $plan): void
+    private function subscribeToPlan(User $user, string $group): void
     {
-        SubscriptionUsage::create([
-            'user_id' => $user->id,
-            'plan' => $plan,
-            'report_type' => 'plus',
-            'period_start' => now()->startOfMonth(),
-            'period_end' => now()->endOfMonth(),
-            'allowance' => 30,
-            'used' => 0,
+        self::$planCounter++;
+
+        $plan = SubscriptionPlan::create([
+            'name' => "Test {$group} plan ".self::$planCounter,
+            'group' => $group,
+            'stripe_price_id' => 'price_test_'.self::$planCounter,
+            'monthly_net' => 99.00,
+            'monthly_credits' => 30,
+            'additional_credit_net' => 4.99,
+            'is_active' => true,
+            'sort_order' => self::$planCounter,
         ]);
+
+        app(CreditLedgerService::class)->grantSubscriptionCredits($user, $plan, $plan->monthly_credits, now()->addDays(15));
     }
 
     public function test_a_dealer_subscriber_can_submit_business_details(): void

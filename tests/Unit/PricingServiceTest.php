@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\ProductPrice;
 use App\Models\SitePromotion;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserProductPrice;
 use App\Services\Pricing\PricingService;
@@ -76,20 +77,34 @@ class PricingServiceTest extends TestCase
         $this->assertSame(10.00, (new PricingService)->forCreditPack('plus_1')->gross);
     }
 
-    public function test_subscription_plans_are_flat_prices_not_derived_from_plus(): void
+    public function test_subscription_plan_prices_are_flat_and_not_derived_from_plus(): void
     {
         $pricing = new PricingService;
+        $plan = SubscriptionPlan::where('name', 'Pro 25')->firstOrFail();
 
-        $this->assertSame(49.99, $pricing->forSubscription('trader')->gross);
-        $this->assertSame(94.99, $pricing->forSubscription('pro')->gross);
-        $this->assertSame(149.99, $pricing->forSubscription('dealer')->gross);
+        $this->assertSame(118.80, $pricing->forSubscriptionPlan($plan)->gross);
 
         ProductPrice::where('type', 'plus')->update(['gross' => 999.00]);
 
         $pricing = new PricingService;
-        $this->assertSame(49.99, $pricing->forSubscription('trader')->gross);
-        $this->assertSame(94.99, $pricing->forSubscription('pro')->gross);
-        $this->assertSame(149.99, $pricing->forSubscription('dealer')->gross);
+        $this->assertSame(118.80, $pricing->forSubscriptionPlan($plan)->gross);
+    }
+
+    public function test_breakdown_from_net_computes_vat_forward_not_backward(): void
+    {
+        $breakdown = (new PricingService)->breakdownFromNet(100.00);
+
+        $this->assertSame(100.00, $breakdown->net);
+        $this->assertSame(20.00, $breakdown->vat);
+        $this->assertSame(120.00, $breakdown->gross);
+    }
+
+    public function test_additional_credit_price_is_derived_from_the_plans_own_rate(): void
+    {
+        $plan = SubscriptionPlan::where('name', 'Pro 25')->firstOrFail();
+
+        // 4.99 net -> 5.988 gross, rounded to 5.99
+        $this->assertSame(5.99, (new PricingService)->forAdditionalCredit($plan)->gross);
     }
 
     public function test_a_user_with_a_custom_price_pays_that_instead_of_the_standard_price(): void

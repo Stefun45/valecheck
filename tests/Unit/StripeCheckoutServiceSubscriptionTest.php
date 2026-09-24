@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Services\Payments\StripeCheckoutService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,25 +13,39 @@ class StripeCheckoutServiceSubscriptionTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function planWithNoPrice(): SubscriptionPlan
+    {
+        return SubscriptionPlan::create([
+            'name' => 'Unpriced Plan',
+            'group' => 'pro',
+            'stripe_price_id' => null,
+            'monthly_net' => 99.00,
+            'monthly_credits' => 25,
+            'additional_credit_net' => 4.99,
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+    }
+
     public function test_checkout_for_subscription_rejects_a_plan_with_no_stripe_price_configured(): void
     {
-        config(['valecheck.pricing.subscriptions.trader.stripe_price' => null]);
+        $plan = $this->planWithNoPrice();
         $user = User::factory()->create();
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('STRIPE_PRICE_TRADER');
+        $this->expectExceptionMessage($plan->name);
 
-        app(StripeCheckoutService::class)->checkoutForSubscription($user, 'trader');
+        app(StripeCheckoutService::class)->checkoutForSubscription($user, $plan);
     }
 
     public function test_swap_subscription_rejects_a_plan_with_no_stripe_price_configured(): void
     {
-        config(['valecheck.pricing.subscriptions.dealer.stripe_price' => null]);
+        $plan = $this->planWithNoPrice();
         $user = User::factory()->create();
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('STRIPE_PRICE_DEALER');
+        $this->expectExceptionMessage($plan->name);
 
-        app(StripeCheckoutService::class)->swapSubscription($user, 'dealer');
+        app(StripeCheckoutService::class)->swapSubscription($user, $plan);
     }
 }

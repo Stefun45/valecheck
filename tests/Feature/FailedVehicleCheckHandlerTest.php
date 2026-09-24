@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Payment;
-use App\Models\SubscriptionUsage;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleCheck;
@@ -39,28 +38,29 @@ class FailedVehicleCheckHandlerTest extends TestCase
         $this->assertSame(2, $ledger->balance($user, VehicleCheck::TYPE_REBUILD));
     }
 
-    public function test_a_failed_subscription_funded_check_releases_the_allowance(): void
+    /**
+     * A Plus check's credit (subscription allowance or purchased pack -
+     * one unified balance) is only ever deducted once GenerateReport
+     * confirms success (see VehicleCheckOrderService::submit() and
+     * GenerateReport::consumePlusCreditNowReportIsConfirmed()), so a
+     * failure before that point never deducted anything - there is
+     * nothing for this handler to refund, and it must not accidentally
+     * grant a phantom credit either.
+     */
+    public function test_a_failed_credit_funded_plus_check_leaves_the_balance_untouched(): void
     {
         $user = User::factory()->create();
-        $usage = SubscriptionUsage::create([
-            'user_id' => $user->id,
-            'plan' => 'trader',
-            'report_type' => VehicleCheck::TYPE_REBUILD,
-            'period_start' => now()->startOfMonth(),
-            'period_end' => now()->endOfMonth(),
-            'allowance' => 5,
-            'used' => 1,
-        ]);
-
+        $ledger = app(CreditLedgerService::class);
+        $ledger->grantPurchasedCredits($user, VehicleCheck::TYPE_PLUS, 3);
         $check = VehicleCheck::factory()->create([
             'user_id' => $user->id,
-            'type' => VehicleCheck::TYPE_REBUILD,
-            'funding_source' => 'subscription',
+            'type' => VehicleCheck::TYPE_PLUS,
+            'funding_source' => 'credit',
         ]);
 
         app(FailedVehicleCheckHandler::class)->handle($check->id, 'Provider timeout.');
 
-        $this->assertSame(0, $usage->fresh()->used);
+        $this->assertSame(3, $ledger->balance($user, VehicleCheck::TYPE_PLUS));
     }
 
     public function test_handling_an_already_failed_check_is_a_no_op(): void

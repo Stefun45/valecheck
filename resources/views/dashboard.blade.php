@@ -37,11 +37,20 @@
                 @if (config('valecheck.subscriptions_enabled'))
                     <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
                         <p class="text-xs uppercase tracking-widest text-gray-400">Subscription</p>
-                        @if ($activeSubscriptionUsage)
-                            <p class="font-display text-lg font-bold text-vale-navy mt-1 capitalize">{{ $activeSubscriptionUsage->plan }}</p>
+                        @if ($activePlan)
+                            <p class="font-display text-lg font-bold text-vale-navy mt-1">{{ $activePlan->name }}</p>
                             <p class="text-xs text-gray-500 mt-1">
-                                {{ $activeSubscriptionUsage->used }} / {{ $activeSubscriptionUsage->allowance ?? '∞' }} used this period
+                                {{ $subscriptionCreditsRemaining }} / {{ $subscriptionGrantTotal }} credits remaining this period
                             </p>
+                            @if ($additionalCreditsRemaining > 0)
+                                <p class="text-xs text-gray-500">{{ $additionalCreditsRemaining }} additional credit(s) remaining</p>
+                            @endif
+                            @if ($renewalDate)
+                                <p class="text-xs text-gray-400 mt-1">Renews {{ $renewalDate->format('d M Y') }}</p>
+                            @endif
+                            @if ($pendingPlan)
+                                <p class="text-xs text-vale-red mt-1">Changing to {{ $pendingPlan->name }} at renewal.</p>
+                            @endif
                         @else
                             <p class="font-display text-lg font-bold text-gray-400 mt-1">None</p>
                         @endif
@@ -51,6 +60,23 @@
                     </div>
                 @endif
             </div>
+
+            @if ($activePlan)
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">Buy additional credits</h3>
+                    <p class="text-sm text-gray-500 mb-3">
+                        Out of monthly credits? Top up at £{{ number_format($activePlanAdditionalCreditPrice, 2) }} each - cheaper than the standard £{{ number_format($plusPrice, 2) }} report, but priced to make upgrading worthwhile if you need this regularly.
+                    </p>
+                    <form method="POST" action="{{ route('billing.additional-credits') }}" class="flex items-end gap-3">
+                        @csrf
+                        <div>
+                            <x-input-label for="quantity" value="Quantity" />
+                            <x-text-input type="number" name="quantity" id="quantity" min="1" max="1000" value="5" class="mt-1 w-24" required />
+                        </div>
+                        <x-primary-button type="submit">Buy credits</x-primary-button>
+                    </form>
+                </div>
+            @endif
 
             @if ($needsTraderVerification)
                 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
@@ -68,7 +94,7 @@
                             </p>
                         @else
                             <p class="text-sm text-gray-500 mb-3">
-                                Trader and Dealer plans unlock trade-restricted report content once we've verified you're a genuine motor trader. Submit your business details below.
+                                Dealer plans unlock trade-restricted report content once we've verified you're a genuine motor trader. Submit your business details below.
                             </p>
                         @endif
                         <form method="POST" action="{{ route('billing.trader-verification.store') }}" class="grid sm:grid-cols-3 gap-3">
@@ -121,21 +147,39 @@
                     <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">
                         {{ $isSubscribed ? 'Change plan' : 'Subscribe for regular checks' }}
                     </h3>
-                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        @foreach ($subscriptionPlans as $key => $plan)
-                            @php $isCurrentPlan = $isSubscribed && $activeSubscriptionUsage?->plan === $key; @endphp
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach ($subscriptionPlans as $item)
+                            @php
+                                $plan = $item['plan'];
+                                $isCurrentPlan = $activePlan?->id === $plan->id;
+                                $isPendingPlan = $pendingPlan?->id === $plan->id;
+                                $isUpgrade = $activePlan && $plan->isUpgradeFrom($activePlan);
+                                $isDowngrade = $activePlan && $plan->isDowngradeFrom($activePlan);
+                            @endphp
                             <div class="bg-white border {{ $isCurrentPlan ? 'border-vale-red' : 'border-gray-200' }} rounded-xl p-5 shadow-sm flex flex-col">
-                                <p class="text-vale-navy font-semibold">{{ $plan['label'] }}</p>
-                                <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($plan['price']->gross, 2) }}<span class="text-sm text-gray-400">/mo</span></p>
-                                <p class="text-xs text-gray-500 mt-1 flex-1">{{ $plan['allowances']['plus'] }} Plus reports/month</p>
+                                <p class="text-vale-navy font-semibold">{{ $plan->name }}</p>
+                                <p class="text-xs text-gray-400 capitalize">{{ $plan->group }}</p>
+                                <p class="font-display text-2xl font-extrabold text-vale-navy mt-1">£{{ number_format($item['price']->gross, 2) }}<span class="text-sm text-gray-400">/mo</span></p>
+                                <p class="text-xs text-gray-500 mt-1">excl. VAT: £{{ number_format($plan->monthly_net, 2) }}</p>
+                                <p class="text-xs text-gray-500 mt-1 flex-1">{{ $plan->monthly_credits }} Plus reports/month</p>
                                 @if ($isCurrentPlan)
                                     <p class="mt-3 text-center text-xs font-semibold uppercase tracking-widest text-vale-red">Current plan</p>
+                                @elseif ($isPendingPlan)
+                                    <p class="mt-3 text-center text-xs font-semibold uppercase tracking-widest text-gray-400">Starts at renewal</p>
                                 @else
                                     <form method="POST" action="{{ route('billing.subscribe') }}">
                                         @csrf
-                                        <input type="hidden" name="plan" value="{{ $key }}">
+                                        <input type="hidden" name="plan_id" value="{{ $plan->id }}">
                                         <button type="submit" class="mt-3 w-full inline-flex justify-center items-center px-4 py-2 bg-vale-red hover:bg-red-600 rounded-full font-semibold text-sm text-white">
-                                            {{ $isSubscribed ? 'Switch to this plan' : 'Subscribe' }}
+                                            @if (! $isSubscribed)
+                                                Subscribe
+                                            @elseif ($isUpgrade)
+                                                Upgrade now
+                                            @elseif ($isDowngrade)
+                                                Downgrade at renewal
+                                            @else
+                                                Switch to this plan
+                                            @endif
                                         </button>
                                     </form>
                                 @endif

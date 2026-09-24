@@ -19,6 +19,7 @@
                 <a href="{{ route('admin.provider-lookups.index') }}" class="text-vale-red hover:text-red-600">Provider Lookups &rarr;</a>
                 <a href="{{ route('admin.provider-costs.edit') }}" class="text-vale-red hover:text-red-600">Edit Provider Costs &rarr;</a>
                 <a href="{{ route('admin.trader-verifications.index') }}" class="text-vale-red hover:text-red-600">Trader Verifications &rarr;</a>
+                <a href="{{ route('admin.subscription-plans.index') }}" class="text-vale-red hover:text-red-600">Subscription Plans &rarr;</a>
             </div>
 
             <div>

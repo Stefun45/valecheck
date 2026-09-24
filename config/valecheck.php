@@ -278,6 +278,11 @@ return [
     'reports' => [
         'pdf_disk' => env('REPORT_PDF_DISK', 's3'),
         'retention_days' => (int) env('REPORT_RETENTION_DAYS', 30),
+        // A customer re-checking a vehicle they already have a completed
+        // Plus report for within this window is shown the existing report
+        // instead of generating (and paying/spending a credit for) a new
+        // one - see VehicleCheckOrderService::findReusableExistingCheck().
+        'reuse_window_days' => (int) env('REPORT_REUSE_WINDOW_DAYS', 30),
     ],
 
 ];

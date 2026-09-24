@@ -35,7 +35,7 @@ class SubscriptionsHiddenTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $this->post(route('billing.subscribe'), ['plan' => 'trader'])->assertNotFound();
+        $this->post(route('billing.subscribe'), ['plan_id' => 1])->assertNotFound();
     }
 
     public function test_the_billing_portal_endpoint_is_unreachable(): void
@@ -44,6 +44,14 @@ class SubscriptionsHiddenTest extends TestCase
         $this->actingAs($user);
 
         $this->get(route('billing.portal'))->assertNotFound();
+    }
+
+    public function test_the_additional_credits_endpoint_is_unreachable(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->post(route('billing.additional-credits'), ['quantity' => 5])->assertNotFound();
     }
 
     public function test_the_credit_pack_endpoint_remains_reachable(): void

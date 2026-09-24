@@ -5,6 +5,7 @@ namespace App\Services\Pricing;
 use App\DataTransferObjects\PriceBreakdown;
 use App\Models\ProductPrice;
 use App\Models\SitePromotion;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserProductPrice;
 use InvalidArgumentException;
@@ -47,6 +48,25 @@ class PricingService
         return new PriceBreakdown(
             gross: round($gross, 2),
             net: $net,
+            vat: $vat,
+            vatRate: $rate,
+            currency: config('valecheck.currency'),
+        );
+    }
+
+    /**
+     * Subscription plans are given ex-VAT per the commercial spec, unlike
+     * every other price in this service which starts from a VAT-inclusive
+     * gross - this is the one place that goes the other direction.
+     */
+    public function breakdownFromNet(float $net): PriceBreakdown
+    {
+        $rate = $this->vatRate();
+        $vat = round($net * $rate, 2);
+
+        return new PriceBreakdown(
+            gross: round($net + $vat, 2),
+            net: round($net, 2),
             vat: $vat,
             vatRate: $rate,
             currency: config('valecheck.currency'),
@@ -121,15 +141,14 @@ class PricingService
         return $this->breakdown($unitGross * $pack['credits'] * (1 - ($pack['discount'] ?? 0)));
     }
 
-    public function forSubscription(string $plan): PriceBreakdown
+    public function forSubscriptionPlan(SubscriptionPlan $plan): PriceBreakdown
     {
-        $subscription = config("valecheck.pricing.subscriptions.{$plan}");
+        return $this->breakdownFromNet($plan->monthly_net);
+    }
 
-        if (! $subscription) {
-            throw new InvalidArgumentException("Unknown subscription plan [{$plan}].");
-        }
-
-        return $this->breakdown((float) $subscription['gross']);
+    public function forAdditionalCredit(SubscriptionPlan $plan): PriceBreakdown
+    {
+        return $this->breakdownFromNet($plan->additional_credit_net);
     }
 
     public function creditPackCredits(string $key): int

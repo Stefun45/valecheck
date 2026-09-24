@@ -8,7 +8,6 @@ use App\Models\BidRecommendation;
 use App\Models\Payment;
 use App\Models\Report;
 use App\Models\SalvageAuctionCheck;
-use App\Models\SubscriptionUsage;
 use App\Models\User;
 use App\Models\UserProductPrice;
 use App\Models\Vehicle;
@@ -512,20 +511,12 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertSame(VehicleCheck::STATUS_PENDING, $check->status);
     }
 
-    public function test_a_rebuild_report_can_be_funded_by_a_subscription_allowance(): void
+    public function test_a_rebuild_report_can_be_funded_by_a_purchased_credit(): void
     {
         $this->fakeAnthropicResponses();
 
         $user = $this->verifiedUser();
-        SubscriptionUsage::create([
-            'user_id' => $user->id,
-            'plan' => 'trader',
-            'report_type' => VehicleCheck::TYPE_REBUILD,
-            'period_start' => now()->startOfMonth(),
-            'period_end' => now()->endOfMonth(),
-            'allowance' => 5,
-            'used' => 0,
-        ]);
+        app(CreditLedgerService::class)->grantPurchasedCredits($user, VehicleCheck::TYPE_REBUILD, 1);
 
         $this->actingAs($user);
 
@@ -539,9 +530,9 @@ class VehicleCheckFlowTest extends TestCase
 
         $check = VehicleCheck::where('registration', 'AB12CDE')->firstOrFail();
 
-        $this->assertSame('subscription', $check->funding_source);
+        $this->assertSame('credit', $check->funding_source);
         $this->assertSame(VehicleCheck::STATUS_COMPLETED, $check->status);
-        $this->assertSame(1, SubscriptionUsage::first()->used);
+        $this->assertSame(0, app(CreditLedgerService::class)->balance($user, VehicleCheck::TYPE_REBUILD));
     }
 
     public function test_a_zero_priced_account_skips_checkout_entirely_even_for_the_base_valecheck(): void

@@ -8,6 +8,7 @@ use App\Models\AiUsage;
 use App\Models\Report;
 use App\Models\VehicleCheck;
 use App\Services\Ai\AiProvider;
+use App\Services\Credits\CreditLedgerService;
 use App\Services\Reports\ReportPdfService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -30,7 +31,7 @@ class GenerateReport implements ShouldQueue
 
     public function __construct(public int $vehicleCheckId) {}
 
-    public function handle(AiProvider $provider, ReportPdfService $pdfService): void
+    public function handle(AiProvider $provider, ReportPdfService $pdfService, CreditLedgerService $ledger): void
     {
         $check = VehicleCheck::findOrFail($this->vehicleCheckId);
         $check->update(['stage' => 'generating_report']);
@@ -71,12 +72,36 @@ class GenerateReport implements ShouldQueue
             'expires_at' => now()->addDays((int) config('valecheck.reports.retention_days')),
         ]);
 
+        $this->consumePlusCreditNowReportIsConfirmed($check, $ledger);
+
         // Explicit, not a side effect of building the email's attachment —
         // the PDF is generated and stored (to S3 in production) the moment
         // the report completes, regardless of whether the email succeeds or
         // anyone ever clicks "Download PDF" on the site.
         $this->generateReportPdf($check, $pdfService);
         $this->sendReportReadyEmail($check);
+    }
+
+    /**
+     * A Plus report's credit (subscription allowance or purchased pack -
+     * one unified balance, see CreditLedgerService) is only ever consumed
+     * here, once the report has genuinely, successfully generated - never
+     * up front at checkout time. This is the one point in the pipeline
+     * that's actually reached if, and only if, generation succeeded, which
+     * is exactly what the commercial spec requires: a credit is never lost
+     * to an invalid registration, a provider error, an unavailable
+     * provider, or any other failure before this point (see
+     * VehicleCheckOrderService::submit(), where this funding_source is
+     * left un-deducted for Plus specifically).
+     */
+    private function consumePlusCreditNowReportIsConfirmed(VehicleCheck $check, CreditLedgerService $ledger): void
+    {
+        if ($check->type !== VehicleCheck::TYPE_PLUS || $check->funding_source !== 'credit') {
+            return;
+        }
+
+        $transaction = $ledger->consumeCredit($check->user, VehicleCheck::TYPE_PLUS, $check);
+        $check->update(['credit_transaction_id' => $transaction->id]);
     }
 
     /**

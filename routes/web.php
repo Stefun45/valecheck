@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ProductPriceController;
 use App\Http\Controllers\Admin\ProviderEndpointCostController;
 use App\Http\Controllers\Admin\ProviderLookupLogController;
 use App\Http\Controllers\Admin\SitePromotionController;
+use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\TraderVerificationController as AdminTraderVerificationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\BillingController;
@@ -86,6 +87,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('billing/credit-pack', [BillingController::class, 'creditPack'])->name('billing.credit-pack');
     Route::post('billing/subscribe', [BillingController::class, 'subscription'])->name('billing.subscribe');
     Route::get('billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
+    Route::post('billing/additional-credits', [BillingController::class, 'additionalCredits'])->name('billing.additional-credits');
     Route::post('billing/trader-verification', [TraderVerificationController::class, 'store'])->name('billing.trader-verification.store');
 
     Route::get('contact/enterprise', [ContactController::class, 'showEnterprise'])->name('contact.enterprise');
@@ -127,6 +129,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('trader-verifications', [AdminTraderVerificationController::class, 'index'])->name('trader-verifications.index');
     Route::post('trader-verifications/{traderVerification}/approve', [AdminTraderVerificationController::class, 'approve'])->name('trader-verifications.approve');
     Route::post('trader-verifications/{traderVerification}/reject', [AdminTraderVerificationController::class, 'reject'])->name('trader-verifications.reject');
+
+    Route::get('subscription-plans', [SubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
+    Route::post('subscription-plans', [SubscriptionPlanController::class, 'store'])->name('subscription-plans.store');
+    Route::put('subscription-plans/{subscriptionPlan}', [SubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
 });
 
 require __DIR__.'/auth.php';

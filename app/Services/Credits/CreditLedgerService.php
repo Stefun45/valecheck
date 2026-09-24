@@ -4,8 +4,10 @@ namespace App\Services\Credits;
 
 use App\Models\CreditTransaction;
 use App\Models\Payment;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\VehicleCheck;
+use Carbon\Carbon;
 use RuntimeException;
 
 /**
@@ -15,10 +17,17 @@ use RuntimeException;
  */
 class CreditLedgerService
 {
+    /**
+     * Expired subscription-grant rows are excluded, not deleted or
+     * zeroed - this is what makes "unused monthly credits don't roll
+     * over" happen automatically the moment a period's expires_at
+     * passes, with no separate void step and a full audit trail intact.
+     */
     public function balance(User $user, string $reportType): int
     {
         return (int) $user->creditTransactions()
             ->where('report_type', $reportType)
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
             ->sum('amount');
     }
 
@@ -55,6 +64,26 @@ class CreditLedgerService
             'report_type' => $reportType,
             'amount' => $amount,
             'note' => $note ?? "Manually granted {$amount} {$reportType} credit(s).",
+        ]);
+    }
+
+    /**
+     * A subscription plan's monthly credit allocation - amount can be a
+     * partial top-up (e.g. the incremental credits an upgrade grants for
+     * the rest of the current period), not always the plan's full
+     * monthly_credits. expiresAt is always the end of the billing period
+     * this grant belongs to, whichever period that turns out to be.
+     */
+    public function grantSubscriptionCredits(User $user, SubscriptionPlan $plan, int $amount, Carbon $expiresAt, ?string $note = null): CreditTransaction
+    {
+        return CreditTransaction::create([
+            'user_id' => $user->id,
+            'type' => CreditTransaction::TYPE_SUBSCRIPTION_GRANT,
+            'report_type' => 'plus',
+            'amount' => $amount,
+            'expires_at' => $expiresAt,
+            'subscription_plan_id' => $plan->id,
+            'note' => $note ?? "Granted {$amount} credit(s) from the {$plan->name} plan.",
         ]);
     }
 

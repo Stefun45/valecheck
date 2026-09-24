@@ -3,6 +3,7 @@
 namespace App\Services\Payments;
 
 use App\Models\Payment;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserProductPrice;
 use App\Models\VehicleCheck;
@@ -145,47 +146,93 @@ class StripeCheckoutService
         );
     }
 
-    public function checkoutForSubscription(User $user, string $plan): Checkout
+    public function checkoutForSubscription(User $user, SubscriptionPlan $plan): Checkout
     {
-        return $user->newSubscription('default', $this->resolveSubscriptionPriceId($plan))->checkout([
+        return $user->newSubscription('default', $this->resolveStripePriceId($plan))->checkout([
             'success_url' => route('dashboard').'?subscribed=1',
             'cancel_url' => route('dashboard'),
             'metadata' => [
                 'kind' => 'subscription',
-                'plan' => $plan,
+                'plan_id' => (string) $plan->id,
             ],
         ]);
     }
 
     /**
      * Changes an already-active subscription to a different plan via
-     * Stripe's own proration - no Checkout redirect needed, the payment
-     * method is already on file. Only ever called once BillingController
-     * has confirmed the user is genuinely subscribed; calling this on a
-     * user with no subscription throws (Cashier has nothing to swap).
+     * Stripe's own proration (an upgrade) or with proration suppressed
+     * (a downgrade being applied exactly at renewal - see
+     * StripeWebhookController) - no Checkout redirect needed, the payment
+     * method is already on file. Only ever called once the caller has
+     * confirmed the user is genuinely subscribed; calling this on a user
+     * with no subscription throws (Cashier has nothing to swap).
      */
-    public function swapSubscription(User $user, string $plan): void
+    public function swapSubscription(User $user, SubscriptionPlan $plan, bool $prorate = true): void
     {
         // Resolved before touching the subscription object - PHP attempts
         // the ->swap() call before evaluating its argument, so a bad plan
         // would otherwise surface as a confusing "call to swap() on null"
         // rather than this method's own clear error.
-        $priceId = $this->resolveSubscriptionPriceId($plan);
+        $priceId = $this->resolveStripePriceId($plan);
+        $subscription = $user->subscription('default');
 
-        $user->subscription('default')->swap($priceId);
+        if ($prorate) {
+            $subscription->swap($priceId);
+        } else {
+            $subscription->noProrate()->swap($priceId);
+        }
     }
 
-    private function resolveSubscriptionPriceId(string $plan): string
+    /**
+     * A subscriber topping up when their monthly allowance runs out - the
+     * same economic event as a one-off credit pack purchase, just priced
+     * from their own plan's additional_credit_net rather than a
+     * config-defined pack tier, so it reuses the exact same
+     * StripeCheckoutCompletionHandler "credit_pack" handling with no new
+     * code path needed there.
+     */
+    public function checkoutForAdditionalCredits(User $user, SubscriptionPlan $plan, int $quantity): Checkout
     {
-        $priceId = config("valecheck.pricing.subscriptions.{$plan}.stripe_price");
+        $unitPrice = $this->pricing->forAdditionalCredit($plan);
+        $totalGross = round($unitPrice->gross * $quantity, 2);
+        $label = "{$quantity} additional credit(s) ({$plan->name})";
 
-        if (empty($priceId)) {
-            throw new InvalidArgumentException(
-                "No Stripe price is configured for the [{$plan}] subscription plan. Set STRIPE_PRICE_".strtoupper($plan).' in .env.'
-            );
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'type' => Payment::TYPE_CREDIT_PACK,
+            'description' => $label,
+            'gross' => $totalGross,
+            'net' => round($unitPrice->net * $quantity, 2),
+            'vat' => round($unitPrice->vat * $quantity, 2),
+            'vat_rate' => $unitPrice->vatRate,
+            'currency' => $unitPrice->currency,
+            'status' => Payment::STATUS_PENDING,
+        ]);
+
+        return $user->checkoutCharge(
+            $this->toMinorUnits($totalGross),
+            $label,
+            1,
+            [
+                'success_url' => route('dashboard')."?paid=1&payment={$payment->id}",
+                'cancel_url' => route('dashboard'),
+                'metadata' => [
+                    'kind' => 'credit_pack',
+                    'payment_id' => (string) $payment->id,
+                    'report_type' => VehicleCheck::TYPE_PLUS,
+                    'credits' => (string) $quantity,
+                ],
+            ],
+        );
+    }
+
+    private function resolveStripePriceId(SubscriptionPlan $plan): string
+    {
+        if (empty($plan->stripe_price_id)) {
+            throw new InvalidArgumentException("No Stripe price is configured for the [{$plan->name}] subscription plan.");
         }
 
-        return $priceId;
+        return $plan->stripe_price_id;
     }
 
     private function toMinorUnits(float $gross): int

@@ -4,12 +4,14 @@ namespace Tests\Feature;
 
 use App\Livewire\VehicleCheck\ShowCheck;
 use App\Models\Report;
-use App\Models\SubscriptionUsage;
+use App\Models\SubscriptionPlan;
 use App\Models\TraderVerification;
 use App\Models\User;
 use App\Models\VehicleCheck;
 use App\Models\VehicleHistory;
+use App\Services\Credits\CreditLedgerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -17,17 +19,36 @@ class HighRiskDataVisibilityTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function subscribeToPlan(User $user, string $plan): void
+    private static int $planCounter = 0;
+
+    private function plan(string $group): SubscriptionPlan
     {
-        SubscriptionUsage::create([
-            'user_id' => $user->id,
-            'plan' => $plan,
-            'report_type' => 'plus',
-            'period_start' => now()->startOfMonth(),
-            'period_end' => now()->endOfMonth(),
-            'allowance' => 30,
-            'used' => 0,
+        self::$planCounter++;
+
+        return SubscriptionPlan::create([
+            'name' => "Test {$group} plan {$this->planCounter()}",
+            'group' => $group,
+            'stripe_price_id' => "price_test_{$this->planCounter()}",
+            'monthly_net' => 99.00,
+            'monthly_credits' => 30,
+            'additional_credit_net' => 4.99,
+            'is_active' => true,
+            'sort_order' => self::$planCounter,
         ]);
+    }
+
+    private function planCounter(): int
+    {
+        return self::$planCounter;
+    }
+
+    private function subscribeToPlan(User $user, string $group, ?Carbon $expiresAt = null): SubscriptionPlan
+    {
+        $plan = $this->plan($group);
+
+        app(CreditLedgerService::class)->grantSubscriptionCredits($user, $plan, $plan->monthly_credits, $expiresAt ?? now()->addDays(15));
+
+        return $plan;
     }
 
     private function verify(User $user, string $status = TraderVerification::STATUS_APPROVED): void
@@ -44,28 +65,23 @@ class HighRiskDataVisibilityTest extends TestCase
     private function verifiedDealer(): User
     {
         $user = User::factory()->create();
-        $this->subscribeToPlan($user, 'dealer');
+        $this->subscribeToPlan($user, SubscriptionPlan::GROUP_DEALER);
         $this->verify($user);
 
         return $user;
     }
 
-    public function test_a_user_has_verified_trade_access_only_with_both_an_active_plan_and_approval(): void
+    public function test_a_user_has_verified_trade_access_only_with_both_an_active_dealer_plan_and_approval(): void
     {
         $verifiedDealer = $this->verifiedDealer();
         $this->assertTrue($verifiedDealer->hasVerifiedTradeAccess());
 
-        $verifiedTrader = User::factory()->create();
-        $this->subscribeToPlan($verifiedTrader, 'trader');
-        $this->verify($verifiedTrader);
-        $this->assertTrue($verifiedTrader->hasVerifiedTradeAccess());
-
         $unverifiedDealer = User::factory()->create();
-        $this->subscribeToPlan($unverifiedDealer, 'dealer');
+        $this->subscribeToPlan($unverifiedDealer, SubscriptionPlan::GROUP_DEALER);
         $this->assertFalse($unverifiedDealer->hasVerifiedTradeAccess());
 
         $rejectedDealer = User::factory()->create();
-        $this->subscribeToPlan($rejectedDealer, 'dealer');
+        $this->subscribeToPlan($rejectedDealer, SubscriptionPlan::GROUP_DEALER);
         $this->verify($rejectedDealer, TraderVerification::STATUS_REJECTED);
         $this->assertFalse($rejectedDealer->hasVerifiedTradeAccess());
 
@@ -74,7 +90,7 @@ class HighRiskDataVisibilityTest extends TestCase
         $this->assertFalse($verifiedButUnsubscribed->hasVerifiedTradeAccess());
 
         $verifiedPro = User::factory()->create();
-        $this->subscribeToPlan($verifiedPro, 'pro');
+        $this->subscribeToPlan($verifiedPro, SubscriptionPlan::GROUP_PRO);
         $this->verify($verifiedPro);
         $this->assertFalse($verifiedPro->hasVerifiedTradeAccess());
 
@@ -85,15 +101,7 @@ class HighRiskDataVisibilityTest extends TestCase
     public function test_an_expired_dealer_subscription_does_not_grant_access_even_when_verified(): void
     {
         $user = User::factory()->create();
-        SubscriptionUsage::create([
-            'user_id' => $user->id,
-            'plan' => 'dealer',
-            'report_type' => 'plus',
-            'period_start' => now()->subMonths(2)->startOfMonth(),
-            'period_end' => now()->subMonths(2)->endOfMonth(),
-            'allowance' => 30,
-            'used' => 0,
-        ]);
+        $this->subscribeToPlan($user, SubscriptionPlan::GROUP_DEALER, now()->subMonths(2));
         $this->verify($user);
 
         $this->assertFalse($user->fresh()->hasVerifiedTradeAccess());
@@ -124,7 +132,7 @@ class HighRiskDataVisibilityTest extends TestCase
     public function test_high_risk_data_is_hidden_from_a_dealer_subscriber_who_is_not_yet_verified(): void
     {
         $user = User::factory()->create();
-        $this->subscribeToPlan($user, 'dealer');
+        $this->subscribeToPlan($user, SubscriptionPlan::GROUP_DEALER);
         $check = VehicleCheck::factory()->create([
             'user_id' => $user->id,
             'type' => VehicleCheck::TYPE_CHECK,

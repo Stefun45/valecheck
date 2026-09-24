@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SubscriptionPlan;
 use App\Services\Payments\StripeCheckoutService;
+use App\Services\Subscriptions\SubscriptionPlanChangeService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class BillingController extends Controller
@@ -19,28 +22,55 @@ class BillingController extends Controller
         return $checkoutService->checkoutForCreditPack($request->user(), $validated['pack'])->redirect();
     }
 
-    public function subscription(Request $request, StripeCheckoutService $checkoutService)
+    public function subscription(Request $request, StripeCheckoutService $checkoutService, SubscriptionPlanChangeService $planChanges)
     {
         abort_unless(config('valecheck.subscriptions_enabled'), 404);
 
         $this->ensureStripeConfigured();
 
         $validated = $request->validate([
-            'plan' => ['required', 'string', 'in:'.implode(',', array_keys(config('valecheck.pricing.subscriptions')))],
+            'plan_id' => ['required', 'integer', Rule::exists('subscription_plans', 'id')->where('is_active', true)],
         ]);
 
         $user = $request->user();
+        $newPlan = SubscriptionPlan::findOrFail($validated['plan_id']);
 
-        // Already subscribed - changing plan is an in-place Stripe swap,
-        // never a second Checkout Session (Cashier's newSubscription()
-        // would otherwise happily create a duplicate subscription).
-        if ($user->subscribed('default')) {
-            $checkoutService->swapSubscription($user, $validated['plan']);
-
-            return redirect()->route('dashboard')->with('status', 'Your plan has been changed.');
+        if (! $user->subscribed('default')) {
+            return $checkoutService->checkoutForSubscription($user, $newPlan)->redirect();
         }
 
-        return $checkoutService->checkoutForSubscription($user, $validated['plan'])->redirect();
+        $currentPlan = $user->activeSubscriptionPlan();
+
+        // Downgrade (or an equal-tier switch, which can't happen given
+        // distinct sort_order per plan) never touches Stripe or credits
+        // immediately - see SubscriptionPlanChangeService.
+        if ($currentPlan && $newPlan->isDowngradeFrom($currentPlan)) {
+            $planChanges->requestDowngrade($user, $newPlan);
+
+            return redirect()->route('dashboard')->with('status', "Your plan will change to {$newPlan->name} at your next renewal.");
+        }
+
+        $planChanges->upgrade($user, $newPlan);
+
+        return redirect()->route('dashboard')->with('status', 'Your plan has been changed.');
+    }
+
+    public function additionalCredits(Request $request, StripeCheckoutService $checkoutService)
+    {
+        abort_unless(config('valecheck.subscriptions_enabled'), 404);
+
+        $this->ensureStripeConfigured();
+
+        $validated = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1', 'max:1000'],
+        ]);
+
+        $user = $request->user();
+        $plan = $user->activeSubscriptionPlan();
+
+        abort_if($plan === null, 403, 'An active subscription is required to buy additional credits.');
+
+        return $checkoutService->checkoutForAdditionalCredits($user, $plan, $validated['quantity'])->redirect();
     }
 
     public function portal(Request $request)

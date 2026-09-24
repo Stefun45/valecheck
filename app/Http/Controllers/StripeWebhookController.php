@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SubscriptionUsage;
+use App\Models\CreditTransaction;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Services\Credits\CreditLedgerService;
 use App\Services\Payments\StripeCheckoutCompletionHandler;
+use App\Services\Payments\StripeCheckoutService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;
@@ -13,14 +16,36 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Extends Cashier's webhook controller (which already maintains the local
  * subscriptions/subscription_items tables) to add the one-off "checkout.session.completed"
- * handling Cashier doesn't cover, and to open a SubscriptionUsage window whenever
- * a subscription invoice is paid.
+ * handling Cashier doesn't cover, to grant that period's subscription
+ * credits whenever a subscription invoice is paid, and to apply a
+ * pending downgrade at the exact renewal boundary.
  */
 class StripeWebhookController extends CashierWebhookController
 {
     protected function handleCheckoutSessionCompleted(array $payload): Response
     {
         app(StripeCheckoutCompletionHandler::class)->handle($payload['data']['object']);
+
+        return $this->successMethod();
+    }
+
+    /**
+     * Stripe sends this some time before the renewal invoice is actually
+     * created - the only point at which a pending downgrade can be
+     * applied and still have the upcoming renewal bill at the new
+     * (lower) price. Applying it any later (e.g. on
+     * invoice.payment_succeeded, after that invoice already exists)
+     * would be one full billing cycle too late.
+     */
+    protected function handleInvoiceUpcoming(array $payload): Response
+    {
+        $data = $payload['data']['object'];
+        $user = $this->getUserByStripeId($data['customer'] ?? null);
+
+        if ($user && $user->pending_plan_id && ($data['subscription'] ?? null)) {
+            app(StripeCheckoutService::class)->swapSubscription($user, $user->pendingPlan, prorate: false);
+            $user->update(['pending_plan_id' => null]);
+        }
 
         return $this->successMethod();
     }
@@ -34,7 +59,7 @@ class StripeWebhookController extends CashierWebhookController
         $subscriptionId = $data['subscription'] ?? null;
 
         if ($user && $subscriptionId) {
-            $this->openSubscriptionUsageWindow($user, $data);
+            $this->grantSubscriptionCredits($user, $data);
         }
 
         return $response;
@@ -46,59 +71,47 @@ class StripeWebhookController extends CashierWebhookController
      * is not guaranteed here without testing against a real webhook payload
      * (e.g. via `stripe trigger invoice.payment_succeeded` with the Stripe
      * CLI once real test-mode keys are configured). If either can't be
-     * found, we skip rather than create a SubscriptionUsage row with wrong
-     * dates — the user simply won't get subscription-funded reports until
-     * this is verified against a live payload, which is a safe failure mode.
+     * found, or no plan matches, we skip rather than grant credits against
+     * the wrong plan or period - the user simply won't get subscription
+     * credits until this is verified against a live payload, a safe
+     * failure mode.
      */
-    private function openSubscriptionUsageWindow(User $user, array $invoice): void
+    private function grantSubscriptionCredits(User $user, array $invoice): void
     {
         $line = $invoice['lines']['data'][0] ?? [];
         $priceId = $line['price']['id'] ?? $line['pricing']['price_details']['price'] ?? null;
-
-        $plan = collect(config('valecheck.pricing.subscriptions'))
-            ->search(fn ($subscription) => $subscription['stripe_price'] === $priceId);
-
-        $periodStartTimestamp = $line['period']['start'] ?? null;
         $periodEndTimestamp = $line['period']['end'] ?? null;
 
-        if ($plan === false || $plan === null || ! $periodStartTimestamp || ! $periodEndTimestamp) {
-            Log::warning("Could not determine subscription plan/period from invoice.payment_succeeded for user #{$user->id} — skipping SubscriptionUsage window.");
+        if (! $priceId || ! $periodEndTimestamp) {
+            Log::warning("Could not determine subscription price/period from invoice.payment_succeeded for user #{$user->id} - skipping credit grant.");
 
             return;
         }
 
-        // Subscriptions currently only grant a Plus allowance, but the
-        // schema (report_type column, config keyed by product) supports more
-        // than one product per plan without a future migration.
-        $reportType = 'plus';
-        $periodStart = Carbon::createFromTimestamp($periodStartTimestamp)->toDateString();
-        $periodEnd = Carbon::createFromTimestamp($periodEndTimestamp)->toDateString();
+        $plan = SubscriptionPlan::where('stripe_price_id', $priceId)->first();
 
-        // Not firstOrCreate() — the period_start/period_end columns are
-        // cast as 'date' but persist with a time component, so a plain
-        // string-equality lookup against a bare "Y-m-d" value never
-        // matches an already-stored row. That silently defeated this
-        // idempotency check on every webhook retry (Stripe does retry),
-        // duplicating the usage window each time. whereDate() compares
-        // only the date part regardless of what's actually stored.
-        $exists = SubscriptionUsage::where('user_id', $user->id)
-            ->where('report_type', $reportType)
-            ->whereDate('period_start', $periodStart)
-            ->whereDate('period_end', $periodEnd)
+        if (! $plan) {
+            Log::warning("No SubscriptionPlan matches Stripe price [{$priceId}] for user #{$user->id} - skipping credit grant.");
+
+            return;
+        }
+
+        $expiresAt = Carbon::createFromTimestamp($periodEndTimestamp);
+
+        // Idempotency: a retried webhook for the same invoice must never
+        // grant twice. Keyed on user+plan+expiry rather than a separate
+        // processed-invoice table - the same period can only ever be
+        // granted once per plan.
+        $alreadyGranted = CreditTransaction::where('user_id', $user->id)
+            ->where('type', CreditTransaction::TYPE_SUBSCRIPTION_GRANT)
+            ->where('subscription_plan_id', $plan->id)
+            ->where('expires_at', $expiresAt)
             ->exists();
 
-        if ($exists) {
+        if ($alreadyGranted) {
             return;
         }
 
-        SubscriptionUsage::create([
-            'user_id' => $user->id,
-            'report_type' => $reportType,
-            'period_start' => $periodStart,
-            'period_end' => $periodEnd,
-            'plan' => $plan,
-            'allowance' => config("valecheck.pricing.subscriptions.{$plan}.allowances.{$reportType}"),
-            'used' => 0,
-        ]);
+        app(CreditLedgerService::class)->grantSubscriptionCredits($user, $plan, $plan->monthly_credits, $expiresAt);
     }
 }
