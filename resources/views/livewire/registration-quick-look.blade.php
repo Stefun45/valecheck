@@ -61,15 +61,15 @@
                     $previewHistory = new \App\Models\VehicleHistory(['mot_history' => $preview['mot_history'], 'mileage_anomaly' => false]);
                 @endphp
                 <div class="grid sm:grid-cols-2 gap-4 mt-4">
-                    @include('livewire.vehicle-check.partials.mileage-chart', ['history' => $previewHistory])
-                    @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $previewHistory])
+                    @include('livewire.vehicle-check.partials.mileage-chart-teaser', ['history' => $previewHistory])
+                    @include('livewire.vehicle-check.partials.mot-history-teaser', ['history' => $previewHistory])
                 </div>
             @endif
 
             <p class="text-sm text-vale-navy font-semibold mt-4">Is this your vehicle?</p>
             <div class="flex gap-3 mt-2">
                 <button type="button" wire:click="confirm" class="inline-flex items-center justify-center px-5 py-2 bg-vale-red rounded-full font-semibold text-xs text-white hover:bg-red-600 transition">
-                    Yes, that's it &rarr;
+                    Yes, that's it &mdash; see report options &rarr;
                 </button>
                 <button type="button" wire:click="reject" class="inline-flex items-center justify-center px-5 py-2 border border-gray-300 text-gray-600 rounded-full font-semibold text-xs hover:bg-gray-50 transition">
                     No, try again

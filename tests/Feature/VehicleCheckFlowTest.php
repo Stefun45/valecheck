@@ -260,11 +260,16 @@ class VehicleCheckFlowTest extends TestCase
 
     public function test_sections_already_covered_by_the_free_preview_show_the_real_data_unlocked(): void
     {
-        // MOT history and basic identity are already fetched for the free
-        // preview (the same MOT/Tax and DVLA/DVSA calls the paid report
-        // itself uses), so those specific sections should show the real
-        // thing rather than a lock - unlike write-off/finance/valuation,
-        // which are genuinely separate paid calls not made yet.
+        // Basic identity is already fetched for the free preview (the same
+        // MOT/Tax and DVLA/DVSA calls the paid report itself uses), so
+        // Vehicle Summary shows the real thing rather than a lock - unlike
+        // write-off/finance/valuation, which are genuinely separate paid
+        // calls not made yet. MOT & Mileage and Mileage Over Time also have
+        // real data available here, but only ever show a one-line teaser
+        // (pass/fail summary and trend) rather than the full table/chart -
+        // the full detail stays behind the paywall even when it's free to
+        // compute, since giving it away pre-purchase left nothing left to
+        // buy.
         $user = $this->verifiedUser();
         $this->actingAs($user);
 
@@ -283,10 +288,13 @@ class VehicleCheckFlowTest extends TestCase
                 ],
             ])
             ->call('confirmVehicle', true)
-            // Real MOT rows and mileage chart, not the blurred placeholder.
+            // A real one-line teaser, not the full table/chart.
             ->assertSeeHtml('data-section="Write-Off History" data-tier="check"')
-            ->assertSee('20,000 mi')
-            ->assertSee('28,000 mi')
+            ->assertSee('2 MOTs on record')
+            ->assertSee('2 passed, 0 failed')
+            ->assertSee('Mileage trend: increasing consistently across 2 MOTs')
+            ->assertDontSee('20,000 mi')
+            ->assertDontSee('28,000 mi')
             ->assertDontSeeHtml('data-section="MOT &amp; Mileage"')
             ->assertDontSeeHtml('data-section="Mileage Over Time"')
             // Real identity fields, tagged "included free" rather than locked.
@@ -353,12 +361,13 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSee('drag and drop photographs');
     }
 
-    public function test_the_confirmation_step_shows_full_mot_history_and_a_mileage_chart_when_the_preview_includes_it(): void
+    public function test_the_confirmation_step_shows_a_mot_and_mileage_teaser_when_the_preview_includes_it(): void
     {
         // The free preview reuses the same MOT History & Tax Status call the
-        // paid report uses, so it's already fetched — showing the full
-        // history and chart here costs nothing extra, unlike provenance/
-        // valuation/salvage which are separate paid calls.
+        // paid report uses, so a one-line teaser costs nothing extra to
+        // compute - but the full history and chart stay behind the
+        // paywall, unlike provenance/valuation/salvage which are separate
+        // paid calls that genuinely haven't run yet.
         $user = $this->verifiedUser();
         $this->actingAs($user);
 
@@ -383,7 +392,12 @@ class VehicleCheckFlowTest extends TestCase
             ->assertSee('until 01 May 2027')
             ->assertSee('MOT &amp; Mileage', false)
             ->assertSee('Mileage Over Time')
-            ->assertSeeHtml('bg-red-50 text-vale-red');
+            ->assertSee('2 MOTs on record')
+            ->assertSee('1 passed, 1 failed')
+            ->assertSee('Mileage trend: increasing consistently across 2 MOTs')
+            ->assertDontSeeText('Front tyre worn')
+            ->assertDontSee('20,000 mi')
+            ->assertDontSee('28,000 mi');
     }
 
     public function test_the_confirmation_step_has_no_mot_section_when_the_preview_has_no_mot_history(): void

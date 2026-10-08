@@ -81,8 +81,8 @@
                         $previewHistory = new \App\Models\VehicleHistory(['mot_history' => $vehiclePreview['mot_history'], 'mileage_anomaly' => false]);
                     @endphp
                     <div class="grid sm:grid-cols-2 gap-4 mt-4">
-                        @include('livewire.vehicle-check.partials.mileage-chart', ['history' => $previewHistory])
-                        @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $previewHistory])
+                        @include('livewire.vehicle-check.partials.mileage-chart-teaser', ['history' => $previewHistory])
+                        @include('livewire.vehicle-check.partials.mot-history-teaser', ['history' => $previewHistory])
                     </div>
                 @endif
 
@@ -119,14 +119,18 @@
                     ['label' => 'Salvage Auction History', 'icon' => 'shield', 'plusOnly' => true],
                 ];
 
-                // MOT history and basic identity are already fetched for
-                // the free preview above (same MOT/Tax call and DVLA/DVSA
-                // lookup the paid report itself uses) - so these three
-                // sections show the real thing here rather than a lock,
-                // reusing the exact same partials/data the real report
-                // renders. Only shown "included free" when that data
-                // genuinely came back, never faked when the preview
-                // failed or was rate-limited.
+                // Basic identity is already fetched for the free preview
+                // above (same MOT/Tax call and DVLA/DVSA lookup the paid
+                // report itself uses), so Vehicle Summary shows the real
+                // thing here rather than a lock. MOT & Mileage and Mileage
+                // Over Time also have real data available at this point,
+                // but only ever show a one-line pass/fail and trend
+                // summary (see mot-history-teaser/mileage-chart-teaser) -
+                // the full table and chart stay behind the paywall, same
+                // as every other section here. Vehicle Summary is only
+                // shown "included free" when that data genuinely came
+                // back, never faked when the preview failed or was
+                // rate-limited.
                 $hasPreviewMotHistory = ! empty($vehiclePreview['mot_history']);
                 $hasPreviewIdentity = ! empty($vehiclePreview['make']) || ! empty($vehiclePreview['model']);
                 $previewHistory = $hasPreviewMotHistory
@@ -181,7 +185,8 @@
                         : 'Whether this vehicle has passed through salvage auction.',
                     // Fallback copy only - MOT & Mileage and Mileage Over
                     // Time normally show the user's own real free-preview
-                    // data instead (see $previewHistory above) and never
+                    // teaser instead (see $previewHistory above and
+                    // mot-history-teaser/mileage-chart-teaser) and never
                     // reach this array at all. These two only get used if
                     // that preview call didn't return MOT history, so this
                     // locked card isn't left blank.
@@ -199,9 +204,9 @@
                 <div class="grid sm:grid-cols-2 gap-4">
                     @foreach ($reportSections as $section)
                         @if ($section['label'] === 'MOT & Mileage' && $previewHistory)
-                            @include('livewire.vehicle-check.partials.mot-history-table', ['history' => $previewHistory])
+                            @include('livewire.vehicle-check.partials.mot-history-teaser', ['history' => $previewHistory])
                         @elseif ($section['label'] === 'Mileage Over Time' && $previewHistory)
-                            @include('livewire.vehicle-check.partials.mileage-chart', ['history' => $previewHistory])
+                            @include('livewire.vehicle-check.partials.mileage-chart-teaser', ['history' => $previewHistory])
                         @elseif ($section['label'] === 'Vehicle Summary' && $hasPreviewIdentity)
                             <div class="relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm" data-section="Vehicle Summary" data-tier="included">
                                 <span class="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-green-100 text-green-700">Included free</span>

@@ -79,12 +79,13 @@ class RegistrationQuickLookTest extends TestCase
             ->assertSet('status', 'found');
     }
 
-    public function test_the_free_preview_includes_full_mot_history_and_a_mileage_chart(): void
+    public function test_the_free_preview_shows_a_mot_and_mileage_teaser_not_the_full_history(): void
     {
-        // The homepage widget must match the same-cost preview shown when
-        // starting a check from inside the account (StartCheck) - it's
-        // the same underlying provider call, so there's no reason for one
-        // to show the full MOT history and the other not to.
+        // Giving away the full MOT history and mileage chart before
+        // checkout left nothing for a purchase to unlock - the homepage
+        // widget must match the same teaser shown when starting a check
+        // from inside the account (StartCheck): a real pass/fail summary
+        // and trend line, never the full per-test breakdown or advisories.
         Livewire::test(RegistrationQuickLook::class)
             ->set('registration', 'AB12CDE')
             ->set('status', 'found')
@@ -104,8 +105,23 @@ class RegistrationQuickLookTest extends TestCase
                     ['test_date' => '2024-06-01', 'result' => 'FAILED', 'mileage' => 28000, 'advisories' => ['Front tyre worn']],
                 ],
             ])
-            ->assertSeeText('Front tyre worn')
-            ->assertSeeText('20,000')
-            ->assertSeeText('28,000');
+            ->assertSeeText('2 MOTs on record')
+            ->assertSeeText('1 passed, 1 failed')
+            ->assertSeeText('Mileage trend: increasing consistently across 2 MOTs')
+            ->assertDontSeeText('Front tyre worn')
+            ->assertDontSeeText('20,000')
+            ->assertDontSeeText('28,000');
+    }
+
+    public function test_the_confirm_button_signals_that_the_next_step_is_choosing_a_report(): void
+    {
+        // Production data showed ~110 free lookups and almost no
+        // purchases - part of the problem was a confirm button that gave
+        // no hint that clicking led towards pricing/a purchase decision.
+        Livewire::test(RegistrationQuickLook::class)
+            ->set('registration', 'AB12CDE')
+            ->call('check')
+            ->assertSeeText("Yes, that's it", false)
+            ->assertSeeText('see report options');
     }
 }
