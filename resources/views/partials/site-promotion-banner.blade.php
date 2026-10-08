@@ -9,7 +9,6 @@
 @endphp
 @if ($liveSitePromotions->isNotEmpty())
     <div class="bg-vale-red text-white text-center text-sm font-semibold py-2 px-4">
-        Launch Offer:
         {{ $liveSitePromotions->map(fn ($row) => "{$row['label']} now £".number_format((float) $row['promotion']->discounted_gross, 2))->implode(', ') }}
         - for a limited time.
     </div>

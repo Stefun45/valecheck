@@ -131,7 +131,7 @@ class AdminSitePromotionTest extends TestCase
         SitePromotion::current('check')->update(['is_active' => true, 'discounted_gross' => 7.19]);
 
         $this->get('/')
-            ->assertSeeText('Launch Offer')
+            ->assertSeeText('for a limited time')
             ->assertSeeText('7.19')
             ->assertSeeText('8.99');
     }
@@ -139,7 +139,7 @@ class AdminSitePromotionTest extends TestCase
     public function test_no_active_promotion_shows_no_banner_and_no_struck_through_price(): void
     {
         $this->get('/')
-            ->assertDontSeeText('Launch Offer')
+            ->assertDontSeeText('for a limited time')
             ->assertSeeText('8.99');
     }
 }
