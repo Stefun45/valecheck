@@ -60,7 +60,7 @@
                                         step="0.01"
                                         min="0.01"
                                         class="block w-full pl-7"
-                                        value="{{ old("promotions.{$type}.discounted_gross", $promotion->discounted_gross) }}"
+                                        value="{{ old('promotions.'.$type.'.discounted_gross', $promotion->discounted_gross) }}"
                                     />
                                 </div>
                                 <x-input-error :messages="$errors->get('promotions.'.$type.'.discounted_gross')" class="mt-2" />

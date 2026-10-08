@@ -43,6 +43,27 @@ class AdminSitePromotionTest extends TestCase
             ->assertSee('7.19');
     }
 
+    /**
+     * Regression test: a nested double-quoted old() call inside the
+     * discounted_gross <x-text-input> component's value="..." attribute
+     * once broke Blade's component tag compiler entirely, printing the
+     * literal "<x-text-input ...>" tag as text instead of a real <input>
+     * - meaning the field was never actually editable, just invisible
+     * text pretending to be one. assertSee() alone can't catch this
+     * (the literal tag text still "contains" the field's attributes), so
+     * this asserts directly against the compiled HTML.
+     */
+    public function test_the_discounted_price_fields_render_as_real_inputs_not_a_literal_component_tag(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $html = $this->actingAs($admin)->get(route('admin.promotion.edit'))->getContent();
+
+        $this->assertStringNotContainsString('<x-text-input', $html);
+        $this->assertStringContainsString('name="promotions[check][discounted_gross]"', $html);
+        $this->assertSame(4, substr_count($html, 'id="discounted_'));
+    }
+
     public function test_an_admin_can_turn_a_plans_promotion_on_and_it_takes_effect_immediately(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
