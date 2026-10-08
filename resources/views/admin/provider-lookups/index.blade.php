@@ -11,7 +11,7 @@
             </p>
 
             <div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100 shadow-sm overflow-x-auto">
-                <div class="grid grid-cols-7 gap-4 px-4 py-3 text-xs font-bold uppercase tracking-widest text-gray-400">
+                <div class="grid grid-cols-[1.3fr_0.7fr_1.6fr_0.9fr_0.8fr_0.5fr_0.9fr] gap-4 px-4 py-3 text-xs font-bold uppercase tracking-widest text-gray-400">
                     <span>Timestamp</span>
                     <span>Provider</span>
                     <span>Endpoint</span>
@@ -21,11 +21,11 @@
                     <span>Report</span>
                 </div>
                 @forelse ($logs as $log)
-                    <div class="grid grid-cols-7 gap-4 px-4 py-3 text-sm items-center">
-                        <span class="text-gray-500">{{ $log->created_at->format('d M Y H:i:s') }}</span>
-                        <span class="text-vale-navy">{{ $log->provider }}</span>
-                        <span class="text-vale-navy font-mono text-xs">{{ $log->endpoint }}</span>
-                        <span class="text-vale-navy font-mono">{{ $log->registration }}</span>
+                    <div class="grid grid-cols-[1.3fr_0.7fr_1.6fr_0.9fr_0.8fr_0.5fr_0.9fr] gap-4 px-4 py-3 text-sm items-center">
+                        <span class="text-gray-500 min-w-0 truncate">{{ $log->created_at->format('d M Y H:i:s') }}</span>
+                        <span class="text-vale-navy min-w-0 truncate">{{ $log->provider }}</span>
+                        <span class="text-vale-navy font-mono text-xs min-w-0 truncate" title="{{ $log->endpoint }}">{{ $log->endpoint }}</span>
+                        <span class="text-vale-navy font-mono min-w-0 truncate">{{ $log->registration }}</span>
                         <span>
                             @if ($log->status === \App\Models\ProviderLookupLog::STATUS_SUCCESS)
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700">Success</span>
