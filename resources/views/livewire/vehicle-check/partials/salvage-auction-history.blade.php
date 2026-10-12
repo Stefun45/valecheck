@@ -14,14 +14,16 @@
                         <div class="flex justify-between"><dt class="text-gray-500">Secondary damage</dt><dd class="text-vale-navy">{{ $record['secondaryDamageDescription'] ?? '—' }}</dd></div>
                         <div class="flex justify-between sm:col-span-2"><dt class="text-gray-500">Location</dt><dd class="text-vale-navy">{{ $record['location'] ?? '—' }}</dd></div>
                     </dl>
-                    @if (! empty($record['imageUrls']))
-                        {{-- Linked out, never embedded — avoids image
-                             licensing issues, and Experian doesn't want
-                             photographs embedded in reports using their
-                             data. --}}
+                    @php $recordImages = $salvageAuctionCheck->images->where('record_index', $loop->index); @endphp
+                    @if ($recordImages->isNotEmpty())
+                        {{-- Downloaded and stored permanently by
+                             RetrieveSalvageAuctionImages — these are our
+                             own copies, not a link to a One Auto URL that
+                             expires after ~12 hours, so they're embedded
+                             directly here rather than linked out. --}}
                         <div class="flex flex-wrap gap-3 mt-3">
-                            @foreach ($record['imageUrls'] as $index => $imageUrl)
-                                <a href="{{ $imageUrl }}" target="_blank" rel="noopener" class="text-xs text-vale-red hover:text-red-600 underline">View photo {{ $index + 1 }} &#8599;</a>
+                            @foreach ($recordImages as $image)
+                                <img src="{{ $image->temporaryUrl() }}" alt="Salvage auction photo" class="h-24 w-32 object-cover rounded-lg border border-gray-200">
                             @endforeach
                         </div>
                     @else
@@ -35,6 +37,5 @@
                 </div>
             @endforeach
         </div>
-        <p class="text-xs text-gray-400 mt-3">Salvage auction photographs, where available, are linked to their original source rather than shown here, as taken at the time of listing.</p>
     @endif
 </div>

@@ -36,6 +36,7 @@ class ProviderEndpointCost extends Model
         'ukvehicledata/valuationfromvrm/v2' => 'Valuation (clean vehicles) — Plus',
         'salvageguide/bidpredictionfromvrm' => 'Salvage Bid Prediction (written-off vehicles) — Plus',
         'carguide/salvagecheck/v2' => 'Salvage Auction Check — Plus',
+        'salvageguide/thirdpartyimages' => 'Salvage Auction Photos — Plus (only charged on a chargeable HTTP 200; 202/204/206/4xx/5xx are free)',
         'oneauto/vehicletaxfromvrm/v2' => 'Vehicle Tax Cost — Plus',
         'vehicleimagery/imagesearchfromvrm' => 'Vehicle Imagery — image search',
         'vehicleimagery/imagefromid' => 'Vehicle Imagery — image fetch',

@@ -12,6 +12,7 @@ final readonly class SalvageAuctionData
 {
     /**
      * @param  array<int, array{
+     *     recordId: int|string|null,
      *     lotDescription: ?string,
      *     lotDate: ?string,
      *     mileage: ?int,

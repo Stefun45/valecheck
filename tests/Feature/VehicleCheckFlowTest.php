@@ -8,6 +8,7 @@ use App\Models\BidRecommendation;
 use App\Models\Payment;
 use App\Models\Report;
 use App\Models\SalvageAuctionCheck;
+use App\Models\SalvageAuctionImage;
 use App\Models\User;
 use App\Models\UserProductPrice;
 use App\Models\Vehicle;
@@ -1212,6 +1213,8 @@ class VehicleCheckFlowTest extends TestCase
 
     public function test_a_plus_report_shows_salvage_auction_photos_and_details_when_a_record_is_found(): void
     {
+        Storage::fake('local');
+
         $user = $this->verifiedUser();
         $check = VehicleCheck::factory()->create([
             'user_id' => $user->id,
@@ -1221,10 +1224,11 @@ class VehicleCheckFlowTest extends TestCase
 
         VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
         Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
-        SalvageAuctionCheck::create([
+        $salvageCheck = SalvageAuctionCheck::create([
             'vehicle_check_id' => $check->id,
             'record_found' => true,
             'records' => [[
+                'recordId' => 123456,
                 'lotDescription' => 'Category N — front end collision damage',
                 'lotDate' => '2024-03-01',
                 'mileage' => 32000,
@@ -1235,27 +1239,41 @@ class VehicleCheckFlowTest extends TestCase
             ]],
         ]);
 
+        // Simulates RetrieveSalvageAuctionImages having already downloaded
+        // and permanently stored this photo — the report now always embeds
+        // from this table, never from the original (expiring) source URL.
+        $imagePath = "salvage-auction/{$salvageCheck->id}/0-0.jpg";
+        Storage::disk('local')->put($imagePath, 'fake-salvage-photo-bytes');
+        SalvageAuctionImage::create([
+            'salvage_auction_check_id' => $salvageCheck->id,
+            'record_index' => 0,
+            'source_url' => 'https://example.com/photo1.jpg',
+            'disk' => 'local',
+            'path' => $imagePath,
+            'position' => 0,
+        ]);
+
         $this->actingAs($user);
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Salvage Auction History')
             ->assertSeeText('Copart Bedford')
             ->assertSeeText('Front bumper and headlight')
-            // Linked out, never embedded — Experian doesn't want salvage
-            // photographs embedded in reports using their data, and this
-            // also sidesteps image-licensing issues.
-            ->assertSeeHtml('href="https://example.com/photo1.jpg"')
-            ->assertDontSeeHtml('<img src="https://example.com/photo1.jpg"');
+            // Embedded from our own permanently-stored copy, never linked
+            // out to the original (expiring) third-party source URL.
+            ->assertSeeHtml('<img src=')
+            ->assertDontSeeHtml('href="https://example.com/photo1.jpg"');
 
-        // Photographs are shown on the web report (browser-fetched) but not
-        // embedded in the PDF, since dompdf has isRemoteEnabled disabled to
-        // avoid server-side SSRF on third-party-sourced image URLs.
+        // Embedded in the PDF too, as a base64 data URI — dompdf has
+        // isRemoteEnabled disabled (see ReportPdfService), so a plain
+        // <img src="https://..."> or even our own signed URL can't be
+        // fetched there; the bytes have to be inlined directly.
         $pdfHtml = view('pdf.plus-report', ['check' => $check])->render();
 
         $this->assertStringContainsString('Salvage Auction History', $pdfHtml);
         $this->assertStringContainsString('Copart Bedford', $pdfHtml);
+        $this->assertStringContainsString('data:image/jpeg;base64,', $pdfHtml);
         $this->assertStringNotContainsString('https://example.com/photo1.jpg', $pdfHtml);
-        $this->assertStringContainsString(route('vehicle-checks.show', $check), $pdfHtml);
     }
 
     public function test_a_plus_report_states_no_photos_were_provided_when_a_found_record_has_none(): void

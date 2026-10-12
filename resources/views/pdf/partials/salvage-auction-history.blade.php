@@ -14,6 +14,19 @@
                 </tr>
             @endforeach
         </table>
-        <p style="color:#999; font-size:9px; margin-top:6px;">Salvage auction photographs are available on the online version of this report at {{ $reportUrl }}</p>
+        @php $salvageImages = $salvageAuctionCheck->images; @endphp
+        @if ($salvageImages->isNotEmpty())
+            {{-- Embedded as base64 data URIs, not plain <img src> URLs —
+                 dompdf has isRemoteEnabled disabled (see ReportPdfService),
+                 so a normal URL (even our own signed one) can't be fetched
+                 while rendering the PDF. --}}
+            <div style="margin-top:6px;">
+                @foreach ($salvageImages as $image)
+                    <img src="{{ $image->dataUri() }}" alt="" style="max-width:150px; max-height:110px; margin:0 6px 6px 0;">
+                @endforeach
+            </div>
+        @else
+            <p style="color:#999; font-size:9px; margin-top:6px;">No salvage auction photographs were available for this listing.</p>
+        @endif
     @endif
 </div>

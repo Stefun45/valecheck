@@ -68,4 +68,50 @@ class OneAutoClientTest extends TestCase
 
         $this->assertNull(ProviderLookupLog::first()->cost_net);
     }
+
+    /**
+     * Most endpoints are billed flat regardless of outcome, which the tests
+     * above cover. A handful of endpoints (see
+     * OneAutoSalvageAuctionImageProvider) are billed conditionally on HTTP
+     * status instead — this is the generic mechanism that makes that
+     * possible without touching any of the ~20 other call sites.
+     */
+    public function test_a_cost_resolver_overrides_the_flat_lookup_when_provided(): void
+    {
+        ProviderEndpointCost::updateOrCreate(['endpoint' => 'experian/autocheck/v3'], ['cost_net' => 0.12]);
+
+        Http::fake(['api.oneautoapi.com/experian/autocheck/v3*' => Http::response(['success' => true, 'result' => []], 200)]);
+
+        $this->client()->get('experian/autocheck/v3', 'AB12CDE', [], null, fn (?int $httpStatus) => 1.2345);
+
+        $this->assertSame('1.2345', ProviderLookupLog::first()->cost_net);
+    }
+
+    public function test_a_cost_resolver_is_given_the_actual_http_status_of_the_response(): void
+    {
+        Http::fake(['api.oneautoapi.com/experian/autocheck/v3*' => Http::response(['success' => true, 'result' => []], 206)]);
+
+        $seenStatus = null;
+        $this->client()->get('experian/autocheck/v3', 'AB12CDE', [], null, function (?int $httpStatus) use (&$seenStatus) {
+            $seenStatus = $httpStatus;
+
+            return 0.0;
+        });
+
+        $this->assertSame(206, $seenStatus);
+        $this->assertSame('0.0000', ProviderLookupLog::first()->cost_net);
+    }
+
+    public function test_omitting_the_cost_resolver_keeps_the_existing_flat_lookup_behaviour(): void
+    {
+        ProviderEndpointCost::updateOrCreate(['endpoint' => 'experian/autocheck/v3'], ['cost_net' => 0.12]);
+
+        Http::fake(['api.oneautoapi.com/experian/autocheck/v3*' => Http::response(['success' => true, 'result' => []], 200)]);
+
+        // No 5th argument — every one of the ~20 existing call sites calls
+        // get() exactly like this, and must keep behaving identically.
+        $this->client()->get('experian/autocheck/v3', 'AB12CDE', []);
+
+        $this->assertSame('0.1200', ProviderLookupLog::first()->cost_net);
+    }
 }

@@ -29,6 +29,7 @@ class MockSalvageAuctionProvider implements SalvageAuctionProvider
             recordFound: true,
             records: [
                 [
+                    'recordId' => 1000000 + $seed,
                     'lotDescription' => 'Category N — front end collision damage',
                     'lotDate' => Carbon::now()->subYears(2)->toDateString(),
                     'mileage' => 32000 + ($seed * 37),
