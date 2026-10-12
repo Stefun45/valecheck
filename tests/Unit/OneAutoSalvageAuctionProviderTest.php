@@ -29,6 +29,7 @@ class OneAutoSalvageAuctionProviderTest extends TestCase
                     'salvage_auction_record_found' => true,
                     'salvage_auction_records' => [
                         [
+                            'salvage_auction_record_id' => 1234567,
                             'salvage_auction_lot_desc' => 'Category N — front end collision damage',
                             'salvage_auction_lot_date' => '2024-03-01',
                             'mileage' => 32000,
@@ -46,6 +47,7 @@ class OneAutoSalvageAuctionProviderTest extends TestCase
 
         $this->assertTrue($result->recordFound);
         $this->assertCount(1, $result->records);
+        $this->assertSame(1234567, $result->records[0]['recordId']);
         $this->assertSame('Category N — front end collision damage', $result->records[0]['lotDescription']);
         $this->assertSame('2024-03-01', $result->records[0]['lotDate']);
         $this->assertSame(32000, $result->records[0]['mileage']);

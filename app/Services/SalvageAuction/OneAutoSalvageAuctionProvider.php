@@ -37,6 +37,13 @@ class OneAutoSalvageAuctionProvider implements SalvageAuctionProvider
         }
 
         $records = array_map(fn (array $record) => [
+            // Not currently used, but this is the Lot ID a separate
+            // One Auto image endpoint (not yet integrated) needs to fetch
+            // salvage photos - carguide/salvagecheck/v2 itself almost
+            // never returns external_image_urls populated (<5% coverage,
+            // confirmed with One Auto), so it's kept here rather than
+            // discarded for when that second call is wired up.
+            'recordId' => $record['salvage_auction_record_id'] ?? null,
             'lotDescription' => $record['salvage_auction_lot_desc'] ?? null,
             'lotDate' => $record['salvage_auction_lot_date'] ?? null,
             'mileage' => $record['mileage'] ?? null,
