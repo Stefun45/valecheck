@@ -16,8 +16,11 @@ use App\Services\RegistrationLookup\DvlaVesProvider;
 use App\Services\RegistrationLookup\MockDvlaProvider;
 use App\Services\RegistrationLookup\OneAutoBasicProvider;
 use App\Services\RegistrationLookup\VehicleSpecPreviewProvider;
+use App\Services\SalvageAuction\MockSalvageAuctionImageProvider;
 use App\Services\SalvageAuction\MockSalvageAuctionProvider;
+use App\Services\SalvageAuction\OneAutoSalvageAuctionImageProvider;
 use App\Services\SalvageAuction\OneAutoSalvageAuctionProvider;
+use App\Services\SalvageAuction\SalvageAuctionImageProvider;
 use App\Services\SalvageAuction\SalvageAuctionProvider;
 use App\Services\Valuation\MarketValuationProvider;
 use App\Services\Valuation\MockMarketValuationProvider;
@@ -103,6 +106,13 @@ class AppServiceProvider extends ServiceProvider
             return match (strtolower((string) config('valecheck.vehicle_data.provider'))) {
                 'oneauto' => new OneAutoSalvageAuctionProvider($app->make(OneAutoClient::class)),
                 default => new MockSalvageAuctionProvider,
+            };
+        });
+
+        $this->app->bind(SalvageAuctionImageProvider::class, function ($app) {
+            return match (strtolower((string) config('valecheck.vehicle_data.provider'))) {
+                'oneauto' => new OneAutoSalvageAuctionImageProvider($app->make(OneAutoClient::class)),
+                default => new MockSalvageAuctionImageProvider,
             };
         });
 

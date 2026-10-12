@@ -7,6 +7,8 @@ use App\Models\DamageAnalysis;
 use App\Models\Payment;
 use App\Models\RepairEstimate;
 use App\Models\Report;
+use App\Models\SalvageAuctionCheck;
+use App\Models\SalvageAuctionImage;
 use App\Models\User;
 use App\Models\VehicleCheck;
 use App\Models\VehicleCheckImage;
@@ -38,6 +40,22 @@ class PurgeExpiredReportsTest extends TestCase
         Storage::disk('local')->put('reports/'.$check->id.'/report.pdf', 'fake-pdf-bytes');
         $report->update(['pdf_disk' => 'local', 'pdf_path' => 'reports/'.$check->id.'/report.pdf', 'pdf_generated_at' => now()]);
 
+        $salvageCheck = SalvageAuctionCheck::create([
+            'vehicle_check_id' => $check->id,
+            'record_found' => true,
+            'records' => [['recordId' => 123, 'imageUrls' => ['https://example.com/photo.jpg']]],
+        ]);
+        $salvageImagePath = "salvage-auction/{$salvageCheck->id}/0-0.jpg";
+        Storage::disk('local')->put($salvageImagePath, 'fake-salvage-image-bytes');
+        SalvageAuctionImage::create([
+            'salvage_auction_check_id' => $salvageCheck->id,
+            'record_index' => 0,
+            'source_url' => 'https://example.com/photo.jpg',
+            'disk' => 'local',
+            'path' => $salvageImagePath,
+            'position' => 0,
+        ]);
+
         VehicleHistory::create(['vehicle_check_id' => $check->id]);
         VehicleValuation::create(['vehicle_check_id' => $check->id]);
         DamageAnalysis::create(['vehicle_check_id' => $check->id]);
@@ -58,6 +76,7 @@ class PurgeExpiredReportsTest extends TestCase
         $check = $this->fullyCompletedCheck();
         $imagePath = $check->images->first()->path;
         $pdfPath = $check->report->pdf_path;
+        $salvageImagePath = $check->salvageAuctionCheck->images->first()->path;
 
         $this->artisan('reports:purge-expired')->assertSuccessful();
 
@@ -76,6 +95,29 @@ class PurgeExpiredReportsTest extends TestCase
 
         Storage::disk('local')->assertMissing($imagePath);
         Storage::disk('local')->assertMissing($pdfPath);
+        Storage::disk('local')->assertMissing($salvageImagePath);
+    }
+
+    /**
+     * Salvage auction images are tied to this same purge window (see the
+     * comment in PurgeExpiredReports::purge()) rather than any separate
+     * expiry mechanism — the files and DB rows are deleted explicitly,
+     * without touching the parent SalvageAuctionCheck row itself, which is
+     * a deliberate, narrower scope than the rest of this method (that row
+     * is a pre-existing gap this command never purged, and fixing that is
+     * out of scope here).
+     */
+    public function test_it_deletes_salvage_images_but_leaves_the_salvage_auction_check_row_itself(): void
+    {
+        $check = $this->fullyCompletedCheck();
+        $salvageCheck = $check->salvageAuctionCheck;
+        $salvageImagePath = $salvageCheck->images->first()->path;
+
+        $this->artisan('reports:purge-expired')->assertSuccessful();
+
+        $this->assertDatabaseMissing('salvage_auction_images', ['salvage_auction_check_id' => $salvageCheck->id]);
+        $this->assertDatabaseHas('salvage_auction_checks', ['id' => $salvageCheck->id]);
+        Storage::disk('local')->assertMissing($salvageImagePath);
     }
 
     public function test_it_leaves_payment_and_credit_records_untouched(): void
