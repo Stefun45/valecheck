@@ -8,7 +8,6 @@ use App\Models\BidRecommendation;
 use App\Models\Payment;
 use App\Models\Report;
 use App\Models\SalvageAuctionCheck;
-use App\Models\SalvageAuctionImage;
 use App\Models\User;
 use App\Models\UserProductPrice;
 use App\Models\Vehicle;
@@ -18,6 +17,7 @@ use App\Models\VehicleValuation;
 use App\Services\Credits\CreditLedgerService;
 use App\Services\Payments\StripeCheckoutCompletionHandler;
 use App\Services\Reports\ReportPdfService;
+use App\Services\SalvageAuction\SalvageAuctionImageProvider;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -1213,77 +1213,6 @@ class VehicleCheckFlowTest extends TestCase
 
     public function test_a_plus_report_shows_salvage_auction_photos_and_details_when_a_record_is_found(): void
     {
-        Storage::fake('local');
-
-        $user = $this->verifiedUser();
-        $check = VehicleCheck::factory()->create([
-            'user_id' => $user->id,
-            'type' => VehicleCheck::TYPE_PLUS,
-            'status' => VehicleCheck::STATUS_COMPLETED,
-        ]);
-
-        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
-        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
-        $salvageCheck = SalvageAuctionCheck::create([
-            'vehicle_check_id' => $check->id,
-            'record_found' => true,
-            'records' => [[
-                'recordId' => 123456,
-                'lotDescription' => 'Category N — front end collision damage',
-                'lotDate' => '2024-03-01',
-                'mileage' => 32000,
-                'primaryDamageDescription' => 'Front bumper and headlight',
-                'secondaryDamageDescription' => 'Nearside front wing',
-                'location' => 'Copart Bedford',
-                'imageUrls' => ['https://example.com/photo1.jpg'],
-            ]],
-        ]);
-
-        // Simulates RetrieveSalvageAuctionImages having already downloaded
-        // and permanently stored this photo — the report now always embeds
-        // from this table, never from the original (expiring) source URL.
-        $imagePath = "salvage-auction/{$salvageCheck->id}/0-0.jpg";
-        Storage::disk('local')->put($imagePath, 'fake-salvage-photo-bytes');
-        SalvageAuctionImage::create([
-            'salvage_auction_check_id' => $salvageCheck->id,
-            'record_index' => 0,
-            'source_url' => 'https://example.com/photo1.jpg',
-            'disk' => 'local',
-            'path' => $imagePath,
-            'position' => 0,
-        ]);
-
-        $this->actingAs($user);
-
-        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
-            ->assertSeeText('Salvage Auction History')
-            ->assertSeeText('Copart Bedford')
-            ->assertSeeText('Front bumper and headlight')
-            // Embedded from our own permanently-stored copy, never linked
-            // out to the original (expiring) third-party source URL.
-            ->assertSeeHtml('<img src=')
-            ->assertDontSeeHtml('href="https://example.com/photo1.jpg"');
-
-        // Embedded in the PDF too, as a base64 data URI — dompdf has
-        // isRemoteEnabled disabled (see ReportPdfService), so a plain
-        // <img src="https://..."> or even our own signed URL can't be
-        // fetched there; the bytes have to be inlined directly.
-        $pdfHtml = view('pdf.plus-report', ['check' => $check])->render();
-
-        $this->assertStringContainsString('Salvage Auction History', $pdfHtml);
-        $this->assertStringContainsString('Copart Bedford', $pdfHtml);
-        $this->assertStringContainsString('data:image/jpeg;base64,', $pdfHtml);
-        $this->assertStringNotContainsString('https://example.com/photo1.jpg', $pdfHtml);
-    }
-
-    public function test_a_plus_report_states_no_photos_were_provided_when_a_found_record_has_none(): void
-    {
-        // Reproduces a real production case: a genuine salvage record
-        // (AA15ROZ) came back from OneAuto with real lot details but a
-        // completely empty imageUrls array. Leaving the photo area blank
-        // looked identical to "we never checked" rather than "the
-        // source didn't provide any" - the one thing this whole report
-        // exists to avoid.
         $user = $this->verifiedUser();
         $check = VehicleCheck::factory()->create([
             'user_id' => $user->id,
@@ -1297,6 +1226,73 @@ class VehicleCheckFlowTest extends TestCase
             'vehicle_check_id' => $check->id,
             'record_found' => true,
             'records' => [[
+                'recordId' => 123456,
+                'lotDescription' => 'Category N - front end collision damage',
+                'lotDate' => '2024-03-01',
+                'mileage' => 32000,
+                'primaryDamageDescription' => 'Front bumper and headlight',
+                'secondaryDamageDescription' => 'Nearside front wing',
+                'location' => 'Copart Bedford',
+                'imageUrls' => [],
+            ]],
+        ]);
+
+        // The report fetches a fresh link live, at view time, rather than
+        // embedding anything pre-downloaded - see
+        // ShowCheck::salvageAuctionImageLinks(). The real provider is
+        // replaced here with a fake returning a known listing-page URL, so
+        // the test can assert on it without a real One Auto call.
+        $this->app->instance(SalvageAuctionImageProvider::class, new class implements SalvageAuctionImageProvider
+        {
+            public function fetchImages(string $recordId, ?int $vehicleCheckId = null): array
+            {
+                return $recordId === '123456' ? ['https://poctra.com/listing/59749706'] : [];
+            }
+        });
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeText('Salvage Auction History')
+            ->assertSeeText('Copart Bedford')
+            ->assertSeeText('Front bumper and headlight')
+            // Linked out to the live-fetched listing page, never embedded -
+            // the endpoint returns a page, not an image file.
+            ->assertSeeHtml('href="https://poctra.com/listing/59749706"')
+            ->assertDontSeeHtml('<img src=');
+
+        // A PDF is a static snapshot - it can't hold a link that might
+        // expire, or make a live call the way the web page does, so it
+        // points to the online report instead (see the PDF partial).
+        $pdfHtml = view('pdf.plus-report', ['check' => $check])->render();
+
+        $this->assertStringContainsString('Salvage Auction History', $pdfHtml);
+        $this->assertStringContainsString('Copart Bedford', $pdfHtml);
+        $this->assertStringContainsString('available on the online version of this report', $pdfHtml);
+        $this->assertStringNotContainsString('poctra.com', $pdfHtml);
+    }
+
+    public function test_a_plus_report_states_no_photos_were_provided_when_the_live_fetch_returns_none(): void
+    {
+        // Reproduces a real production case: a genuine salvage record
+        // (AA15ROZ) came back from OneAuto with real lot details but no
+        // images available. Leaving the photo area blank looked identical
+        // to "we never checked" rather than "the source didn't provide
+        // any" - the one thing this whole report exists to avoid.
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+        SalvageAuctionCheck::create([
+            'vehicle_check_id' => $check->id,
+            'record_found' => true,
+            'records' => [[
+                'recordId' => 999,
                 'lotDescription' => 'U - Unrecorded',
                 'lotDate' => '2026-09-08',
                 'mileage' => 89919,
@@ -1307,12 +1303,122 @@ class VehicleCheckFlowTest extends TestCase
             ]],
         ]);
 
+        $this->app->instance(SalvageAuctionImageProvider::class, new class implements SalvageAuctionImageProvider
+        {
+            public function fetchImages(string $recordId, ?int $vehicleCheckId = null): array
+            {
+                return [];
+            }
+        });
+
         $this->actingAs($user);
 
         Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
             ->assertSeeText('Peterlee')
             ->assertSeeText('No photos were provided for this listing.')
-            ->assertDontSeeHtml('View photo 1');
+            ->assertDontSeeHtml('View salvage auction photos');
+    }
+
+    public function test_a_plus_report_degrades_gracefully_when_the_live_salvage_image_fetch_throws(): void
+    {
+        // This is additive provenance, not a safety-critical field - a
+        // slow or failing live fetch must never break the rest of the
+        // report page for a customer who already paid for it.
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+        SalvageAuctionCheck::create([
+            'vehicle_check_id' => $check->id,
+            'record_found' => true,
+            'records' => [[
+                'recordId' => 456,
+                'lotDescription' => 'Category N - front end collision damage',
+                'lotDate' => '2024-03-01',
+                'mileage' => 32000,
+                'primaryDamageDescription' => 'Front bumper and headlight',
+                'secondaryDamageDescription' => 'Nearside front wing',
+                'location' => 'Copart Bedford',
+                'imageUrls' => [],
+            ]],
+        ]);
+
+        $this->app->instance(SalvageAuctionImageProvider::class, new class implements SalvageAuctionImageProvider
+        {
+            public function fetchImages(string $recordId, ?int $vehicleCheckId = null): array
+            {
+                throw new RuntimeException('One Auto is unreachable.');
+            }
+        });
+
+        $this->actingAs($user);
+
+        Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertOk()
+            ->assertSeeText('Salvage Auction History')
+            ->assertSeeText('Copart Bedford')
+            ->assertSeeText('No photos were provided for this listing.');
+    }
+
+    public function test_the_live_salvage_image_fetch_is_memoized_across_interactions_with_the_same_report(): void
+    {
+        // verifyVin() is a genuinely separate Livewire network round-trip
+        // that hydrates a fresh component instance - without `persist` on
+        // the #[Computed] property, this would trigger a second, possibly
+        // billable, live One Auto call for the same page view.
+        $user = $this->verifiedUser();
+        $check = VehicleCheck::factory()->create([
+            'user_id' => $user->id,
+            'type' => VehicleCheck::TYPE_PLUS,
+            'status' => VehicleCheck::STATUS_COMPLETED,
+        ]);
+        $check->vehicle()->update(['vin' => 'WVWZZZ1KZAW123456']);
+
+        VehicleHistory::create(['vehicle_check_id' => $check->id, 'finance_marker' => false]);
+        Report::create(['vehicle_check_id' => $check->id, 'type' => VehicleCheck::TYPE_PLUS, 'headline_summary' => 'Test.']);
+        SalvageAuctionCheck::create([
+            'vehicle_check_id' => $check->id,
+            'record_found' => true,
+            'records' => [[
+                'recordId' => 789,
+                'lotDescription' => 'Category N - front end collision damage',
+                'lotDate' => '2024-03-01',
+                'mileage' => 32000,
+                'primaryDamageDescription' => 'Front bumper and headlight',
+                'secondaryDamageDescription' => 'Nearside front wing',
+                'location' => 'Copart Bedford',
+                'imageUrls' => [],
+            ]],
+        ]);
+
+        $spy = new class implements SalvageAuctionImageProvider
+        {
+            public int $calls = 0;
+
+            public function fetchImages(string $recordId, ?int $vehicleCheckId = null): array
+            {
+                $this->calls++;
+
+                return ['https://poctra.com/listing/59749706'];
+            }
+        };
+        $this->app->instance(SalvageAuctionImageProvider::class, $spy);
+
+        $this->actingAs($user);
+
+        $component = Livewire::test(ShowCheck::class, ['vehicleCheck' => $check])
+            ->assertSeeHtml('href="https://poctra.com/listing/59749706"');
+
+        $component->set('vinToVerify', 'WVWZZZ1KZAW123456')
+            ->call('verifyVin')
+            ->assertSeeHtml('href="https://poctra.com/listing/59749706"');
+
+        $this->assertSame(1, $spy->calls, 'verifyVin() re-rendering the report must not trigger a second live fetch.');
     }
 
     public function test_a_plus_report_shows_no_salvage_record_found_when_there_is_none(): void

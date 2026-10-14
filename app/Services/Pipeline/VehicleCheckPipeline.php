@@ -8,7 +8,6 @@ use App\Jobs\CalculateMaximumBid;
 use App\Jobs\CalculateRepair;
 use App\Jobs\GenerateReport;
 use App\Jobs\RetrieveSalvageAuctionHistory;
-use App\Jobs\RetrieveSalvageAuctionImages;
 use App\Jobs\RetrieveValuation;
 use App\Jobs\RetrieveVehicleHistory;
 use App\Jobs\RetrieveVehicleImage;
@@ -39,7 +38,6 @@ class VehicleCheckPipeline
                 new RetrieveVehicleImage($id),
                 new RetrieveValuation($id),
                 new RetrieveSalvageAuctionHistory($id),
-                new RetrieveSalvageAuctionImages($id),
                 new RetrieveVehicleTaxCost($id),
                 new GenerateReport($id),
             ],
@@ -70,7 +68,6 @@ class VehicleCheckPipeline
             new RetrieveVehicleImage($id),
             new RetrieveValuation($id),
             new RetrieveSalvageAuctionHistory($id),
-            new RetrieveSalvageAuctionImages($id),
             new RetrieveVehicleTaxCost($id),
             new GenerateReport($id),
         ])

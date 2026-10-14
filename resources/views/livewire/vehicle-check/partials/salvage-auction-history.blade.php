@@ -14,16 +14,21 @@
                         <div class="flex justify-between"><dt class="text-gray-500">Secondary damage</dt><dd class="text-vale-navy">{{ $record['secondaryDamageDescription'] ?? '—' }}</dd></div>
                         <div class="flex justify-between sm:col-span-2"><dt class="text-gray-500">Location</dt><dd class="text-vale-navy">{{ $record['location'] ?? '—' }}</dd></div>
                     </dl>
-                    @php $recordImages = $salvageAuctionCheck->images->where('record_index', $loop->index); @endphp
-                    @if ($recordImages->isNotEmpty())
-                        {{-- Downloaded and stored permanently by
-                             RetrieveSalvageAuctionImages — these are our
-                             own copies, not a link to a One Auto URL that
-                             expires after ~12 hours, so they're embedded
-                             directly here rather than linked out. --}}
+                    @php $recordImageLinks = $this->salvageAuctionImageLinks[$loop->index] ?? []; @endphp
+                    @if (! empty($recordImageLinks))
+                        {{-- Fetched live, right now, from One Auto's
+                             salvageguide/thirdpartyimages endpoint - see
+                             ShowCheck::salvageAuctionImageLinks(). The URL
+                             it returns expires after ~12 hours and points
+                             to a full third-party listing page (a photo
+                             gallery plus the original vehicle details), not
+                             a bare image file, so it's linked out here
+                             rather than embedded - and fetching it live,
+                             at view time, means it's never stale by the
+                             time anyone actually clicks it. --}}
                         <div class="flex flex-wrap gap-3 mt-3">
-                            @foreach ($recordImages as $image)
-                                <img src="{{ $image->temporaryUrl() }}" alt="Salvage auction photo" class="h-24 w-32 object-cover rounded-lg border border-gray-200">
+                            @foreach ($recordImageLinks as $index => $imageUrl)
+                                <a href="{{ $imageUrl }}" target="_blank" rel="noopener" class="text-xs text-vale-red hover:text-red-600 underline">View salvage auction photos{{ count($recordImageLinks) > 1 ? ' ('.($index + 1).')' : '' }} &#8599;</a>
                             @endforeach
                         </div>
                     @else
@@ -37,5 +42,6 @@
                 </div>
             @endforeach
         </div>
+        <p class="text-xs text-gray-400 mt-3">Salvage auction photographs, where available, are linked to their original source (a third-party listing page) rather than shown here, as taken at the time of listing.</p>
     @endif
 </div>

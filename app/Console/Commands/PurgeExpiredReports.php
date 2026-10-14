@@ -55,26 +55,6 @@ class PurgeExpiredReports extends Command
             $image->delete();
         }
 
-        // Salvage auction photos are deliberately tied to this same purge
-        // window rather than any separate expiry mechanism: One Auto's own
-        // thirdpartyimages endpoint already treats 30 days from first fetch
-        // as the free re-fetch window, and ValeCheck's own reports already
-        // expire and get purged at exactly this same 30-day default (see
-        // config('valecheck.reports.retention_days')) — by the time a
-        // re-fetch would ever cost money again, the report itself is
-        // already gone. The files and rows are deleted explicitly here
-        // (rather than via a cascadeOnDelete() from a deleted
-        // SalvageAuctionCheck row) because SalvageAuctionCheck itself is
-        // not otherwise purged by this command — a pre-existing gap, out
-        // of scope to fix here — so there is no parent delete for a DB
-        // cascade to ride along with.
-        if ($salvageCheck = $check->salvageAuctionCheck) {
-            foreach ($salvageCheck->images as $image) {
-                Storage::disk($image->disk)->delete($image->path);
-                $image->delete();
-            }
-        }
-
         if ($report = $check->report) {
             if ($report->pdf_path) {
                 Storage::disk($report->pdf_disk)->delete($report->pdf_path);

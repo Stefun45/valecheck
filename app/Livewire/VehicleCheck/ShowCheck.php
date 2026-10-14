@@ -3,8 +3,11 @@
 namespace App\Livewire\VehicleCheck;
 
 use App\Models\VehicleCheck;
+use App\Services\SalvageAuction\SalvageAuctionImageProvider;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Throwable;
 
 #[Layout('layouts.app')]
 class ShowCheck extends Component
@@ -41,6 +44,68 @@ class ShowCheck extends Component
         $realVin = $this->vehicleCheck->vehicle->vin;
 
         $this->vinMatchResult = $submitted !== '' && $realVin !== null && strtoupper($realVin) === $submitted;
+    }
+
+    /**
+     * A live, fetched-right-now link to this report's salvage-auction
+     * photos for each found record that has a recordId - see
+     * SalvageAuctionImageProvider and the removal of
+     * RetrieveSalvageAuctionImages. One Auto's thirdpartyimages URL
+     * expires after ~12 hours, far shorter than a report's up-to-30-day
+     * retention window, so pre-fetching once and storing the URL (the
+     * previous approach) would often hand a customer a dead link; fetching
+     * live at view time never can.
+     *
+     * #[Computed] on its own (no `persist`/`cache`) only memoizes for the
+     * lifetime of the single PHP object that handles one Livewire request -
+     * confirmed by reading BaseComputed::handleMagicGet() in this app's
+     * installed Livewire version, whose default (uncached) branch just
+     * stores the value on a property of the Attribute instance. verifyVin()
+     * is a separate Livewire network round-trip that hydrates a brand new
+     * component instance, so without `persist` it would trigger a second
+     * live (and potentially billable) fetch on every interaction with this
+     * same report. `persist: true` instead caches via Laravel's Cache,
+     * keyed by this component's own Livewire id (see
+     * BaseComputed::generatePersistedKey()), so the result survives across
+     * further interactions with this one mounted report, while a genuinely
+     * fresh page load (a new Livewire id) still fetches a fresh link.
+     *
+     * A failed or slow One Auto call degrades to an empty array for that
+     * record rather than breaking the whole report page - the same
+     * "additive provenance, not safety-critical" philosophy as everywhere
+     * else in this feature.
+     *
+     * @return array<int, array<int, string>> image/listing-page URLs keyed
+     *                                        by the record's index in
+     *                                        salvageAuctionCheck->records.
+     */
+    #[Computed(persist: true)]
+    public function salvageAuctionImageLinks(): array
+    {
+        $salvageCheck = $this->vehicleCheck->salvageAuctionCheck;
+
+        if (! $salvageCheck || ! $salvageCheck->record_found) {
+            return [];
+        }
+
+        $provider = app(SalvageAuctionImageProvider::class);
+        $links = [];
+
+        foreach ($salvageCheck->records as $index => $record) {
+            $recordId = $record['recordId'] ?? null;
+
+            if ($recordId === null) {
+                continue;
+            }
+
+            try {
+                $links[$index] = $provider->fetchImages((string) $recordId, $this->vehicleCheck->id);
+            } catch (Throwable) {
+                $links[$index] = [];
+            }
+        }
+
+        return $links;
     }
 
     public function render()

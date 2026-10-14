@@ -8,7 +8,6 @@ use App\Jobs\CalculateMaximumBid;
 use App\Jobs\CalculateRepair;
 use App\Jobs\GenerateReport;
 use App\Jobs\RetrieveSalvageAuctionHistory;
-use App\Jobs\RetrieveSalvageAuctionImages;
 use App\Jobs\RetrieveValuation;
 use App\Jobs\RetrieveVehicleHistory;
 use App\Jobs\RetrieveVehicleImage;
@@ -57,7 +56,6 @@ class VehicleCheckPipelineTest extends TestCase
             RetrieveVehicleImage::class,
             RetrieveValuation::class,
             RetrieveSalvageAuctionHistory::class,
-            RetrieveSalvageAuctionImages::class,
             RetrieveVehicleTaxCost::class,
             GenerateReport::class,
         ]);
@@ -95,7 +93,6 @@ class VehicleCheckPipelineTest extends TestCase
             RetrieveVehicleImage::class,
             RetrieveValuation::class,
             RetrieveSalvageAuctionHistory::class,
-            RetrieveSalvageAuctionImages::class,
             RetrieveVehicleTaxCost::class,
             GenerateReport::class,
         ]);
