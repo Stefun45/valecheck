@@ -10,6 +10,10 @@
             'a' => 'ValeCheck is an instant online vehicle history check for UK cars. Enter a registration and we check for write-offs, outstanding finance, stolen or scrapped markers, and mileage anomalies, using data provided by Experian, the DVLA and the DVSA, then show you a clear report in seconds.',
         ],
         [
+            'q' => 'Is it "ValeCheck" or "Vale Check"?',
+            'a' => 'Both refer to the same service — ValeCheck is written as one word, but "Vale Check" is a common way people search for or refer to us. Either way, you\'ll find the same vehicle history checks at valecheck.com.',
+        ],
+        [
             'q' => 'What\'s the difference between ValeCheck and ValeCheck Plus?',
             'a' => 'ValeCheck covers vehicle history and provenance: write-off category, finance, stolen/scrapped status, keeper and plate change history, and full MOT and mileage history. ValeCheck Plus includes everything in ValeCheck plus a market valuation (trade, private and part-exchange estimates), a salvage auction history check, and the vehicle\'s tax cost — useful if you\'re also trying to work out whether the asking price is fair.',
         ],

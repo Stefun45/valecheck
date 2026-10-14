@@ -10,7 +10,7 @@
         @endif
     </p>
     <p class="mt-4 max-w-2xl mx-auto leading-relaxed px-4">
-        Silverback Customs UK Ltd, trading as ValeCheck.<br>
+        Silverback Customs UK Ltd, trading as ValeCheck (also known as Vale Check).<br>
         Unit 2A, 35 Eastgate North, Driffield, YO25 6DG.
     </p>
     <p class="mt-3 flex items-center justify-center gap-4">

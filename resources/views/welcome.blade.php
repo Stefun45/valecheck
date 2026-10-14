@@ -16,6 +16,7 @@
                 '@context' => 'https://schema.org',
                 '@type' => 'Organization',
                 'name' => 'ValeCheck',
+                'alternateName' => 'Vale Check',
                 'legalName' => 'Silverback Customs UK Ltd',
                 'url' => url('/'),
                 'address' => [
