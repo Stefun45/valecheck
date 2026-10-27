@@ -29,7 +29,19 @@ class TradePageTest extends TestCase
             ->assertOk()
             ->assertSeeText($plan->name)
             ->assertSeeText(number_format($plan->monthly_net, 2))
-            ->assertSeeText(number_format($plan->monthly_credits));
+            ->assertSeeText(number_format($plan->monthly_credits))
+            ->assertSeeText(number_format($plan->monthly_net / $plan->monthly_credits, 2));
+    }
+
+    public function test_the_trade_page_does_not_show_the_additional_credit_top_up_price(): void
+    {
+        // Deliberately deferred to later in the sign-up process, not shown
+        // on this page — see the per-report cost assertion above instead.
+        $plan = SubscriptionPlan::where('is_active', true)->orderBy('sort_order')->first();
+
+        $this->get(route('trade'))
+            ->assertOk()
+            ->assertDontSeeText(number_format($plan->additional_credit_net, 2));
     }
 
     public function test_an_inactive_plan_is_not_shown(): void

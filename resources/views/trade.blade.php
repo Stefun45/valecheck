@@ -134,8 +134,7 @@
                     <h2 class="font-display font-bold text-3xl sm:text-4xl text-vale-navy mt-4">Trade Credit Plans</h2>
                     <p class="text-gray-500 mt-3 max-w-xl mx-auto">
                         Monthly plans for traders and dealers who check vehicles regularly — a set number of ValeCheck
-                        Plus reports included every month, at a fraction of the one-off price, with extra credits
-                        whenever you need them. Prices shown exclude VAT.
+                        Plus reports included every month, at a fraction of the one-off price. Prices shown exclude VAT.
                     </p>
                 </div>
 
@@ -147,7 +146,7 @@
                                     <th class="px-4 py-2">Plan</th>
                                     <th class="px-4 py-2">Monthly (ex VAT)</th>
                                     <th class="px-4 py-2">Reports included</th>
-                                    <th class="px-4 py-2">Extra report (ex VAT)</th>
+                                    <th class="px-4 py-2">Per report (ex VAT)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -161,7 +160,7 @@
                                         </td>
                                         <td class="px-4 py-3 text-vale-navy">£{{ number_format($row['price']->net, 2) }}</td>
                                         <td class="px-4 py-3 text-vale-navy">{{ number_format($row['plan']->monthly_credits) }}</td>
-                                        <td class="px-4 py-3 rounded-r-xl text-vale-navy">£{{ number_format($row['plan']->additional_credit_net, 2) }}</td>
+                                        <td class="px-4 py-3 rounded-r-xl text-vale-navy">£{{ number_format($row['plan']->monthly_net / $row['plan']->monthly_credits, 2) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
