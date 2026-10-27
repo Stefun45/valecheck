@@ -7,7 +7,9 @@
         <title>{{ config('app.name', 'ValeCheck') }} for Trade &amp; Dealers</title>
         @include('partials.seo-meta', [
             'title' => config('app.name', 'ValeCheck').' for Trade & Dealers',
-            'description' => 'Fast UK vehicle history, provenance and damage checks built for dealers, traders and auction buyers — including salvage and Cat N/S stock. Trade verification and volume credit plans launching soon.',
+            'description' => config('valecheck.subscriptions_enabled')
+                ? 'Fast UK vehicle history, provenance and damage checks built for dealers, traders and auction buyers — including salvage and Cat N/S stock. Trade credit plans and trade verification available now.'
+                : 'Fast UK vehicle history, provenance and damage checks built for dealers, traders and auction buyers — including salvage and Cat N/S stock. Trade verification and volume credit plans launching soon.',
             'noindex' => false,
         ])
 

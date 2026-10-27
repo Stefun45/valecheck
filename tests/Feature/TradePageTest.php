@@ -101,6 +101,20 @@ class TradePageTest extends TestCase
         $this->get(route('trade'))->assertOk();
     }
 
+    public function test_the_meta_description_no_longer_says_launching_soon_once_subscriptions_are_enabled(): void
+    {
+        // Regression: the on-page "Coming Soon" badge was made conditional
+        // on this flag, but the <meta name="description"> shown in Google's
+        // search results is a separate string that must track it too, or
+        // searchers see stale copy before they ever reach the real page.
+        config(['valecheck.subscriptions_enabled' => true]);
+
+        $this->get(route('trade'))
+            ->assertOk()
+            ->assertDontSee('launching soon', false)
+            ->assertSee('available now', false);
+    }
+
     public function test_plans_show_as_coming_soon_with_no_subscribe_option_while_subscriptions_are_disabled(): void
     {
         config(['valecheck.subscriptions_enabled' => false]);
