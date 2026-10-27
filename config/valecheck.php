@@ -183,6 +183,12 @@ return [
         'provider' => env('AI_PROVIDER', 'anthropic'),
         'model' => env('AI_MODEL', 'claude-sonnet-4-5-20250929'),
         'max_images' => 12,
+        // Used only by the mobile-web "scan number plate" camera upload
+        // (PlateScanService) — a trivial read-the-text transcription task,
+        // not reasoning, so this always uses a cheap/fast Haiku-class model
+        // regardless of which provider/model is configured above for the
+        // Rebuild damage-analysis pipeline.
+        'plate_scan_model' => env('AI_PLATE_SCAN_MODEL', 'claude-haiku-4-5-20251001'),
     ],
 
     'payment_processing' => [

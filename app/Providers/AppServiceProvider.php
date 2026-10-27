@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\Ai\AiProvider;
 use App\Services\Ai\AnthropicProvider;
 use App\Services\Ai\OpenAiProvider;
+use App\Services\Ai\PlateScanService;
 use App\Services\ListingImport\AutoTraderListingProvider;
 use App\Services\ListingImport\CopartListingProvider;
 use App\Services\ListingImport\EbayListingProvider;
@@ -71,6 +72,13 @@ class AppServiceProvider extends ServiceProvider
                     config('valecheck.ai.model'),
                 ),
             };
+        });
+
+        $this->app->singleton(PlateScanService::class, function () {
+            return new PlateScanService(
+                config('services.anthropic.api_key'),
+                config('valecheck.ai.plate_scan_model'),
+            );
         });
 
         $this->app->bind(MarketValuationProvider::class, function ($app) {

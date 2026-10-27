@@ -8,14 +8,12 @@ use App\DataTransferObjects\DamageFindingData;
 use App\DataTransferObjects\ListingClaimComparison;
 use App\DataTransferObjects\ListingComparisonResult;
 use App\DataTransferObjects\VehicleData;
-use Illuminate\Support\Facades\Http;
+use App\Services\Ai\Concerns\CallsAnthropicMessagesApi;
 use RuntimeException;
 
 class AnthropicProvider implements AiProvider
 {
-    private const API_URL = 'https://api.anthropic.com/v1/messages';
-
-    private const API_VERSION = '2023-06-01';
+    use CallsAnthropicMessagesApi;
 
     public function __construct(
         private readonly ?string $apiKey,
@@ -221,62 +219,20 @@ class AnthropicProvider implements AiProvider
      */
     private function buildImageBlocks(array $imagePaths): array
     {
-        return array_map(function (string $path) {
-            $mimeType = mime_content_type($path) ?: 'image/jpeg';
-            $data = base64_encode(file_get_contents($path));
-
-            return [
-                'type' => 'image',
-                'source' => [
-                    'type' => 'base64',
-                    'media_type' => $mimeType,
-                    'data' => $data,
-                ],
-            ];
-        }, $imagePaths);
+        return array_map(
+            fn (string $path) => $this->anthropicImageBlock(file_get_contents($path), mime_content_type($path) ?: 'image/jpeg'),
+            $imagePaths
+        );
     }
 
     private function callMessages(string $system, array $content, ?array $tools = null, ?array $toolChoice = null, int $maxTokens = 1024): array
     {
-        $payload = [
-            'model' => $this->model,
-            'max_tokens' => $maxTokens,
-            'system' => $system,
-            'messages' => [
-                ['role' => 'user', 'content' => $content],
-            ],
-        ];
-
-        if ($tools) {
-            $payload['tools'] = $tools;
-        }
-
-        if ($toolChoice) {
-            $payload['tool_choice'] = $toolChoice;
-        }
-
-        $response = Http::withHeaders([
-            'x-api-key' => $this->apiKey,
-            'anthropic-version' => self::API_VERSION,
-            'content-type' => 'application/json',
-        ])->post(self::API_URL, $payload);
-
-        if ($response->failed()) {
-            throw new RuntimeException('Anthropic API request failed: '.$response->body());
-        }
-
-        return $response->json();
+        return $this->callAnthropicMessages($this->apiKey, $this->model, $system, $content, $tools, $toolChoice, $maxTokens);
     }
 
     private function extractToolInput(array $response, string $toolName): array
     {
-        foreach ($response['content'] ?? [] as $block) {
-            if (($block['type'] ?? null) === 'tool_use' && ($block['name'] ?? null) === $toolName) {
-                return $block['input'] ?? [];
-            }
-        }
-
-        throw new RuntimeException("Anthropic response did not include the expected {$toolName} tool call.");
+        return $this->extractAnthropicToolInput($response, $toolName);
     }
 
     private function estimateCost(array $usage): ?float

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PlateScanController;
 use App\Http\Controllers\ReportPdfController;
 use App\Http\Controllers\SampleReportController;
 use App\Http\Controllers\SitemapController;
@@ -77,6 +78,11 @@ Route::view('profile', 'profile')
 // without an account. Signing up is only required at the point of actually
 // getting a report (see StartCheck::submit()).
 Route::get('check', StartCheck::class)->name('vehicle-checks.start');
+
+// Public, unauthenticated: backs the mobile-web "scan number plate" camera
+// upload on the start-check page (see PlateScanController) — a visitor
+// hasn't signed up at this point, same as the free preview lookup above.
+Route::post('plate-scan', PlateScanController::class)->name('plate-scan');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('checks/{vehicleCheck}', ShowCheck::class)->name('vehicle-checks.show');

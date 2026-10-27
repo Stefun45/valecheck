@@ -40,6 +40,75 @@
                 </button>
             </div>
 
+            {{-- Mobile-WEB equivalent of the native button above — shown only on an
+                 actual mobile-sized viewport on the ordinary website (never on desktop,
+                 where a phone camera isn't relevant) and never inside the native app
+                 itself, since the Capacitor-gated button above already covers that case
+                 with its own on-device scanner. Only one scan option is ever visible at
+                 once. Uploads the photo straight to the plate-scan endpoint, which reads
+                 it with Claude and never stores the photo. --}}
+            <div
+                x-data="{ scanning: false, scanError: null }"
+                x-cloak
+                :class="window.Capacitor?.isNativePlatform?.() ? 'hidden' : ''"
+                class="mt-3 sm:hidden"
+            >
+                <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    x-ref="plateScanPhotoInput"
+                    class="hidden"
+                    @change="
+                        const file = $event.target.files[0];
+                        if (! file) return;
+
+                        scanning = true;
+                        scanError = null;
+
+                        const formData = new FormData();
+                        formData.append('photo', file);
+
+                        try {
+                            const response = await fetch('{{ route('plate-scan') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                    'Accept': 'application/json',
+                                },
+                                body: formData,
+                            });
+                            const result = await response.json();
+
+                            if (result.success) {
+                                $wire.registration = result.registration;
+                                $wire.lookupVehicle();
+                            } else {
+                                scanError = result.message || 'We couldn\'t read a number plate in that photo. Please type it in instead.';
+                            }
+                        } catch (e) {
+                            scanError = 'We couldn\'t read a number plate in that photo. Please type it in instead.';
+                        } finally {
+                            scanning = false;
+                            $event.target.value = '';
+                        }
+                    "
+                >
+
+                <button
+                    type="button"
+                    @click="$refs.plateScanPhotoInput.click()"
+                    :disabled="scanning"
+                    class="inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-vale-navy hover:bg-gray-50 disabled:opacity-50"
+                >
+                    <x-section-icon name="camera" />
+                    <span x-show="! scanning">Scan Number Plate</span>
+                    <span x-show="scanning" x-cloak>Reading plate&hellip;</span>
+                </button>
+
+                <p x-show="scanError" x-cloak x-text="scanError" class="text-xs text-vale-red mt-2"></p>
+            </div>
+
             @if ($previewStatus === 'not_found')
                 <p class="text-xs text-gray-400 mt-2">We couldn't find a quick preview for that plate, but it's still checkable below.</p>
             @elseif ($previewStatus === 'unavailable')
