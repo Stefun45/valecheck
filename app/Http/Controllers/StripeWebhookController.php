@@ -66,15 +66,17 @@ class StripeWebhookController extends CashierWebhookController
     }
 
     /**
-     * Best-effort: Stripe's invoice line-item JSON shape has changed across
-     * API versions, so the exact path to the price ID and billing period
-     * is not guaranteed here without testing against a real webhook payload
-     * (e.g. via `stripe trigger invoice.payment_succeeded` with the Stripe
-     * CLI once real test-mode keys are configured). If either can't be
-     * found, or no plan matches, we skip rather than grant credits against
-     * the wrong plan or period - the user simply won't get subscription
-     * credits until this is verified against a live payload, a safe
-     * failure mode.
+     * Stripe removed the top-level `price` field from invoice line items in
+     * the 2025-03-31 ("basil") API version, replacing it with
+     * `pricing.price_details.price` - this account is pinned to a later
+     * version (see Cashier::STRIPE_VERSION), so only the newer shape is
+     * ever actually sent; the older `price.id` path is kept only in case
+     * Stripe ever includes it for backwards compatibility. Confirmed
+     * against Stripe's own invoice-line-item object reference, and covered
+     * by both shapes in SubscriptionWebhookTest. If neither path nor the
+     * period can be found, or no plan matches, we skip rather than grant
+     * credits against the wrong plan or period - a safe failure mode, but
+     * one that should never actually trigger in normal operation.
      */
     private function grantSubscriptionCredits(User $user, array $invoice): void
     {
