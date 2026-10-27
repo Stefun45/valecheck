@@ -57,6 +57,7 @@
             <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
                 <x-application-logo text-class="text-base sm:text-lg" />
                 <nav class="flex items-center gap-2 sm:gap-4 text-sm shrink-0">
+                    <a href="{{ route('trade') }}" class="hidden sm:inline font-medium text-vale-navy hover:text-vale-red whitespace-nowrap">Trade &amp; Dealers</a>
                     @auth
                         <a href="{{ route('dashboard') }}" class="font-medium text-vale-navy hover:text-vale-red whitespace-nowrap">Dashboard</a>
                     @else

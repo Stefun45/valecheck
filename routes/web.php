@@ -19,6 +19,7 @@ use App\Http\Controllers\ReportPdfController;
 use App\Http\Controllers\SampleReportController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\TradeController;
 use App\Http\Controllers\TraderVerificationController;
 use App\Http\Controllers\VehicleCheckCheckoutController;
 use App\Http\Controllers\VehicleCheckUpgradeController;
@@ -50,6 +51,11 @@ Route::view('privacy', 'legal.privacy')->name('legal.privacy');
 Route::view('faq', 'faq')->name('faq');
 Route::get('sample-report', [SampleReportController::class, 'show'])->name('sample-report');
 Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
+Route::get('trade', [TradeController::class, 'show'])->name('trade');
+Route::post('trade/interest', [TradeController::class, 'submitInterest'])
+    ->middleware('throttle:5,1')
+    ->name('trade.interest.submit');
 
 // Long-tail SEO content: each answers one specific, realistically-searched
 // question rather than competing on broad head terms a brand-new domain

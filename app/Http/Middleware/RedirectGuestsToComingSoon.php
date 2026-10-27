@@ -22,6 +22,7 @@ class RedirectGuestsToComingSoon
 {
     private const EXEMPT_PATHS = [
         'stripe/webhook', 'up', 'terms', 'privacy', 'faq', 'sample-report', 'sitemap.xml', 'guides', 'guides/*',
+        'trade', 'trade/interest',
         'login', 'forgot-password', 'reset-password/*',
         // Livewire's own transport (component updates, file uploads, its
         // JS assets) — not a page a guest can navigate to, but every
