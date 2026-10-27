@@ -13,10 +13,11 @@ use Illuminate\View\View;
 /**
  * Public, unauthenticated trade/dealer landing page — distinct from
  * billing/trader-verification (which handles an already-registered
- * customer actually getting verified). Subscription plans aren't
- * purchasable yet (see config('valecheck.subscriptions_enabled')), so this
- * page shows the real, admin-configured plan lineup as "coming soon" and
- * collects interest via email rather than linking to checkout.
+ * customer actually getting verified). Shows the real, admin-configured
+ * plan lineup; each row links straight to checkout (via the same
+ * billing.subscribe route the dashboard uses) once subscriptions are
+ * enabled (see config('valecheck.subscriptions_enabled')) — until then it
+ * falls back to a "coming soon" badge and collects interest via email.
  */
 class TradeController extends Controller
 {

@@ -124,13 +124,15 @@
             </div>
         </section>
 
-        <!-- Trade plans (coming soon) -->
+        <!-- Trade plans -->
         <section id="trade-plans" class="border-t border-gray-100 py-16">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center">
-                    <span class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-vale-red border border-red-100 bg-red-50 rounded-full px-4 py-1.5">
-                        Coming Soon
-                    </span>
+                    @unless (config('valecheck.subscriptions_enabled'))
+                        <span class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-vale-red border border-red-100 bg-red-50 rounded-full px-4 py-1.5">
+                            Coming Soon
+                        </span>
+                    @endunless
                     <h2 class="font-display font-bold text-3xl sm:text-4xl text-vale-navy mt-4">Trade Credit Plans</h2>
                     <p class="text-gray-500 mt-3 max-w-xl mx-auto">
                         Monthly plans for traders and dealers who check vehicles regularly — a set number of ValeCheck
@@ -147,6 +149,9 @@
                                     <th class="px-4 py-2">Monthly (ex VAT)</th>
                                     <th class="px-4 py-2">Reports included</th>
                                     <th class="px-4 py-2">Per report (ex VAT)</th>
+                                    @if (config('valecheck.subscriptions_enabled'))
+                                        <th class="px-4 py-2"></th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -160,12 +165,35 @@
                                         </td>
                                         <td class="px-4 py-3 text-vale-navy">£{{ number_format($row['price']->net, 2) }}</td>
                                         <td class="px-4 py-3 text-vale-navy">{{ number_format($row['plan']->monthly_credits) }}</td>
-                                        <td class="px-4 py-3 rounded-r-xl text-vale-navy">£{{ number_format($row['plan']->monthly_net / $row['plan']->monthly_credits, 2) }}</td>
+                                        <td class="px-4 py-3 text-vale-navy {{ config('valecheck.subscriptions_enabled') ? '' : 'rounded-r-xl' }}">£{{ number_format($row['plan']->monthly_net / $row['plan']->monthly_credits, 2) }}</td>
+                                        @if (config('valecheck.subscriptions_enabled'))
+                                            <td class="px-4 py-3 rounded-r-xl">
+                                                @auth
+                                                    <form method="POST" action="{{ route('billing.subscribe') }}">
+                                                        @csrf
+                                                        <input type="hidden" name="plan_id" value="{{ $row['plan']->id }}">
+                                                        <button type="submit" class="inline-flex items-center justify-center px-4 py-1.5 bg-vale-red hover:bg-red-600 rounded-full font-semibold text-xs text-white whitespace-nowrap">
+                                                            Subscribe
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-4 py-1.5 bg-vale-red hover:bg-red-600 rounded-full font-semibold text-xs text-white whitespace-nowrap">
+                                                        Sign Up
+                                                    </a>
+                                                @endauth
+                                            </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
+
+                    @if (config('valecheck.subscriptions_enabled'))
+                        <p class="text-center text-xs text-gray-400 mt-4">
+                            Already signed in? Subscribing here takes you straight to checkout — manage or change your plan any time from your dashboard.
+                        </p>
+                    @endif
                 @endif
             </div>
         </section>
@@ -173,10 +201,17 @@
         <!-- Register interest -->
         <section class="border-t border-gray-100 py-16 bg-vale-light-grey">
             <div class="max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="font-display font-bold text-3xl text-center text-vale-navy">Register Your Interest</h2>
-                <p class="text-gray-500 mt-3 text-center text-sm">
-                    Leave your details and we'll let you know the moment trade plans go live.
-                </p>
+                @if (config('valecheck.subscriptions_enabled'))
+                    <h2 class="font-display font-bold text-3xl text-center text-vale-navy">Have Questions?</h2>
+                    <p class="text-gray-500 mt-3 text-center text-sm">
+                        Not sure which plan's right for you, or need a custom volume deal? Leave your details and we'll be in touch.
+                    </p>
+                @else
+                    <h2 class="font-display font-bold text-3xl text-center text-vale-navy">Register Your Interest</h2>
+                    <p class="text-gray-500 mt-3 text-center text-sm">
+                        Leave your details and we'll let you know the moment trade plans go live.
+                    </p>
+                @endif
 
                 @if (session('status'))
                     <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm mt-6">{{ session('status') }}</div>

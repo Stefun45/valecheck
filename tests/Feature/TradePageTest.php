@@ -101,6 +101,43 @@ class TradePageTest extends TestCase
         $this->get(route('trade'))->assertOk();
     }
 
+    public function test_plans_show_as_coming_soon_with_no_subscribe_option_while_subscriptions_are_disabled(): void
+    {
+        config(['valecheck.subscriptions_enabled' => false]);
+
+        $this->get(route('trade'))
+            ->assertOk()
+            ->assertSeeText('Coming Soon')
+            ->assertDontSee(route('billing.subscribe'), false)
+            ->assertDontSeeText('Sign Up');
+    }
+
+    public function test_a_guest_sees_a_sign_up_link_for_each_plan_once_subscriptions_are_enabled(): void
+    {
+        config(['valecheck.subscriptions_enabled' => true]);
+
+        $this->get(route('trade'))
+            ->assertOk()
+            ->assertDontSeeText('Coming Soon')
+            ->assertSeeText('Sign Up')
+            ->assertSee(route('register'), false);
+    }
+
+    public function test_a_signed_in_user_sees_a_working_subscribe_form_for_each_plan_once_enabled(): void
+    {
+        config(['valecheck.subscriptions_enabled' => true]);
+
+        $user = User::factory()->create();
+        $plan = SubscriptionPlan::where('is_active', true)->orderBy('sort_order')->first();
+
+        $this->actingAs($user)
+            ->get(route('trade'))
+            ->assertOk()
+            ->assertSeeText('Subscribe')
+            ->assertSee('action="'.route('billing.subscribe').'"', false)
+            ->assertSee('name="plan_id" value="'.$plan->id.'"', false);
+    }
+
     public function test_a_link_to_the_trade_page_appears_in_the_header_on_every_major_layout(): void
     {
         // The trade link previously only existed on the homepage header -
