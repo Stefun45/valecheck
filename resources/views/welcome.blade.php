@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         @include('partials.google-ads-tag')
         <title>{{ config('app.name', 'ValeCheck') }} — Know Before You Buy</title>
         @include('partials.seo-meta', [

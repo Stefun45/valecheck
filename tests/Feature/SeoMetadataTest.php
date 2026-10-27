@@ -21,6 +21,19 @@ class SeoMetadataTest extends TestCase
         $response->assertDontSee('name="robots" content="noindex', false);
     }
 
+    public function test_the_homepage_has_a_csrf_meta_tag_for_its_javascript_fetch_calls(): void
+    {
+        // Regression: the homepage's mobile-web plate-scan button reads
+        // this tag via document.querySelector() before making its fetch()
+        // call - the homepage is a standalone page (its own <head>, not
+        // layouts.app), and once genuinely shipped without this tag at all,
+        // which silently threw and surfaced as a generic "couldn't read a
+        // number plate" error with the real cause masked.
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<meta name="csrf-token" content="', false);
+    }
+
     public function test_the_homepage_includes_organization_and_product_structured_data(): void
     {
         $response = $this->get('/')->assertOk();
