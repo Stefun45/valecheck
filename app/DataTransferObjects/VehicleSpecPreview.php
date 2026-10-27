@@ -22,6 +22,13 @@ final readonly class VehicleSpecPreview
         public ?string $motStatus,
         public ?string $taxStatus,
         public ?string $taxExpiryDate = null,
+        public ?string $motExpiryDate = null,
+        /**
+         * The most recent recorded odometer reading, when a provider
+         * genuinely has one (One Auto's MOT history) — null for DVLA VES,
+         * which doesn't return mileage at all.
+         */
+        public ?int $lastRecordedMileage = null,
         /**
          * Full MOT test history, same shape as VehicleData::$motHistory
          * (test_date, result, mileage, advisories) — only ever populated by

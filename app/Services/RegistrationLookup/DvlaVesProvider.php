@@ -63,8 +63,10 @@ class DvlaVesProvider implements VehicleSpecPreviewProvider
             motStatus: $data['motStatus'] ?? null,
             taxStatus: $data['taxStatus'] ?? null,
             taxExpiryDate: $data['taxDueDate'] ?? null,
-            // VES has no MOT test history at all — that's DVSA data, a
-            // different service entirely.
+            motExpiryDate: $data['motExpiryDate'] ?? null,
+            // VES has no mileage or MOT test history at all — that's DVSA
+            // data, a different service entirely.
+            lastRecordedMileage: null,
             motHistory: [],
         );
     }

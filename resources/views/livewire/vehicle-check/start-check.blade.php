@@ -140,8 +140,14 @@
                                 @if ($vehiclePreview['tax_expiry_date'] ?? null) (until {{ \Illuminate\Support\Carbon::parse($vehiclePreview['tax_expiry_date'])->format('d M Y') }}) @endif
                             </span>
                             <span class="text-gray-300 mx-1">&middot;</span>
-                            <span class="{{ ($vehiclePreview['mot_status'] ?? null) === 'Valid' ? 'text-green-600' : 'text-vale-red' }}">MOT: {{ $vehiclePreview['mot_status'] ?? 'Unknown' }}</span>
+                            <span class="{{ ($vehiclePreview['mot_status'] ?? null) === 'Valid' ? 'text-green-600' : 'text-vale-red' }}">
+                                MOT: {{ $vehiclePreview['mot_status'] ?? 'Unknown' }}
+                                @if ($vehiclePreview['mot_expiry_date'] ?? null) (until {{ \Illuminate\Support\Carbon::parse($vehiclePreview['mot_expiry_date'])->format('d M Y') }}) @endif
+                            </span>
                         </p>
+                        @if ($vehiclePreview['last_recorded_mileage'] ?? null)
+                            <p class="text-xs text-gray-500 mt-1">Last recorded mileage: {{ number_format($vehiclePreview['last_recorded_mileage']) }} miles</p>
+                        @endif
                     </div>
                 </div>
 

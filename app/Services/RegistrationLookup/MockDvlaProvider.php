@@ -42,6 +42,8 @@ class MockDvlaProvider implements VehicleSpecPreviewProvider
             engineCapacity: [1000, 1200, 1500, 1600, 2000, 3000][$seed % 6],
             motStatus: ($seed % 17 === 0) ? 'No details held by DVLA' : 'Valid',
             taxStatus: ($seed % 19 === 0) ? 'SORN' : 'Taxed',
+            taxExpiryDate: now()->addDays(30 + ($seed % 300))->toDateString(),
+            motExpiryDate: now()->addDays(30 + (($seed >> 2) % 300))->toDateString(),
         );
     }
 }

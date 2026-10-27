@@ -385,20 +385,23 @@ class VehicleCheckFlowTest extends TestCase
                 'mot_status' => 'Valid',
                 'tax_status' => 'Taxed',
                 'tax_expiry_date' => '2027-05-01',
+                'mot_expiry_date' => '2026-12-25',
+                'last_recorded_mileage' => 28000,
                 'mot_history' => [
                     ['test_date' => '2023-06-01', 'result' => 'PASSED', 'mileage' => 20000, 'advisories' => []],
                     ['test_date' => '2024-06-01', 'result' => 'FAILED', 'mileage' => 28000, 'advisories' => ['Front tyre worn']],
                 ],
             ])
             ->assertSee('until 01 May 2027')
+            ->assertSee('until 25 Dec 2026')
+            ->assertSee('Last recorded mileage: 28,000 miles')
             ->assertSee('MOT &amp; Mileage', false)
             ->assertSee('Mileage Over Time')
             ->assertSee('2 MOTs on record')
             ->assertSee('1 passed, 1 failed')
             ->assertSee('Mileage trend: increasing consistently across 2 MOTs')
             ->assertDontSeeText('Front tyre worn')
-            ->assertDontSee('20,000 mi')
-            ->assertDontSee('28,000 mi');
+            ->assertDontSee('20,000 mi');
     }
 
     public function test_the_confirmation_step_has_no_mot_section_when_the_preview_has_no_mot_history(): void

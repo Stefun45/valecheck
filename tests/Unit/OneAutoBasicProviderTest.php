@@ -72,6 +72,8 @@ class OneAutoBasicProviderTest extends TestCase
         $this->assertSame('Valid', $preview->motStatus);
         $this->assertSame('Taxed', $preview->taxStatus);
         $this->assertSame('2026-09-01', $preview->taxExpiryDate);
+        $this->assertSame(now()->addMonths(6)->toDateString(), $preview->motExpiryDate);
+        $this->assertSame(48210, $preview->lastRecordedMileage);
         $this->assertCount(1, $preview->motHistory);
         $this->assertSame('2025-03-12', $preview->motHistory[0]['test_date']);
         $this->assertSame('PASSED', $preview->motHistory[0]['result']);

@@ -138,6 +138,8 @@ class StartCheck extends Component
                 'mot_status' => $result->motStatus,
                 'tax_status' => $result->taxStatus,
                 'tax_expiry_date' => $result->taxExpiryDate,
+                'mot_expiry_date' => $result->motExpiryDate,
+                'last_recorded_mileage' => $result->lastRecordedMileage,
                 'mot_history' => $result->motHistory,
             ];
             $this->previewStatus = 'found';

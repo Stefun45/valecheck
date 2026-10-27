@@ -100,6 +100,8 @@ class RegistrationQuickLookTest extends TestCase
                 'mot_status' => 'Valid',
                 'tax_status' => 'Taxed',
                 'tax_expiry_date' => '2027-05-01',
+                'mot_expiry_date' => '2026-12-25',
+                'last_recorded_mileage' => 28000,
                 'mot_history' => [
                     ['test_date' => '2023-06-01', 'result' => 'PASSED', 'mileage' => 20000, 'advisories' => []],
                     ['test_date' => '2024-06-01', 'result' => 'FAILED', 'mileage' => 28000, 'advisories' => ['Front tyre worn']],
@@ -108,9 +110,11 @@ class RegistrationQuickLookTest extends TestCase
             ->assertSeeText('2 MOTs on record')
             ->assertSeeText('1 passed, 1 failed')
             ->assertSeeText('Mileage trend: increasing consistently across 2 MOTs')
+            ->assertSeeText('until 01 May 2027')
+            ->assertSeeText('until 25 Dec 2026')
+            ->assertSeeText('Last recorded mileage: 28,000 miles')
             ->assertDontSeeText('Front tyre worn')
-            ->assertDontSeeText('20,000')
-            ->assertDontSeeText('28,000');
+            ->assertDontSeeText('20,000');
     }
 
     public function test_the_confirm_button_signals_that_the_next_step_is_choosing_a_report(): void

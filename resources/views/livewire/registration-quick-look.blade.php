@@ -117,10 +117,19 @@
                         @if($preview['engine_capacity']) &middot; {{ number_format($preview['engine_capacity']) }}cc @endif
                     </p>
                     <p class="text-xs mt-1">
-                        <span class="{{ $preview['tax_status'] === 'Taxed' ? 'text-green-600' : 'text-vale-red' }}">Tax: {{ $preview['tax_status'] ?? 'Unknown' }}</span>
+                        <span class="{{ $preview['tax_status'] === 'Taxed' ? 'text-green-600' : 'text-vale-red' }}">
+                            Tax: {{ $preview['tax_status'] ?? 'Unknown' }}
+                            @if ($preview['tax_expiry_date'] ?? null) (until {{ \Illuminate\Support\Carbon::parse($preview['tax_expiry_date'])->format('d M Y') }}) @endif
+                        </span>
                         <span class="text-gray-300 mx-1">&middot;</span>
-                        <span class="{{ $preview['mot_status'] === 'Valid' ? 'text-green-600' : 'text-vale-red' }}">MOT: {{ $preview['mot_status'] ?? 'Unknown' }}</span>
+                        <span class="{{ $preview['mot_status'] === 'Valid' ? 'text-green-600' : 'text-vale-red' }}">
+                            MOT: {{ $preview['mot_status'] ?? 'Unknown' }}
+                            @if ($preview['mot_expiry_date'] ?? null) (until {{ \Illuminate\Support\Carbon::parse($preview['mot_expiry_date'])->format('d M Y') }}) @endif
+                        </span>
                     </p>
+                    @if ($preview['last_recorded_mileage'] ?? null)
+                        <p class="text-xs text-gray-500 mt-1">Last recorded mileage: {{ number_format($preview['last_recorded_mileage']) }} miles</p>
+                    @endif
                 </div>
             </div>
 

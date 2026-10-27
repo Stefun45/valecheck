@@ -46,6 +46,8 @@ class OneAutoBasicProvider implements VehicleSpecPreviewProvider
             motStatus: $this->motStatus($tests),
             taxStatus: $mot['dvla_data']['tax_status'] ?? null,
             taxExpiryDate: $mot['dvla_data']['tax_expiry_date'] ?? null,
+            motExpiryDate: $tests[0]['mot_expiry_date'] ?? null,
+            lastRecordedMileage: $tests[0]['observation_mileage'] ?? null,
             motHistory: array_map(fn (array $test) => [
                 'test_date' => $test['mot_test_date'] ?? null,
                 'result' => $test['mot_test_result'] ?? null,

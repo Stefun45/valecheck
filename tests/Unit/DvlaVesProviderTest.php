@@ -22,6 +22,7 @@ class DvlaVesProviderTest extends TestCase
                 'motStatus' => 'Valid',
                 'taxStatus' => 'Taxed',
                 'taxDueDate' => '2026-11-01',
+                'motExpiryDate' => '2026-08-15',
             ], 200),
         ]);
 
@@ -33,8 +34,10 @@ class DvlaVesProviderTest extends TestCase
         $this->assertSame('BLUE', $result->colour);
         $this->assertSame(2018, $result->yearOfManufacture);
         $this->assertSame('2026-11-01', $result->taxExpiryDate);
-        // VES has no MOT test history at all — that's DVSA data, a
-        // different service entirely.
+        $this->assertSame('2026-08-15', $result->motExpiryDate);
+        // VES has no mileage or MOT test history at all — that's DVSA
+        // data, a different service entirely.
+        $this->assertNull($result->lastRecordedMileage);
         $this->assertSame([], $result->motHistory);
 
         Http::assertSent(function ($request) {
