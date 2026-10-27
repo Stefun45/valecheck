@@ -124,4 +124,14 @@ class RegistrationQuickLookTest extends TestCase
             ->assertSeeText("Yes, that's it", false)
             ->assertSeeText('see report options');
     }
+
+    public function test_the_mobile_web_scan_option_is_present_and_posts_to_the_plate_scan_endpoint(): void
+    {
+        // The homepage widget is the main funnel entry point, so it needs
+        // the same mobile-web scan option as start-check.blade.php - both
+        // are free-preview entry points and should behave consistently.
+        Livewire::test(RegistrationQuickLook::class)
+            ->assertSeeText('Scan Number Plate')
+            ->assertSeeHtml(route('plate-scan'));
+    }
 }
