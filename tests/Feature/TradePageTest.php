@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\TradeInterestEmail;
 use App\Models\SubscriptionPlan;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -98,5 +99,17 @@ class TradePageTest extends TestCase
         config(['valecheck.coming_soon_enabled' => true]);
 
         $this->get(route('trade'))->assertOk();
+    }
+
+    public function test_a_link_to_the_trade_page_appears_in_the_header_on_every_major_layout(): void
+    {
+        // The trade link previously only existed on the homepage header -
+        // visitors arriving anywhere else on the site (the check page, the
+        // main app nav, the legal/guides pages) had no way to find it.
+        $user = User::factory()->create();
+
+        $this->get(route('vehicle-checks.start'))->assertOk()->assertSee(route('trade'), false);
+        $this->get(route('faq'))->assertOk()->assertSee(route('trade'), false);
+        $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertSee(route('trade'), false);
     }
 }

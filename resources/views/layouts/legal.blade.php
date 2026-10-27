@@ -17,10 +17,11 @@
     </head>
     <body class="font-sans antialiased bg-white text-vale-navy">
         <header class="border-b border-gray-200">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
                 <a href="{{ url('/') }}" wire:navigate>
                     <x-application-logo text-class="text-lg" />
                 </a>
+                <a href="{{ route('trade') }}" class="text-sm font-medium text-vale-navy hover:text-vale-red whitespace-nowrap">Trade &amp; Dealers</a>
             </div>
         </header>
 

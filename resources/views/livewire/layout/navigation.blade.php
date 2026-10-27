@@ -41,6 +41,9 @@ new class extends Component
                     <x-nav-link :href="route('vehicle-checks.start')" :active="request()->routeIs('vehicle-checks.start')" wire:navigate>
                         {{ __('New Check') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('trade')" :active="request()->routeIs('trade')" wire:navigate>
+                        {{ __('Trade & Dealers') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -113,6 +116,9 @@ new class extends Component
             @endauth
             <x-responsive-nav-link :href="route('vehicle-checks.start')" :active="request()->routeIs('vehicle-checks.start')" wire:navigate>
                 {{ __('New Check') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('trade')" :active="request()->routeIs('trade')" wire:navigate>
+                {{ __('Trade & Dealers') }}
             </x-responsive-nav-link>
         </div>
 
