@@ -578,6 +578,52 @@ class VehicleCheckFlowTest extends TestCase
         $this->assertSame(0, Payment::where('user_id', $user->id)->count());
     }
 
+    public function test_an_account_with_both_credit_and_a_zero_priced_override_spends_the_credit_first(): void
+    {
+        // An admin/test account can have both a real credit balance (e.g.
+        // a live subscription) and a £0 account price override - the
+        // credit a subscription is actually paying for must be used first,
+        // not silently bypassed by the override every time (which would
+        // leave the subscription's credits never consumed).
+        $user = $this->verifiedUser();
+        UserProductPrice::create(['user_id' => $user->id, 'type' => VehicleCheck::TYPE_PLUS, 'gross' => 0]);
+        app(CreditLedgerService::class)->grantPurchasedCredits($user, VehicleCheck::TYPE_PLUS, 1);
+        $this->actingAs($user);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'CR3DIT1')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->call('choose', 'plus')
+            ->set('mileage', 20000)
+            ->call('submit');
+
+        $check = VehicleCheck::where('registration', 'CR3DIT1')->firstOrFail();
+
+        $this->assertSame('credit', $check->funding_source);
+        $this->assertSame(0, app(CreditLedgerService::class)->balance($user, VehicleCheck::TYPE_PLUS));
+    }
+
+    public function test_the_zero_priced_override_still_applies_once_credit_is_exhausted(): void
+    {
+        $user = $this->verifiedUser();
+        UserProductPrice::create(['user_id' => $user->id, 'type' => VehicleCheck::TYPE_PLUS, 'gross' => 0]);
+        $this->actingAs($user);
+
+        Livewire::test(StartCheck::class)
+            ->set('registration', 'NOCRED1')
+            ->call('lookupVehicle')
+            ->call('confirmVehicle', true)
+            ->call('choose', 'plus')
+            ->set('mileage', 20000)
+            ->call('submit');
+
+        $check = VehicleCheck::where('registration', 'NOCRED1')->firstOrFail();
+
+        $this->assertSame('free', $check->funding_source);
+        $this->assertSame(VehicleCheck::STATUS_COMPLETED, $check->status);
+    }
+
     public function test_a_zero_priced_account_does_not_affect_other_users_checkout(): void
     {
         $vip = $this->verifiedUser();

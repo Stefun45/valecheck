@@ -120,20 +120,25 @@ class VehicleCheckOrderService
 
     private function determineFundingSource(User $user, string $type): string
     {
-        // Checked first, and for every type including the base ValeCheck
-        // product - an admin-set £0 account price should never route to
-        // Stripe (which doesn't support a genuine £0 Checkout Session
-        // anyway) regardless of what type it is.
+        $isCreditEligible = in_array($type, [VehicleCheck::TYPE_PLUS, VehicleCheck::TYPE_REBUILD], true);
+
+        // Credit (subscription allowance or a purchased pack) is checked
+        // first - an account can have both real credit and an admin-set £0
+        // override (e.g. a staff/test account), and the credit a customer
+        // is actually paying a subscription for must be the thing that
+        // gets used, not silently skipped in favour of the free override
+        // every time. The £0 override only kicks in once credit (if any)
+        // is exhausted, or for types with no credit facility at all (the
+        // base ValeCheck product).
+        if ($isCreditEligible && $this->ledger->hasCredit($user, $type)) {
+            return 'credit';
+        }
+
+        // An admin-set £0 account price should never route to Stripe
+        // (which doesn't support a genuine £0 Checkout Session anyway)
+        // regardless of what type it is.
         if ($this->pricing->forProduct($type, $user)->gross <= 0.0) {
             return 'free';
-        }
-
-        if (! in_array($type, [VehicleCheck::TYPE_PLUS, VehicleCheck::TYPE_REBUILD], true)) {
-            return 'purchase';
-        }
-
-        if ($this->ledger->hasCredit($user, $type)) {
-            return 'credit';
         }
 
         return 'purchase';
