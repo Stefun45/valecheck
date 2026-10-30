@@ -4,6 +4,16 @@ return [
 
     'currency' => 'GBP',
 
+    // Time-boxed seasonal theming - see App\Support\SeasonalTheme. Active
+    // from the morning of the 30th through to midnight on the 31st, then
+    // switches itself off with no deploy needed.
+    'seasonal_theme' => [
+        'halloween' => [
+            'starts_at' => '2026-10-30 00:00:00',
+            'ends_at' => '2026-11-01 00:00:00',
+        ],
+    ],
+
     // Temporary launch flag - ValeCheck Rebuild (£14.99) is hidden from the
     // storefront while the AI damage-analysis product is finished. Flip to
     // true to bring it back with no code changes. Credit packs and

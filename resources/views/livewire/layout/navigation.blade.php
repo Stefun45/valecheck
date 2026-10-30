@@ -22,10 +22,13 @@ new class extends Component
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center">
+                <div class="shrink-0 flex items-center gap-1.5">
                     <a href="{{ auth()->check() ? route('dashboard') : url('/') }}" wire:navigate>
                         <x-application-logo text-class="text-lg" />
                     </a>
+                    @if (\App\Support\SeasonalTheme::halloweenActive())
+                        <span class="text-base select-none" aria-hidden="true" title="Happy Halloween">🎃</span>
+                    @endif
                 </div>
 
                 <!-- Navigation Links -->

@@ -35,6 +35,19 @@
     .vale-racing-stripe {
         background: linear-gradient(90deg, #10243a 0 40%, #e31b23 40% 55%, #10243a 55% 100%);
     }
+
+    /* Halloween seasonal variants - see App\Support\SeasonalTheme. Same
+       role as the vale- flourishes above, swapped in only while active. */
+    .vale-hero-wash--halloween {
+        background:
+            radial-gradient(circle at 15% 15%, rgba(109, 40, 217, 0.16), transparent 45%),
+            radial-gradient(circle at 85% 10%, rgba(249, 115, 22, 0.18), transparent 50%),
+            radial-gradient(circle at 50% 0%, rgba(232, 241, 248, 0.9), transparent 60%);
+    }
+
+    .vale-racing-stripe--halloween {
+        background: linear-gradient(90deg, #10243a 0 35%, #f97316 35% 50%, #6d28d9 50% 65%, #10243a 65% 100%);
+    }
 }
 
 @keyframes vale-pulse-glow {
@@ -44,6 +57,21 @@
 
 .vale-pulse {
     animation: vale-pulse-glow 3.5s ease-in-out infinite;
+}
+
+@keyframes vale-halloween-drift {
+    0%, 100% { transform: translateY(0) rotate(-4deg); }
+    50% { transform: translateY(-10px) rotate(4deg); }
+}
+
+.vale-halloween-drift {
+    animation: vale-halloween-drift 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vale-halloween-drift {
+        animation: none;
+    }
 }
 
 [x-cloak] {

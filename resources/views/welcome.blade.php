@@ -50,13 +50,20 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased bg-white text-vale-navy">
+    <body class="relative font-sans antialiased bg-white text-vale-navy">
+        @php $halloweenActive = \App\Support\SeasonalTheme::halloweenActive(); @endphp
 
+        @include('partials.halloween-decoration')
         @include('partials.site-promotion-banner')
 
         <header class="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
             <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
-                <x-application-logo text-class="text-base sm:text-lg" />
+                <div class="flex items-center gap-1.5">
+                    <x-application-logo text-class="text-base sm:text-lg" />
+                    @if ($halloweenActive)
+                        <span class="text-base select-none" aria-hidden="true" title="Happy Halloween">🎃</span>
+                    @endif
+                </div>
                 <nav class="flex items-center gap-2 sm:gap-4 text-sm shrink-0">
                     <a href="{{ route('trade') }}" class="hidden sm:inline font-medium text-vale-navy hover:text-vale-red whitespace-nowrap">Trade &amp; Dealers</a>
                     @auth
@@ -71,13 +78,22 @@
         </header>
 
         <!-- Hero -->
-        <section class="relative overflow-hidden vale-hero-wash">
-            <div class="absolute inset-x-0 top-0 h-1 vale-racing-stripe"></div>
+        <section class="relative overflow-hidden {{ $halloweenActive ? 'vale-hero-wash--halloween' : 'vale-hero-wash' }}">
+            <div class="absolute inset-x-0 top-0 h-1 {{ $halloweenActive ? 'vale-racing-stripe--halloween' : 'vale-racing-stripe' }}"></div>
+
+            @if ($halloweenActive)
+                <span class="hidden sm:block absolute top-16 left-[8%] text-3xl opacity-70 vale-halloween-drift pointer-events-none select-none" aria-hidden="true" style="animation-delay: -2s">🦇</span>
+                <span class="hidden sm:block absolute top-28 right-[10%] text-2xl opacity-60 vale-halloween-drift pointer-events-none select-none" aria-hidden="true">👻</span>
+            @endif
 
             <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center">
                 <span class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-vale-navy/70 border border-gray-200 rounded-full px-4 py-1.5 bg-white">
-                    <span class="h-1.5 w-1.5 rounded-full bg-vale-red"></span>
-                    UK Vehicle History &amp; Value
+                    <span class="h-1.5 w-1.5 rounded-full {{ $halloweenActive ? 'bg-orange-500' : 'bg-vale-red' }}"></span>
+                    @if ($halloweenActive)
+                        🎃 UK Vehicle History &amp; Value
+                    @else
+                        UK Vehicle History &amp; Value
+                    @endif
                 </span>
 
                 <h1 class="font-display font-extrabold leading-tight mt-6 text-4xl sm:text-6xl">
@@ -88,6 +104,10 @@
                 <p class="mt-4 text-gray-500 max-w-xl mx-auto">
                     Get the full history, condition and value before you make your decision.
                 </p>
+
+                @if ($halloweenActive)
+                    <p class="mt-2 text-sm text-vale-navy/60 italic">Even on Halloween, the only scary surprise should be the costume.</p>
+                @endif
 
                 <div class="mt-8 max-w-lg mx-auto text-left">
                     <livewire:registration-quick-look />
