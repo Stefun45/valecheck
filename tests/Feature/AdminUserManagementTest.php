@@ -35,6 +35,23 @@ class AdminUserManagementTest extends TestCase
             ->assertSeeText('Standard');
     }
 
+    public function test_the_user_list_separates_completed_checks_from_pending_ones(): void
+    {
+        // A pending check is an abandoned/incomplete checkout - never paid
+        // for, never reported on - so counting it alongside real completed
+        // checks overstates a customer's actual activity on this screen.
+        $admin = User::factory()->create(['is_admin' => true]);
+        $customer = User::factory()->create(['name' => 'Jane Dealer', 'email' => 'jane@example.com']);
+        VehicleCheck::factory()->create(['user_id' => $customer->id, 'status' => VehicleCheck::STATUS_COMPLETED]);
+        VehicleCheck::factory()->create(['user_id' => $customer->id, 'status' => VehicleCheck::STATUS_PENDING]);
+        VehicleCheck::factory()->create(['user_id' => $customer->id, 'status' => VehicleCheck::STATUS_PENDING]);
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index'))->assertOk();
+
+        $response->assertSeeText('(2 pending)');
+        $this->assertMatchesRegularExpression('/1[\s\S]*?\(2 pending\)/', $response->getContent());
+    }
+
     public function test_the_user_list_can_be_searched_by_name_or_email(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

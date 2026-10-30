@@ -22,7 +22,10 @@ class UserController extends Controller
             ->when($search !== '', fn ($query) => $query->where(
                 fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%")
             ))
-            ->withCount('vehicleChecks')
+            ->withCount([
+                'vehicleChecks',
+                'vehicleChecks as completed_checks_count' => fn ($query) => $query->where('status', VehicleCheck::STATUS_COMPLETED),
+            ])
             ->with('productPriceOverrides')
             ->latest()
             ->paginate(50)

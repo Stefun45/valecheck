@@ -35,7 +35,12 @@
                             <tr class="border-b border-gray-50 last:border-0">
                                 <td class="p-4 text-vale-navy font-semibold">{{ $user->name }}{{ $user->is_admin ? ' (admin)' : '' }}</td>
                                 <td class="p-4 text-gray-500">{{ $user->email }}</td>
-                                <td class="p-4 text-vale-navy">{{ $user->vehicle_checks_count }}</td>
+                                <td class="p-4 text-vale-navy">
+                                    {{ $user->completed_checks_count }}
+                                    @if ($user->vehicle_checks_count > $user->completed_checks_count)
+                                        <span class="text-gray-400 text-xs">({{ $user->vehicle_checks_count - $user->completed_checks_count }} pending)</span>
+                                    @endif
+                                </td>
                                 <td class="p-4">
                                     @if ($user->productPriceOverrides->isNotEmpty())
                                         <span class="text-xs font-semibold px-2 py-1 rounded-full bg-amber-100 text-amber-700">
