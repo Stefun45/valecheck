@@ -40,13 +40,22 @@
        role as the vale- flourishes above, swapped in only while active. */
     .vale-hero-wash--halloween {
         background:
-            radial-gradient(circle at 15% 15%, rgba(109, 40, 217, 0.16), transparent 45%),
-            radial-gradient(circle at 85% 10%, rgba(249, 115, 22, 0.18), transparent 50%),
-            radial-gradient(circle at 50% 0%, rgba(232, 241, 248, 0.9), transparent 60%);
+            radial-gradient(circle at 12% 10%, rgba(109, 40, 217, 0.4), transparent 42%),
+            radial-gradient(circle at 88% 8%, rgba(249, 115, 22, 0.42), transparent 46%),
+            radial-gradient(circle at 50% 95%, rgba(249, 115, 22, 0.14), transparent 55%),
+            linear-gradient(180deg, rgba(109, 40, 217, 0.06), rgba(255, 255, 255, 0) 70%);
     }
 
+    /* Candy-corn bunting, not a flat colour split - reads as a pattern at a
+       glance instead of a stray two-tone bar. */
     .vale-racing-stripe--halloween {
-        background: linear-gradient(90deg, #10243a 0 35%, #f97316 35% 50%, #6d28d9 50% 65%, #10243a 65% 100%);
+        background: repeating-linear-gradient(
+            90deg,
+            #f97316 0 24px,
+            #10243a 24px 36px,
+            #6d28d9 36px 60px,
+            #10243a 60px 72px
+        );
     }
 }
 

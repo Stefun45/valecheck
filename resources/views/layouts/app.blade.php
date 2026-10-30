@@ -24,8 +24,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <div class="relative min-h-screen bg-vale-light-grey">
-            @include('partials.halloween-decoration')
+        <div class="min-h-screen bg-vale-light-grey">
             @include('partials.site-promotion-banner')
             <livewire:layout.navigation />
 
@@ -39,7 +38,8 @@
             @endif
 
             <!-- Page Content -->
-            <main>
+            <main class="relative">
+                @include('partials.halloween-decoration')
                 {{ $slot }}
             </main>
 

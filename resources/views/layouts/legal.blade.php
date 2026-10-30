@@ -15,9 +15,9 @@
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|montserrat:600,700,800" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="relative font-sans antialiased bg-white text-vale-navy">
-        @include('partials.halloween-decoration')
-        <header class="border-b border-gray-200">
+    <body class="font-sans antialiased bg-white text-vale-navy">
+        <header class="relative border-b border-gray-200">
+            @include('partials.halloween-decoration')
             <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
                 <a href="{{ url('/') }}" wire:navigate>
                     <x-application-logo text-class="text-lg" />

@@ -53,7 +53,6 @@
     <body class="relative font-sans antialiased bg-white text-vale-navy">
         @php $halloweenActive = \App\Support\SeasonalTheme::halloweenActive(); @endphp
 
-        @include('partials.halloween-decoration')
         @include('partials.site-promotion-banner')
 
         <header class="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
@@ -79,18 +78,26 @@
 
         <!-- Hero -->
         <section class="relative overflow-hidden {{ $halloweenActive ? 'vale-hero-wash--halloween' : 'vale-hero-wash' }}">
-            <div class="absolute inset-x-0 top-0 h-1 {{ $halloweenActive ? 'vale-racing-stripe--halloween' : 'vale-racing-stripe' }}"></div>
+            <div class="absolute inset-x-0 top-0 {{ $halloweenActive ? 'h-2 vale-racing-stripe--halloween' : 'h-1 vale-racing-stripe' }}"></div>
 
             @if ($halloweenActive)
-                <span class="hidden sm:block absolute top-16 left-[8%] text-3xl opacity-70 vale-halloween-drift pointer-events-none select-none" aria-hidden="true" style="animation-delay: -2s">🦇</span>
-                <span class="hidden sm:block absolute top-28 right-[10%] text-2xl opacity-60 vale-halloween-drift pointer-events-none select-none" aria-hidden="true">👻</span>
+                <span class="absolute top-10 left-[4%] sm:left-[8%] text-4xl sm:text-5xl opacity-90 vale-halloween-drift pointer-events-none select-none" aria-hidden="true" style="animation-delay: -1s">🦇</span>
+                <span class="hidden sm:block absolute top-32 left-[18%] text-2xl opacity-70 vale-halloween-drift pointer-events-none select-none" aria-hidden="true" style="animation-delay: -4s">🦇</span>
+                <span class="absolute top-16 right-[5%] sm:right-[9%] text-4xl sm:text-5xl opacity-80 vale-halloween-drift pointer-events-none select-none" aria-hidden="true" style="animation-delay: -3s">👻</span>
+                <span class="hidden sm:block absolute top-6 right-[28%] text-3xl opacity-80 pointer-events-none select-none" aria-hidden="true">🌙</span>
+                <span class="hidden sm:block absolute bottom-10 left-[12%] text-3xl opacity-80 vale-halloween-drift pointer-events-none select-none" aria-hidden="true" style="animation-delay: -5s">🎃</span>
+                <span class="hidden sm:block absolute bottom-16 right-[14%] text-3xl opacity-80 vale-halloween-drift pointer-events-none select-none" aria-hidden="true" style="animation-delay: -2s">🎃</span>
             @endif
 
             <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center">
-                <span class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-vale-navy/70 border border-gray-200 rounded-full px-4 py-1.5 bg-white">
+                <span @class([
+                    'inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] rounded-full px-4 py-1.5 border',
+                    'text-orange-900 bg-gradient-to-r from-orange-50 to-violet-50 border-orange-200' => $halloweenActive,
+                    'text-vale-navy/70 bg-white border-gray-200' => ! $halloweenActive,
+                ])>
                     <span class="h-1.5 w-1.5 rounded-full {{ $halloweenActive ? 'bg-orange-500' : 'bg-vale-red' }}"></span>
                     @if ($halloweenActive)
-                        🎃 UK Vehicle History &amp; Value
+                        🎃 Spooky Season Special
                     @else
                         UK Vehicle History &amp; Value
                     @endif
@@ -106,7 +113,7 @@
                 </p>
 
                 @if ($halloweenActive)
-                    <p class="mt-2 text-sm text-vale-navy/60 italic">Even on Halloween, the only scary surprise should be the costume.</p>
+                    <p class="mt-2 text-sm font-medium text-violet-700 italic">Even on Halloween, the only scary surprise should be the costume.</p>
                 @endif
 
                 <div class="mt-8 max-w-lg mx-auto text-left">
